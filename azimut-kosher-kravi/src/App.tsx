@@ -1,18 +1,23 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Layout from "./Layout";
-
-// TODO: import your Pages here
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Layout />,
-    children: [
-      { index: true, element: <div>Home Page</div> },
-    ],
-  },
-]);
+import React from 'react';
+import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { LanguageContext } from './Components/LanguageContext';
+import QuickWorkout from './Pages/QuickWorkout';
 
 export default function App() {
-  return <RouterProvider router={router} />;
+  const [language, setLanguage] = React.useState('hebrew');
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage }}>
+      <SafeAreaView style={styles.container}>
+        <QuickWorkout />
+      </SafeAreaView>
+    </LanguageContext.Provider>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+});

@@ -1,3 +1,8 @@
-export default function LanguageContext() {
-  return <div>LanguageContext Component</div>;
+import { createContext } from "react";
+
+interface LanguageContextType {
+  language: string;
+  setLanguage: (language: string) => void;
 }
+
+export const LanguageContext = createContext<LanguageContextType | null>(null);

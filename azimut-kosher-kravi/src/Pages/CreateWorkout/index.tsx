@@ -1,12 +1,17 @@
+
 import React, { useState, useEffect, useContext } from "react";
-import { Warmup } from "../../Entities/Warmup";
-import { RunningEndurance } from "../../Entities/RunningEndurance";
-import { StrengthExplosive } from "../../Entities/StrengthExplosive";
-import { Special } from "../../Entities/Special";
-import { WorkoutHistory } from "../../Entities/WorkoutHistory";
-import { User } from "../../Entities/User";
-// Icons will need to be implemented as React Native icons
-import { LanguageContext } from "../../Components/LanguageContext";
+import { Warmup } from "@/entities/Warmup";
+import { RunningEndurance } from "@/entities/RunningEndurance";
+import { StrengthExplosive } from "@/entities/StrengthExplosive";
+import { Special } from "@/entities/Special";
+import { WorkoutHistory } from "@/entities/WorkoutHistory";
+import { User } from "@/entities/User";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Timer, Target, Zap, Play, Check, RotateCcw, ZapOff, Clock, ThumbsUp, Star, Coffee } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { LanguageContext } from "@/components/LanguageContext";
+import { AnimatePresence, motion } from "framer-motion";
 
 const pageTexts = {
   hebrew: {
@@ -100,10 +105,10 @@ const RestDisplay = ({ duration, onComplete }) => {
     const seconds = String(remaining % 60).padStart(2, '0');
 
     return (
-        <div className="text-center">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
             <h2 className="text-3xl font-bold text-idf-olive mb-4">{pageTexts.hebrew.rest}</h2>
             <div className="text-6xl font-bold font-mono text-dark-olive">{minutes}:{seconds}</div>
-        </div>
+        </motion.div>
     );
 };
 
@@ -241,6 +246,7 @@ const handleWorkoutHistory = async (workoutData) => {
 };
 
 export default function CreateWorkout() {
+  const navigate = useNavigate();
   const [currentWorkouts, setCurrentWorkouts] = useState([]);
   const [currentWorkoutIndex, setCurrentWorkoutIndex] = useState(0);
   const [tasks, setTasks] = useState([]);
@@ -254,6 +260,7 @@ export default function CreateWorkout() {
   const [workoutStartTime, setWorkoutStartTime] = useState(null);
   const [feedback, setFeedback] = useState({ difficulty: null, feeling: null });
   const { language } = useContext(LanguageContext);
+  const location = useLocation();
 
   const currentTexts = pageTexts[language];
   const currentTask = tasks[currentTaskIndex];
@@ -291,7 +298,7 @@ export default function CreateWorkout() {
       }
     };
     generateWorkoutSequence();
-  }, []);
+  }, [location.search]);
 
   const startWorkout = () => {
       setCurrentTaskIndex(0);
@@ -365,40 +372,197 @@ export default function CreateWorkout() {
   };
 
   const handleFeedbackSubmit = () => {
-      // Navigate to Home - implementation depends on navigation setup
-      console.log("Navigate to Home");
+      navigate(createPageUrl("Home"));
   };
 
   if (isLoading) {
     return (
-      <div style={{ height: 'calc(100vh - 73px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-            <div style={{ 
-              width: '64px', 
-              height: '64px', 
-              border: '4px solid #1a3d2e',
-              borderTop: '4px solid transparent',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto 16px'
-            }}></div>
-            <p style={{ fontWeight: '500', color: '#1a3d2e' }}>{currentTexts.generatingMission}</p>
+      <div className="flex items-center justify-center text-dark-olive" style={{ height: 'calc(100vh - 73px)' }}>
+        <div className="text-center">
+            <div className="w-16 h-16 border-4 border-idf-olive border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="font-medium text-dark-olive">{currentTexts.generatingMission}</p>
         </div>
       </div>
     );
   }
 
-  // Return a simplified version for now - the full UI will need React Native components
-  return (
-    <div style={{ padding: '24px', color: '#1a3d2e' }}>
-      <h1>Create Workout - {currentTexts.missionBrief}</h1>
-      {currentWorkout && (
-        <div>
-          <h2>{currentWorkout.title}</h2>
-          <p>{currentWorkout.instructions}</p>
-          <button onClick={startWorkout}>{currentTexts.startMission}</button>
+  // Workout Summary Screen
+  if (showSummary) {
+    const totalWorkoutDuration = workoutStartTime ? Math.round((Date.now() - workoutStartTime) / 1000) : 0; 
+    const totalMinutes = Math.floor(totalWorkoutDuration / 60);
+    const remainingSeconds = totalWorkoutDuration % 60;
+    
+    return (
+        <div className="p-6 text-dark-olive" dir="rtl">
+            <div className="max-w-md mx-auto">
+                <div className="flex items-center gap-4 mb-6">
+                    <Clock className="w-8 h-8 text-idf-olive" />
+                    <h1 className="text-2xl font-bold">{currentTexts.workoutSummary}</h1>
+                </div>
+                
+                <div className="bg-white rounded-xl p-6 card-shadow border border-gray-100 mb-6">
+                    <div className="text-center mb-6">
+                        <h2 className="text-xl font-bold text-dark-olive mb-2">
+                            {currentWorkouts.map(w => w.title).join(" + ")}
+                        </h2>
+                        <div className="flex items-center justify-center gap-2 text-lg font-semibold text-idf-olive">
+                            <Timer className="w-5 h-5" />
+                            <span>{currentTexts.totalDuration}: {totalMinutes} {currentTexts.minutes} {remainingSeconds} {currentTexts.seconds}</span>
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                        {completedTasks.map((task, index) => (
+                            <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <div className="flex-1 text-right">
+                                    <h4 className="font-semibold text-dark-olive">{task.title}</h4>
+                                    {task.workoutTitle && <p className="text-sm text-gray-600">({task.workoutTitle})</p>}
+                                    {task.type === 'rest' && <p className="text-sm text-gray-600">{currentTexts.rest}</p>}
+                                </div>
+                                <div className="text-sm font-mono text-idf-olive">
+                                    {formatTime(task.duration)}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                
+                <Button onClick={handleSummaryConfirm} className="w-full bg-idf-olive text-light-sand font-bold py-4 rounded-xl btn-press card-shadow text-lg">
+                    <Check className="w-5 h-5 ml-2" />
+                    {currentTexts.confirm}
+                </Button>
+            </div>
         </div>
-      )}
-    </div>
-  );
+    );
+  }
+
+  // Workout Feedback Screen
+  if (showFeedback) {
+    return (
+        <div className="p-6 text-dark-olive" dir="rtl">
+            <div className="max-w-md mx-auto">
+                <div className="flex items-center gap-4 mb-6">
+                    <Star className="w-8 h-8 text-idf-olive" />
+                    <h1 className="text-2xl font-bold">{currentTexts.workoutFeedback}</h1>
+                </div>
+                
+                <div className="space-y-8">
+                    {/* How was the workout */}
+                    <div className="bg-white rounded-xl p-6 card-shadow border border-gray-100">
+                        <h3 className="text-lg font-bold text-center mb-4 text-dark-olive">{currentTexts.howWasWorkout}</h3>
+                        <div className="grid grid-cols-3 gap-3">
+                            {[
+                                { key: 'easy', label: currentTexts.easy, icon: Coffee },
+                                { key: 'moderate', label: currentTexts.moderate, icon: Target },
+                                { key: 'hard', label: currentTexts.hard, icon: Zap }
+                            ].map(({ key, label, icon: Icon }) => (
+                                <button
+                                    key={key}
+                                    onClick={() => setFeedback(prev => ({ ...prev, difficulty: key }))}
+                                    className={`flex flex-col items-center gap-2 p-4 rounded-lg border transition-all btn-press card-shadow
+                                        ${feedback.difficulty === key ? 'bg-idf-olive text-light-sand border-idf-olive' : 'bg-white text-dark-olive border-gray-200'}`}
+                                >
+                                    <Icon className="w-6 h-6" />
+                                    <span className="text-sm font-semibold">{label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    {/* How do you feel */}
+                    <div className="bg-white rounded-xl p-6 card-shadow border border-gray-100">
+                        <h3 className="text-lg font-bold text-center mb-4 text-dark-olive">{currentTexts.howDoYouFeel}</h3>
+                        <div className="grid grid-cols-3 gap-3">
+                            {[
+                                { key: 'good', label: currentTexts.good, icon: ThumbsUp },
+                                { key: 'exhausted', label: currentTexts.exhausted, icon: ZapOff },
+                                { key: 'fresh', label: currentTexts.fresh, icon: Star }
+                            ].map(({ key, label, icon: Icon }) => (
+                                <button
+                                    key={key}
+                                    onClick={() => setFeedback(prev => ({ ...prev, feeling: key }))}
+                                    className={`flex flex-col items-center gap-2 p-4 rounded-lg border transition-all btn-press card-shadow
+                                        ${feedback.feeling === key ? 'bg-idf-olive text-light-sand border-idf-olive' : 'bg-white text-dark-olive border-gray-200'}`}
+                                >
+                                    <Icon className="w-6 h-6" />
+                                    <span className="text-sm font-semibold">{label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+                
+                <Button 
+                    onClick={handleFeedbackSubmit} 
+                    disabled={!feedback.difficulty || !feedback.feeling}
+                    className="w-full bg-idf-olive text-light-sand font-bold py-4 rounded-xl btn-press card-shadow mt-8 text-lg disabled:opacity-50"
+                >
+                    <Check className="w-5 h-5 ml-2" />
+                    {currentTexts.submit}
+                </Button>
+            </div>
+        </div>
+    );
+  }
+
+  // Briefing Screen
+  if (currentTaskIndex === -1 && currentWorkout && currentWorkouts.length > 0) {
+    return (
+       <div className="p-6 text-dark-olive" dir="rtl">
+            <div className="max-w-md mx-auto">
+                <div className="flex items-center gap-4 mb-8">
+                  <Link to={createPageUrl("Home")}>
+                    <button className="p-2 rounded-lg bg-white border border-gray-200 card-shadow btn-press">
+                      <ArrowLeft className="w-6 h-6 text-dark-olive" />
+                    </button>
+                  </Link>
+                  <div>
+                    <h1 className="text-2xl font-bold">{currentTexts.missionBrief}</h1>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl p-6 card-shadow border border-gray-100 text-center space-y-4">
+                     <Target className="w-10 h-10 text-idf-olive mx-auto" />
+                     <h2 className="text-xl font-bold text-dark-olive">{currentWorkout.title}</h2>
+                     <p className="text-gray-600 whitespace-pre-wrap">{currentWorkout.instructions}</p>
+                     <div className="flex justify-center gap-4">
+                         <span className="px-3 py-1 rounded-lg text-sm font-medium bg-gray-100 text-dark-olive">{currentWorkout.difficulty}</span>
+                         <span className="px-3 py-1 rounded-lg text-sm font-medium bg-gray-100 text-dark-olive">{currentWorkout.category}</span>
+                     </div>
+                </div>
+                 <Button onClick={startWorkout} className="w-full bg-idf-olive text-light-sand font-bold py-4 rounded-xl btn-press card-shadow mt-6 text-lg">
+                    <Play className="w-5 h-5 ml-2" />
+                    {currentTexts.startMission}
+                </Button>
+            </div>
+       </div>
+    )
+  }
+
+  // Workout Player Screen
+  if (currentTask && currentWorkout) {
+    return (
+        <div className="p-6 flex flex-col items-center justify-center text-dark-olive" style={{ height: 'calc(100vh - 73px)' }} dir="rtl">
+           <AnimatePresence mode="wait">
+            {currentTask.type === 'active' ? (
+                 <motion.div key="active" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full max-w-md text-center">
+                    <h3 className="text-lg font-semibold text-gray-500 mb-2">{currentWorkout.title} ({currentWorkoutIndex + 1}/{currentWorkouts.length})</h3>
+                    <h2 className="text-3xl font-bold text-idf-olive mb-2">{currentTask.title}</h2>
+                    <p className="text-gray-600 text-lg whitespace-pre-wrap mb-8">{currentTask.description}</p>
+                    <TimerDisplay startTime={taskStartTime} />
+                    <Button onClick={advanceTask} className="w-full bg-idf-olive text-light-sand font-bold py-4 rounded-xl btn-press card-shadow mt-12 text-lg">
+                        <Check className="w-5 h-5 ml-2" />
+                        {currentTexts.finished}
+                    </Button>
+                 </motion.div>
+            ) : (
+                <motion.div key="rest" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <RestDisplay duration={currentTask.duration} onComplete={advanceTask} />
+                </motion.div>
+            )}
+           </AnimatePresence>
+        </div>
+    );
+  }
+
+  return null;
 }
