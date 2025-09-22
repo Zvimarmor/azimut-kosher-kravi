@@ -7,6 +7,7 @@ import SelectWorkout from './Pages/SelectWorkout';
 import WorkoutHistory from './Pages/WorkoutHistory';
 import Settings from './Pages/Settings';
 import QuickWorkout from './Pages/QuickWorkout';
+import MilitaryChat from './Pages/MilitaryChat';
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/workout-history" element={<WorkoutHistory />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/quick-workout" element={<QuickWorkout />} />
+          <Route path="/military-chat" element={<MilitaryChat />} />
         </Routes>
       </Layout>
     </Router>

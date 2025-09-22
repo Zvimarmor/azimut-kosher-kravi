@@ -1,255 +1,389 @@
 
-import React, { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, AlertTriangle, History, Plus } from "lucide-react";
-import { InvokeLLM } from "@/integrations/Core";
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import { LanguageContext } from '@/components/LanguageContext';
+import { Send, Plus, AlertTriangle } from 'lucide-react';
+
+interface ChatMessage {
+  id: string;
+  type: 'user' | 'ai' | 'system' | 'error';
+  content: string;
+  timestamp: Date;
+}
+
+interface ChatSession {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  createdAt: Date;
+}
+
+const SYSTEM_PROMPT = `אתה עוזר AI מתמחה בנושאים צבאיים ישראליים. התפקיד שלך הוא לספק מידע מדויק ועובדתי בתחומים הבאים בלבד:
+- תהליכי גיוס לצה"ל
+- תוכניות אימונים צבאיות
+- תזונה לחיילים ומתאמנים
+- יחידות צה"ל השונות
+- כושר גופני צבאי
+
+הגבלות קפדניות:
+- ענה רק בעברית
+- אל תדון בנושאים רפואיים
+- אל תחשוף מידע מסווג
+- אל תענה על שאלות לא הולמות
+- הזהר את המשתמש שהמידע עלול להיות שגוי ויש לוודא אותו
+
+אם נשאל על נושא שאינו בתחום שלך, ענה: "אני יכול לעזור רק בנושאים צבאיים כגון גיוס, אימונים, תזונה ויחידות צה"ל. לשאלות אחרות פנה לגורמים מקצועיים."`;
 
 const INSTRUCTIONS_MESSAGE = `הוראות שימוש:
-* יש לשלוח לצ׳אט רק שאלות בנושאים צבאיים כמו מיונים, אימונים,תזונה, יחידות בצה״ל וכו׳. אין להתייעץ עם הצ׳אט לגבי נושאים רפואיים, מידע מסווג או נושאים שאינם ראויים. שאלות כאלו לא יענו ויובילו להרחקת המשתמש.
-* יש להשתמש בשפה מכובדת וראויה. כל השאלות עוברות בקרה אנושית של אנשי המערכת.
-* המידע שניתן על ידי הצ׳אט יכול להיות שגוי, בבקשה תבדקו כל דבר חשוב יותר מפעם אחת ותוודאו את המידע הניתן.`;
+• יש לשלוח לצ'אט רק שאלות בנושאים צבאיים כמו מיונים, אימונים, תזונה, יחידות בצה"ל וכו'.
+• אין להתייעץ עם הצ'אט לגבי נושאים רפואיים, מידע מסווג או נושאים שאינם ראויים.
+• יש להשתמש בשפה מכובדת וראויה.
+• המידע שניתן על ידי הצ'אט יכול להיות שגוי, בבקשה תבדקו את המידע הניתן.`;
 
-const SYSTEM_PROMPT = `You are an advisor for military-related topics such as IDF recruitment processes, training programs, nutrition for trainees, and IDF units. You must only answer questions in these topics, in Hebrew. Always answer in Hebrew. Answer accurately and factually without making up data. If you do not know the answer, respond with: "אין לי אפשרות לענות על השאלה כרגע. סליחה". If the received question is not under the allowed topics, respond with: "סליחה, השאלה שנשאלה לא בנושאים עליהם אני צריך לענות. סליחה."`;
-
-const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
-
-const Q_COUNT_KEY = 'tactical_fit_q_count';
-const Q_TIMESTAMP_KEY = 'tactical_fit_q_timestamp';
-const CONVERSATIONS_KEY = 'tactical_fit_conversations';
-const ACTIVE_CONVO_ID_KEY = 'tactical_fit_active_convo_id';
+const DAILY_QUOTA = 10;
 
 export default function MilitaryChat() {
-  const [conversations, setConversations] = useState([]);
-  const [activeConversationId, setActiveConversationId] = useState(null);
-  const [inputValue, setInputValue] = useState("");
+  const { language } = useContext(LanguageContext);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [questionsRemaining, setQuestionsRemaining] = useState(10);
-  const chatAreaRef = useRef(null);
-  const textareaRef = useRef(null);
+  const [dailyQuota, setDailyQuota] = useState(DAILY_QUOTA);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Load sessions and quota from localStorage
   useEffect(() => {
-    // Question limit logic
-    const today = new Date().toDateString();
-    const lastStoredDate = sessionStorage.getItem(Q_TIMESTAMP_KEY);
+    const savedSessions = localStorage.getItem('militaryChat_sessions');
+    const savedQuota = localStorage.getItem('militaryChat_quota');
+    const lastQuotaReset = localStorage.getItem('militaryChat_quotaReset');
 
-    if (lastStoredDate === today) {
-      const storedCount = sessionStorage.getItem(Q_COUNT_KEY);
-      setQuestionsRemaining(storedCount ? parseInt(storedCount, 10) : 10);
-    } else {
-      sessionStorage.setItem(Q_COUNT_KEY, '10');
-      sessionStorage.setItem(Q_TIMESTAMP_KEY, today);
-      setQuestionsRemaining(10);
+    const today = new Date().toDateString();
+
+    if (lastQuotaReset !== today) {
+      // Reset quota for new day
+      setDailyQuota(DAILY_QUOTA);
+      localStorage.setItem('militaryChat_quota', DAILY_QUOTA.toString());
+      localStorage.setItem('militaryChat_quotaReset', today);
+    } else if (savedQuota) {
+      setDailyQuota(parseInt(savedQuota));
     }
 
-    // Conversation history loading logic
-    const storedConversations = sessionStorage.getItem(CONVERSATIONS_KEY);
-    const storedActiveId = sessionStorage.getItem(ACTIVE_CONVO_ID_KEY);
-
-    if (storedConversations && storedActiveId) {
-      try {
-        const parsedConversations = JSON.parse(storedConversations);
-        setConversations(parsedConversations);
-        // Set active conversation ID only if it exists in the parsed conversations
-        if (parsedConversations.some(convo => convo.id === storedActiveId)) {
-          setActiveConversationId(storedActiveId);
-        } else {
-          // If stored active ID is invalid/missing, start a new chat
-          startNewChat();
-        }
-      } catch (error) {
-        console.error("Failed to parse stored conversations, starting new chat:", error);
-        startNewChat();
+    if (savedSessions) {
+      const parsedSessions = JSON.parse(savedSessions);
+      setSessions(parsedSessions);
+      if (parsedSessions.length > 0 && !activeSessionId) {
+        setActiveSessionId(parsedSessions[0].id);
       }
     } else {
-      // If no stored conversations or active ID, start a new chat
-      startNewChat();
+      // Create initial session
+      createNewSession();
     }
   }, []);
 
+  // Save sessions to localStorage
   useEffect(() => {
-    if (chatAreaRef.current) {
-      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
+    if (sessions.length > 0) {
+      localStorage.setItem('militaryChat_sessions', JSON.stringify(sessions));
     }
-  }, [conversations, activeConversationId]);
+  }, [sessions]);
 
+  // Scroll to bottom of messages
   useEffect(() => {
-    // Persist conversations to session storage whenever they change
-    // Only save if there are conversations and an active one is selected.
-    if (conversations.length > 0 && activeConversationId) {
-      try {
-        sessionStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(conversations));
-        sessionStorage.setItem(ACTIVE_CONVO_ID_KEY, activeConversationId);
-      } catch (error) {
-        console.error("Failed to save conversations to session storage:", error);
-      }
-    }
-  }, [conversations, activeConversationId]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [sessions, activeSessionId]);
 
-  useEffect(() => {
-    // Auto-resize textarea
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [inputValue]);
-
-  const startNewChat = () => {
-    const newId = generateId();
-    const newConversation = {
-      id: newId,
-      messages: [{ id: generateId(), type: "system", content: INSTRUCTIONS_MESSAGE }]
+  const createNewSession = () => {
+    const newSession: ChatSession = {
+      id: crypto.randomUUID(),
+      title: 'שיחה חדשה',
+      messages: [{
+        id: crypto.randomUUID(),
+        type: 'system',
+        content: INSTRUCTIONS_MESSAGE,
+        timestamp: new Date()
+      }],
+      createdAt: new Date()
     };
-    // Add new conversation to the beginning and limit to 15
-    setConversations(prev => [newConversation, ...prev].slice(0, 15));
-    setActiveConversationId(newId);
+
+    setSessions(prev => [newSession, ...prev]);
+    setActiveSessionId(newSession.id);
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!inputValue.trim() || isLoading || questionsRemaining <= 0) return;
+  const getCurrentSession = () => {
+    return sessions.find(s => s.id === activeSessionId);
+  };
 
-    const userMessage = { id: generateId(), type: "user", content: inputValue.trim() };
-    setInputValue("");
-
-    const updatedConversations = conversations.map(convo =>
-      convo.id === activeConversationId ? { ...convo, messages: [...convo.messages, userMessage] } : convo
+  const updateSessionTitle = (sessionId: string, firstMessage: string) => {
+    const title = firstMessage.length > 30 ? firstMessage.substring(0, 30) + '...' : firstMessage;
+    setSessions(prev =>
+      prev.map(session =>
+        session.id === sessionId
+          ? { ...session, title }
+          : session
+      )
     );
-    setConversations(updatedConversations);
+  };
+
+  const simulateAIResponse = async (userMessage: string): Promise<string> => {
+    // Simulate AI processing delay
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+
+    // Mock responses based on keywords
+    const message = userMessage.toLowerCase();
+
+    if (message.includes('גולני') || message.includes('חטיבת גולני')) {
+      return 'חטיבת גולני היא אחת מחטיבות הרגלים המובחרות בצה"ל. הגיוס לגולני מתבצע בעיקר דרך "יום מיון 02" והמועמדים עוברים מבחני כושר ונפש מאתגרים. החטיבה ידועה בסמל האריה הצהוב ובמוטו "בזרוע ובגבורה".';
+    }
+
+    if (message.includes('רפואים') || message.includes('יחידת רפואים')) {
+      return 'יחידת הרפואים (יר"פ) היא יחידה רפואית מובחרת בצה"ל. הגיוס מתבצע דרך "יום מיון 97" והדורש כישורים רפואיים בסיסיים, כושר גופני גבוה ויכולת עבודה תחת לחץ. היחידה עוסקת בטיפול רפואי בשטח ובפינוי פצועים.';
+    }
+
+    if (message.includes('כושר') || message.includes('אימון')) {
+      return 'אימוני הכושר בצה"ל מתבססים על עקרונות של הדרגתיות ועמידות. מומלץ להתחיל הכנה 3-6 חודשים לפני הגיוס, להתמקד בריצה, שכיבות סמיכה, מתח ונשיאת משאות. חשוב לשמור על תזונה מאוזנת ולהימנע מפציעות.';
+    }
+
+    if (message.includes('תזונה')) {
+      return 'תזונה נכונה לחיילים כוללת: ארוחות קבועות עשירות בחלבון (עוף, דג, קטניות), פחמימות מורכבות (אורז מלא, פסטה מלאה), ירקות ופירות רבים. חשוב לשתות הרבה מים ולהימנע ממזון מעובד. בפעילות אינטנסיבית יש להגביר את כמות הקלוריות.';
+    }
+
+    if (message.includes('מיון') || message.includes('גיוס')) {
+      return 'תהליך הגיוס לצה"ל כולל מספר שלבים: יום הגיוס הראשוני, מבחני פרופיל רפואי ונפש, ומבחני התאמה ליחידות שונות. חשוב להגיע במצב גופני טוב, עם כל המסמכים הנדרשים, ולהיות כנים בכל השאלות הרפואיות והאישיות.';
+    }
+
+    // Default response for unrecognized topics
+    return 'אני יכול לעזור רק בנושאים צבאיים כגון גיוס, אימונים, תזונה ויחידות צה"ל. לשאלות אחרות פנה לגורמים מקצועיים מתאימים.';
+  };
+
+  const sendMessage = async () => {
+    if (!inputMessage.trim() || isLoading || dailyQuota <= 0) return;
+
+    const currentSession = getCurrentSession();
+    if (!currentSession) return;
+
+    // Add user message
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      type: 'user',
+      content: inputMessage.trim(),
+      timestamp: new Date()
+    };
+
+    setSessions(prev =>
+      prev.map(session =>
+        session.id === activeSessionId
+          ? {
+              ...session,
+              messages: [...session.messages, userMessage]
+            }
+          : session
+      )
+    );
+
+    // Update session title if this is the first real message
+    if (currentSession.messages.length === 1) {
+      updateSessionTitle(activeSessionId!, inputMessage.trim());
+    }
+
+    setInputMessage('');
     setIsLoading(true);
 
     try {
-      const response = await InvokeLLM({ prompt: `${SYSTEM_PROMPT}\n\nUser question: "${userMessage.content}"` });
-      const aiMessage = { id: generateId(), type: "ai", content: response };
+      const aiResponse = await simulateAIResponse(inputMessage);
 
-      setConversations(prev => prev.map(convo =>
-        convo.id === activeConversationId ? { ...convo, messages: [...convo.messages, aiMessage] } : convo
-      ));
+      const aiMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        type: 'ai',
+        content: aiResponse,
+        timestamp: new Date()
+      };
 
-      const newCount = questionsRemaining - 1;
-      setQuestionsRemaining(newCount);
-      sessionStorage.setItem(Q_COUNT_KEY, newCount.toString());
+      setSessions(prev =>
+        prev.map(session =>
+          session.id === activeSessionId
+            ? {
+                ...session,
+                messages: [...session.messages, aiMessage]
+              }
+            : session
+        )
+      );
+
+      // Update quota
+      const newQuota = dailyQuota - 1;
+      setDailyQuota(newQuota);
+      localStorage.setItem('militaryChat_quota', newQuota.toString());
 
     } catch (error) {
-      console.error("Error invoking LLM:", error);
-      const errorMessage = { id: generateId(), type: "error", content: "שגיאת תקשורת, אנא נסה שוב." };
-      setConversations(prev => prev.map(convo =>
-        convo.id === activeConversationId ? { ...convo, messages: [...convo.messages, errorMessage] } : convo
-      ));
+      const errorMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        type: 'error',
+        content: 'אירעה שגיאה בקבלת התשובה. אנא נסה שוב.',
+        timestamp: new Date()
+      };
+
+      setSessions(prev =>
+        prev.map(session =>
+          session.id === activeSessionId
+            ? {
+                ...session,
+                messages: [...session.messages, errorMessage]
+              }
+            : session
+        )
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const getActiveConversation = () => conversations.find(c => c.id === activeConversationId);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [inputMessage]);
+
+  const currentSession = getCurrentSession();
 
   return (
-    <div className="flex flex-row-reverse w-full text-dark-olive" style={{ height: 'calc(100vh - 73px)' }}>
-      {/* History Bar */}
-      <aside className="w-1/4 max-w-[280px] bg-gray-50 border-l border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200 bg-white">
-          <h2 className="text-lg font-bold text-center flex items-center justify-center gap-2 text-dark-olive">
-            <History className="w-5 h-5" />
-            היסטוריה
-          </h2>
-        </div>
-        <ScrollArea className="flex-1 p-3">
-          <div className="space-y-2">
-            {conversations.map(convo => {
-              const firstUserMessage = convo.messages.find(m => m.type === 'user');
-              return (
-                <button
-                  key={convo.id}
-                  className={`w-full text-right p-3 rounded-lg text-sm transition-all btn-press ${
-                    activeConversationId === convo.id
-                      ? 'bg-idf-olive text-light-sand card-shadow'
-                      : 'bg-white text-dark-olive hover:bg-gray-100 border border-gray-200'
-                  }`}
-                  onClick={() => setActiveConversationId(convo.id)}
-                >
-                  <p className="truncate text-right">
-                    {firstUserMessage ? firstUserMessage.content : "צ'אט חדש"}
-                  </p>
-                </button>
-              )
-            })}
-          </div>
-        </ScrollArea>
-        <div className="p-3 border-t border-gray-200">
+    <div className="flex h-full bg-[var(--color-bg-neutral)]" dir="rtl">
+      {/* Chat History Sidebar */}
+      <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
+        <div className="p-4 border-b border-gray-200">
           <button
-            onClick={startNewChat}
-            className="w-full bg-idf-olive text-light-sand font-medium py-3 rounded-lg btn-press card-shadow flex items-center justify-center gap-2"
+            onClick={createNewSession}
+            className="w-full flex items-center justify-center gap-2 bg-[var(--color-accent-primary)] text-[var(--color-text-light)] px-4 py-3 rounded-lg hover:bg-[var(--color-accent-secondary)] transition-colors"
           >
-            <Plus className="w-4 h-4" />
-            צ'אט חדש
+            <Plus className="w-5 h-5" />
+            <span>שיחה חדשה</span>
           </button>
         </div>
-      </aside>
 
-      {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col bg-white">
-        <header className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
-          <div className="text-right">
-            <p className="font-semibold text-dark-olive">
-              נשארו לך <span className="font-bold text-idf-olive">{questionsRemaining}</span> שאלות
-            </p>
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-2">
+            {sessions.map((session) => (
+              <div
+                key={session.id}
+                onClick={() => setActiveSessionId(session.id)}
+                className={`p-3 mb-2 rounded-lg cursor-pointer transition-colors ${
+                  session.id === activeSessionId
+                    ? 'bg-[var(--color-accent-primary)] text-[var(--color-text-light)]'
+                    : 'bg-gray-50 hover:bg-gray-100 text-[var(--color-text-dark)]'
+                }`}
+              >
+                <div className="font-medium text-sm truncate">{session.title}</div>
+                <div className="text-xs opacity-75 mt-1">
+                  {session.createdAt.toLocaleDateString('he-IL')}
+                </div>
+              </div>
+            ))}
           </div>
-        </header>
+        </div>
+      </div>
 
-        <div ref={chatAreaRef} className="flex-1 p-4 overflow-y-auto space-y-4">
-          {getActiveConversation()?.messages.map(message => (
-            <div key={message.id} dir="rtl" className={`flex ${message.type === 'user' ? 'justify-start' : 'justify-end'}`}>
-              <div className={`max-w-[85%] p-4 rounded-xl ${
-                message.type === 'user' ? 'bg-idf-olive text-light-sand rounded-tr-sm' :
-                message.type === 'ai' ? 'bg-gray-100 text-dark-olive rounded-tl-sm' :
-                message.type === 'system' ? 'bg-amber-50 text-amber-800 border border-amber-200 text-sm' :
-                'bg-red-50 text-red-800 border border-red-200'
-              } card-shadow`}>
-                {message.type === 'system' && <AlertTriangle className="inline-block w-4 h-4 ml-2 text-amber-600" />}
-                <div className="whitespace-pre-wrap">{message.content}</div>
+      {/* Main Chat Interface */}
+      <div className="flex-1 flex flex-col">
+        {/* Header with Quota */}
+        <div className="bg-white border-b border-gray-200 p-4">
+          <div className="text-center">
+            <div className="text-lg font-bold text-[var(--color-text-dark)]">היסטוריה</div>
+            <div className="text-sm text-gray-600 mt-1">
+              נשארו לך {dailyQuota} שאלות
+            </div>
+          </div>
+        </div>
+
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {currentSession?.messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${message.type === 'user' ? 'justify-start' : 'justify-end'}`}
+            >
+              <div
+                className={`max-w-[70%] rounded-2xl px-4 py-3 ${
+                  message.type === 'user'
+                    ? 'bg-[var(--color-accent-primary)] text-[var(--color-text-light)]'
+                    : message.type === 'ai'
+                    ? 'bg-white border border-gray-200 text-[var(--color-text-dark)]'
+                    : message.type === 'system'
+                    ? 'bg-yellow-50 text-yellow-800 border border-yellow-200 text-center italic'
+                    : 'bg-red-100 text-red-700'
+                }`}
+              >
+                {message.type === 'system' && (
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span className="font-semibold">הוראות שימוש</span>
+                  </div>
+                )}
+                <div className="whitespace-pre-wrap text-right">{message.content}</div>
+                <div className="text-xs opacity-75 mt-2">
+                  {message.timestamp.toLocaleTimeString('he-IL', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </div>
               </div>
             </div>
           ))}
-           {isLoading && (
-              <div dir="rtl" className="flex justify-end">
-                <div className="bg-gray-100 p-4 rounded-xl flex items-center gap-2 card-shadow">
-                   <div className="w-2 h-2 rounded-full bg-idf-olive animate-bounce" style={{ animationDelay: '0ms' }} />
-                   <div className="w-2 h-2 rounded-full bg-idf-olive animate-bounce" style={{ animationDelay: '150ms' }} />
-                   <div className="w-2 h-2 rounded-full bg-idf-olive animate-bounce" style={{ animationDelay: '300ms' }} />
+
+          {isLoading && (
+            <div className="flex justify-end">
+              <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 max-w-[70%]">
+                <div className="flex items-center gap-2 text-[var(--color-text-dark)]">
+                  <div className="animate-spin w-4 h-4 border-2 border-[var(--color-accent-primary)] border-t-transparent rounded-full"></div>
+                  <span>מכין תשובה...</span>
                 </div>
               </div>
-            )}
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
         </div>
 
-        <footer className="p-4 border-t border-gray-200 bg-gray-50">
-          <form onSubmit={handleSendMessage} className="flex gap-3 items-end">
-            <button
-              type="submit"
-              disabled={isLoading || !inputValue.trim()}
-              className="bg-idf-olive text-light-sand px-6 py-3 rounded-lg font-medium btn-press card-shadow disabled:opacity-50 disabled:cursor-not-allowed self-stretch flex items-center"
-            >
-              <Send className="w-5 h-5" />
-            </button>
-            <Textarea
-              ref={textareaRef}
-              dir="rtl"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="כתוב את שאלתך כאן..."
-              className="flex-1 bg-white border-gray-300 text-dark-olive py-3 px-4 rounded-lg focus:border-idf-olive focus:ring-1 focus:ring-idf-olive resize-none overflow-y-hidden"
-              rows={1}
-              disabled={isLoading}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage(e);
-                }
-              }}
-            />
-          </form>
-        </footer>
-      </main>
+        {/* Input Area */}
+        <div className="bg-white border-t border-gray-200 p-4">
+          {dailyQuota <= 0 ? (
+            <div className="text-center py-4">
+              <div className="text-red-600 font-medium">סיימת את מכסת השאלות היומית</div>
+              <div className="text-sm text-gray-600 mt-1">חזור מחר לשאלות נוספות</div>
+            </div>
+          ) : (
+            <div className="flex gap-3 items-end">
+              <button
+                onClick={sendMessage}
+                disabled={!inputMessage.trim() || isLoading}
+                className="flex-shrink-0 bg-[var(--color-accent-primary)] text-[var(--color-text-light)] p-3 rounded-full hover:bg-[var(--color-accent-secondary)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send className="w-5 h-5" />
+              </button>
+
+              <textarea
+                ref={textareaRef}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="כתוב את שאלתך כאן..."
+                className="flex-1 border border-gray-300 rounded-2xl px-4 py-3 text-right resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:border-transparent min-h-[44px] max-h-[120px]"
+                style={{ height: '44px' }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
