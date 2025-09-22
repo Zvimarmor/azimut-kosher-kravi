@@ -23,6 +23,48 @@ export interface User {
   medical_restrictions?: string[];
 }
 
+import { DataService } from '../services/DataService';
+
+export class User {
+  static async me(): Promise<User> {
+    return DataService.getCurrentUser();
+  }
+
+  static async update(updates: Partial<User>): Promise<User> {
+    return DataService.updateUser(updates);
+  }
+
+  static async filter(criteria: any, sortBy?: string, limit?: number): Promise<User[]> {
+    const user = await this.me();
+    return [user];
+  }
+
+  static async create(data: Partial<User>): Promise<User> {
+    return {
+      id: data.id || crypto.randomUUID(),
+      name: data.name || '',
+      email: data.email,
+      age: data.age,
+      fitness_level: data.fitness_level || 'beginner',
+      preferred_language: data.preferred_language || 'hebrew',
+      attributes: data.attributes || {
+        push_strength: 5,
+        pull_strength: 5,
+        cardio_endurance: 5,
+        running_volume: 5,
+        rucking_volume: 5,
+        weight_work: 5
+      },
+      created_date: data.created_date || new Date().toISOString(),
+      last_active: data.last_active || new Date().toISOString(),
+      unit: data.unit,
+      rank: data.rank,
+      goals: data.goals || [],
+      medical_restrictions: data.medical_restrictions || []
+    };
+  }
+}
+
 export class UserService {
   static createUser(data: Partial<User>): User {
     return {

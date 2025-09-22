@@ -1,4 +1,5 @@
 import { AttributeType } from './Warmup';
+import { DataService } from '../services/DataService';
 
 export interface RunningEndurance {
   title: string;
@@ -12,6 +13,33 @@ export interface RunningEndurance {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   warmup_required: boolean;
   cooldown_required: boolean;
+}
+
+export class RunningEndurance {
+  static async list(): Promise<RunningEndurance[]> {
+    return DataService.getRunningEndurance();
+  }
+
+  static async filter(criteria: any, sortBy?: string, limit?: number): Promise<RunningEndurance[]> {
+    const runs = await this.list();
+    return runs;
+  }
+
+  static async create(data: Partial<RunningEndurance>): Promise<RunningEndurance> {
+    return {
+      title: data.title || '',
+      target_attributes: data.target_attributes || ['cardio_endurance'],
+      distance: data.distance,
+      duration: data.duration,
+      intensity: data.intensity || 'moderate',
+      pace: data.pace,
+      instructions: data.instructions || '',
+      terrain: data.terrain || 'road',
+      difficulty: data.difficulty || 'beginner',
+      warmup_required: data.warmup_required ?? true,
+      cooldown_required: data.cooldown_required ?? true
+    };
+  }
 }
 
 export class RunningEnduranceService {

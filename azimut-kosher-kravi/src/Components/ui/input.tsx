@@ -1,64 +1,25 @@
 import React from 'react';
-import { TextInput, View, Text, StyleSheet, TextInputProps, ViewStyle } from 'react-native';
 
-interface InputProps extends TextInputProps {
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
-  containerStyle?: ViewStyle;
+  className?: string;
 }
 
-export function Input({ 
-  label, 
-  error, 
-  containerStyle, 
-  style,
-  ...props 
+export function Input({
+  label,
+  error,
+  className = '',
+  ...props
 }: InputProps) {
   return (
-    <View style={[styles.container, containerStyle]}>
-      {label && <Text style={styles.label}>{label}</Text>}
-      <TextInput
-        style={[
-          styles.input,
-          error && styles.inputError,
-          style
-        ]}
-        placeholderTextColor="#999"
+    <div className="my-2">
+      {label && <label className="block text-base font-semibold text-gray-800 mb-1 text-right">{label}</label>}
+      <input
+        className={`w-full border border-gray-300 rounded-lg px-3 py-3 text-base bg-white text-right focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:border-transparent ${error ? 'border-red-500' : ''} ${className}`}
         {...props}
       />
-      {error && <Text style={styles.error}>{error}</Text>}
-    </View>
+      {error && <p className="text-red-600 text-sm mt-1 text-right">{error}</p>}
+    </div>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginVertical: 8,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-    textAlign: 'right', // RTL for Hebrew
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    fontSize: 16,
-    backgroundColor: '#FFF',
-    textAlign: 'right', // RTL for Hebrew
-  },
-  inputError: {
-    borderColor: '#DC2626',
-  },
-  error: {
-    color: '#DC2626',
-    fontSize: 14,
-    marginTop: 4,
-    textAlign: 'right', // RTL for Hebrew
-  },
-});

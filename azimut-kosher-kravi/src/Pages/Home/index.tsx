@@ -21,9 +21,9 @@ export default function Home() {
       try {
         const user = await User.me();
         if (
-          (user.push_strength === 0 || !user.push_strength) &&
-          (user.pull_strength === 0 || !user.pull_strength) &&
-          (user.cardio_endurance === 0 || !user.cardio_endurance)
+          (user.attributes.push_strength === 0 || !user.attributes.push_strength) &&
+          (user.attributes.pull_strength === 0 || !user.attributes.pull_strength) &&
+          (user.attributes.cardio_endurance === 0 || !user.attributes.cardio_endurance)
         ) {
           navigate(createPageUrl("Onboarding"));
         }
@@ -41,38 +41,38 @@ export default function Home() {
     >
       <div className="flex-1 flex flex-col justify-center gap-6 max-w-md mx-auto w-full">
         {/* Primary Action - Create Workout */}
-        <div className="mb-4">
+        <div className="mb-8">
           <Link to={mainButtons[0].href} className="block">
-            <div className="bg-[var(--color-accent-primary)] text-[var(--color-text-light)] rounded-xl px-6 py-8 card-shadow btn-press transition-all duration-200 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-[var(--color-accent-primary)] to-[var(--color-accent-secondary)] text-[var(--color-text-light)] rounded-2xl px-8 py-12 card-shadow btn-press transition-all duration-200 flex items-center justify-between hover:shadow-lg">
               <div className="flex-1 text-right">
-                <h2 className="text-2xl font-bold mb-2">{mainButtons[0].title}</h2>
-                <p className="text-base opacity-90">{mainButtons[0].subtitle}</p>
+                <h2 className="text-3xl font-bold mb-3">{mainButtons[0].title}</h2>
+                <p className="text-lg opacity-95">{mainButtons[0].subtitle}</p>
               </div>
-              <div className="flex items-center gap-3 mr-3">
-                <Activity className="w-8 h-8 text-[var(--color-text-light)] opacity-90" />
-                <ChevronRight className="w-6 h-6 text-[var(--color-text-light)] opacity-70" />
+              <div className="flex items-center gap-4 mr-4">
+                <Activity className="w-12 h-12 text-[var(--color-text-light)] opacity-95" />
+                <ChevronRight className="w-8 h-8 text-[var(--color-text-light)] opacity-80" />
               </div>
             </div>
           </Link>
         </div>
 
         {/* Secondary Actions */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {mainButtons.slice(1).map((button, index) => {
             const IconComponent = button.icon;
-            
+
             return (
               <Link key={index + 1} to={button.href} className="block">
-                <div className="bg-white text-[var(--color-text-dark)] border border-gray-200 rounded-xl px-5 py-4 card-shadow btn-press transition-all duration-200 flex items-center justify-between">
+                <div className="bg-white text-[var(--color-text-dark)] border border-gray-200 rounded-xl px-6 py-5 card-shadow btn-press transition-all duration-200 flex items-center justify-between hover:border-[var(--color-accent-primary)] hover:shadow-md">
                   <div className="flex-1 text-right">
                     <h3 className="text-lg font-semibold mb-1">{button.title}</h3>
                     {button.subtitle && (
                       <p className="text-sm text-gray-600">{button.subtitle}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 mr-2">
-                    <IconComponent className="w-6 h-6 text-[var(--color-text-dark)] opacity-90" />
-                    <ChevronRight className="w-5 h-5 text-[var(--color-text-dark)] opacity-70" />
+                  <div className="flex items-center gap-3 mr-3">
+                    <IconComponent className="w-7 h-7 text-[var(--color-accent-primary)] opacity-90" />
+                    <ChevronRight className="w-6 h-6 text-[var(--color-text-dark)] opacity-70" />
                   </div>
                 </div>
               </Link>

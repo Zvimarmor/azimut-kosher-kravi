@@ -1,3 +1,5 @@
+import { DataService } from '../services/DataService';
+
 export type AttributeType = 'push_strength' | 'pull_strength' | 'cardio_endurance' | 'running_volume' | 'rucking_volume' | 'weight_work';
 
 export interface Warmup {
@@ -8,10 +10,27 @@ export interface Warmup {
   equipment?: string[];
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   video_url?: string;
+  category?: string;
+  exercises?: Array<{
+    name: string;
+    type: string;
+    values: number[];
+    rest_seconds?: number;
+  }>;
+  rounds?: number;
 }
 
-export class WarmupService {
-  static createWarmup(data: Partial<Warmup>): Warmup {
+export class Warmup {
+  static async list(): Promise<Warmup[]> {
+    return DataService.getWarmups();
+  }
+
+  static async filter(criteria: any, sortBy?: string, limit?: number): Promise<Warmup[]> {
+    const warmups = await this.list();
+    return warmups;
+  }
+
+  static async create(data: Partial<Warmup>): Promise<Warmup> {
     return {
       title: data.title || '',
       target_attributes: data.target_attributes || [],
@@ -19,7 +38,10 @@ export class WarmupService {
       instructions: data.instructions || '',
       equipment: data.equipment || [],
       difficulty: data.difficulty || 'beginner',
-      video_url: data.video_url
+      video_url: data.video_url,
+      category: data.category || 'Warmup',
+      exercises: data.exercises || [],
+      rounds: data.rounds || 1
     };
   }
 

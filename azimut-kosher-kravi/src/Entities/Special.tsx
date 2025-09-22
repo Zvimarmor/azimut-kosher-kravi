@@ -1,4 +1,5 @@
 import { AttributeType } from './Warmup';
+import { DataService } from '../services/DataService';
 
 export interface Special {
   title: string;
@@ -13,6 +14,41 @@ export interface Special {
   location_requirements?: string;
   safety_notes?: string;
   scoring_method?: string;
+  exercises?: Array<{
+    name: string;
+    type: string;
+    values: number[];
+    rest_seconds?: number;
+  }>;
+  rounds?: number;
+}
+
+export class Special {
+  static async list(): Promise<Special[]> {
+    return DataService.getSpecial();
+  }
+
+  static async filter(criteria: any, sortBy?: string, limit?: number): Promise<Special[]> {
+    const specials = await this.list();
+    return specials;
+  }
+
+  static async create(data: Partial<Special>): Promise<Special> {
+    return {
+      title: data.title || '',
+      target_attributes: data.target_attributes || [],
+      category: data.category || 'military_skills',
+      duration: data.duration || 30,
+      instructions: data.instructions || '',
+      equipment: data.equipment || [],
+      min_participants: data.min_participants,
+      max_participants: data.max_participants,
+      difficulty: data.difficulty || 'intermediate',
+      location_requirements: data.location_requirements,
+      safety_notes: data.safety_notes,
+      scoring_method: data.scoring_method
+    };
+  }
 }
 
 export class SpecialService {

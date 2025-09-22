@@ -1,4 +1,5 @@
 import { AttributeType } from './Warmup';
+import { DataService } from '../services/DataService';
 
 export interface StrengthExplosive {
   title: string;
@@ -11,6 +12,43 @@ export interface StrengthExplosive {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   video_url?: string;
   progression_notes?: string;
+  category?: string;
+  exercises?: Array<{
+    name: string;
+    type: string;
+    values: number[];
+    rest_seconds?: number;
+  }>;
+  rounds?: number;
+}
+
+export class StrengthExplosive {
+  static async list(): Promise<StrengthExplosive[]> {
+    return DataService.getStrengthExplosive();
+  }
+
+  static async filter(criteria: any, sortBy?: string, limit?: number): Promise<StrengthExplosive[]> {
+    const exercises = await this.list();
+    return exercises;
+  }
+
+  static async create(data: Partial<StrengthExplosive>): Promise<StrengthExplosive> {
+    return {
+      title: data.title || '',
+      target_attributes: data.target_attributes || [],
+      sets: data.sets || 3,
+      reps: data.reps || 10,
+      rest_between_sets: data.rest_between_sets || 60,
+      instructions: data.instructions || '',
+      equipment: data.equipment || [],
+      difficulty: data.difficulty || 'beginner',
+      video_url: data.video_url,
+      progression_notes: data.progression_notes,
+      category: data.category || 'Strength',
+      exercises: data.exercises || [],
+      rounds: data.rounds || 1
+    };
+  }
 }
 
 export class StrengthExplosiveService {

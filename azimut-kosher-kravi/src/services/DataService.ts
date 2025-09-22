@@ -1,0 +1,292 @@
+// Mock data service for workout entities
+
+import type { Warmup, AttributeType } from '../Entities/Warmup';
+import type { StrengthExplosive } from '../Entities/StrengthExplosive';
+import type { RunningEndurance } from '../Entities/RunningEndurance';
+import type { Special } from '../Entities/Special';
+import type { User } from '../Entities/User';
+import type { WorkoutHistory } from '../Entities/WorkoutHistory';
+
+// Mock workout data
+const mockWarmups: Warmup[] = [
+  {
+    title: "חימום כללי",
+    target_attributes: ['cardio_endurance', 'push_strength'],
+    duration: 5,
+    instructions: "התחל בריצה קלה במקום למשך דקה, עבור לקפיצות, לחיצות כתף וסיבובי ידיים",
+    difficulty: 'beginner',
+    category: 'Warmup',
+    exercises: [
+      {
+        name: "ריצה במקום",
+        type: 'time_based',
+        values: [30, 45, 60, 90, 120, 150, 180, 210, 240, 300], // seconds for levels 1-10
+        rest_seconds: 0
+      },
+      {
+        name: "קפיצות",
+        type: 'rep_based',
+        values: [5, 8, 10, 12, 15, 18, 20, 22, 25, 30], // reps for levels 1-10
+        rest_seconds: 0
+      }
+    ],
+    rounds: 1
+  },
+  {
+    title: "חימום קרבי",
+    target_attributes: ['push_strength', 'pull_strength'],
+    duration: 8,
+    instructions: "חימום מתקדם הכולל תרגילי משקל גוף וכנה לפעילות אינטנסיבית",
+    difficulty: 'intermediate',
+    category: 'Warmup',
+    exercises: [
+      {
+        name: "סיבובי זרועות",
+        type: 'rep_based',
+        values: [8, 10, 12, 15, 18, 20, 22, 25, 28, 30],
+        rest_seconds: 0
+      },
+      {
+        name: "לחיצות מעוקבות",
+        type: 'rep_based',
+        values: [3, 5, 8, 10, 12, 15, 18, 20, 22, 25],
+        rest_seconds: 0
+      }
+    ],
+    rounds: 1
+  }
+];
+
+const mockStrengthExplosive: StrengthExplosive[] = [
+  {
+    title: "שגרת לחיצות",
+    target_attributes: ['push_strength'],
+    sets: 3,
+    reps: 15,
+    rest_between_sets: 60,
+    instructions: "לחיצות סטנדרטיות עם שמירה על צורה נכונה",
+    difficulty: 'beginner',
+    category: 'Strength',
+    exercises: [
+      {
+        name: "לחיצות",
+        type: 'rep_based',
+        values: [5, 8, 10, 12, 15, 18, 20, 25, 30, 35],
+        rest_seconds: 60
+      }
+    ],
+    rounds: 3
+  },
+  {
+    title: "מתחם כוח עליון",
+    target_attributes: ['push_strength', 'pull_strength'],
+    sets: 4,
+    reps: "AMRAP",
+    rest_between_sets: 90,
+    instructions: "מעגל של לחיצות, משיכות וסחיפות למשך זמן מקסימלי",
+    difficulty: 'advanced',
+    category: 'Strength',
+    exercises: [
+      {
+        name: "לחיצות",
+        type: 'rep_based',
+        values: [8, 12, 15, 18, 20, 25, 30, 35, 40, 50],
+        rest_seconds: 30
+      },
+      {
+        name: "משיכות",
+        type: 'rep_based',
+        values: [3, 5, 8, 10, 12, 15, 18, 20, 25, 30],
+        rest_seconds: 30
+      },
+      {
+        name: "סחיפות",
+        type: 'rep_based',
+        values: [5, 8, 10, 15, 20, 25, 30, 35, 40, 50],
+        rest_seconds: 90
+      }
+    ],
+    rounds: 4
+  }
+];
+
+const mockRunningEndurance: RunningEndurance[] = [
+  {
+    title: "ריצת נפח",
+    target_attributes: ['cardio_endurance', 'running_volume'],
+    distance: 3000,
+    duration: 18,
+    intensity: 'moderate',
+    instructions: "ריצה במהירות קבועה ונוחה",
+    difficulty: 'beginner',
+    warmup_required: true,
+    cooldown_required: true
+  },
+  {
+    title: "ריצת טמפו",
+    target_attributes: ['cardio_endurance'],
+    distance: 5000,
+    duration: 25,
+    intensity: 'high',
+    instructions: "ריצה במהירות גבוהה אך שמירה על קצב קבוע",
+    difficulty: 'intermediate',
+    warmup_required: true,
+    cooldown_required: true
+  }
+];
+
+const mockSpecial: Special[] = [
+  {
+    title: "אתגר הקומנדו",
+    target_attributes: ['push_strength', 'pull_strength', 'cardio_endurance'],
+    category: 'tactical',
+    duration: 20,
+    instructions: "מעגל אינטנסיבי המשלב תרגילי כוח וסיבולת בסגנון קרבי",
+    difficulty: 'advanced',
+    exercises: [
+      {
+        name: "לחיצות",
+        type: 'rep_based',
+        values: [10, 15, 20, 25, 30, 35, 40, 45, 50, 60],
+        rest_seconds: 30
+      },
+      {
+        name: "משיכות",
+        type: 'rep_based',
+        values: [5, 8, 10, 12, 15, 18, 20, 25, 30, 35],
+        rest_seconds: 30
+      },
+      {
+        name: "בטן",
+        type: 'rep_based',
+        values: [15, 20, 25, 30, 35, 40, 50, 60, 70, 80],
+        rest_seconds: 30
+      },
+      {
+        name: "ריצה במקום",
+        type: 'time_based',
+        values: [30, 45, 60, 75, 90, 120, 150, 180, 210, 240],
+        rest_seconds: 60
+      }
+    ],
+    rounds: 3
+  },
+  {
+    title: "מבחן כושר בסיסי",
+    target_attributes: ['push_strength', 'cardio_endurance'],
+    category: 'assessment',
+    duration: 15,
+    instructions: "בדיקת רמת כושר בסיסית הכוללת לחיצות, בטן וריצה",
+    difficulty: 'beginner',
+    exercises: [
+      {
+        name: "לחיצות",
+        type: 'rep_based',
+        values: [5, 8, 10, 12, 15, 18, 20, 25, 30, 35],
+        rest_seconds: 60
+      },
+      {
+        name: "בטן",
+        type: 'rep_based',
+        values: [10, 15, 20, 25, 30, 35, 40, 45, 50, 60],
+        rest_seconds: 60
+      }
+    ],
+    rounds: 2
+  }
+];
+
+// Mock user data
+let currentUser: User = {
+  id: '1',
+  name: 'משתמש בדיקה',
+  email: 'test@example.com',
+  fitness_level: 'intermediate',
+  preferred_language: 'hebrew',
+  attributes: {
+    push_strength: 5,
+    pull_strength: 4,
+    cardio_endurance: 6,
+    running_volume: 5,
+    rucking_volume: 3,
+    weight_work: 4
+  },
+  created_date: new Date().toISOString(),
+  last_active: new Date().toISOString()
+};
+
+// Mock workout history storage
+let workoutHistory: WorkoutHistory[] = [];
+
+// Data service class
+export class DataService {
+  // Warmup methods
+  static async getWarmups(): Promise<Warmup[]> {
+    return Promise.resolve([...mockWarmups]);
+  }
+
+  // Strength Explosive methods
+  static async getStrengthExplosive(): Promise<StrengthExplosive[]> {
+    return Promise.resolve([...mockStrengthExplosive]);
+  }
+
+  // Running Endurance methods
+  static async getRunningEndurance(): Promise<RunningEndurance[]> {
+    return Promise.resolve([...mockRunningEndurance]);
+  }
+
+  // Special methods
+  static async getSpecial(): Promise<Special[]> {
+    return Promise.resolve([...mockSpecial]);
+  }
+
+  // User methods
+  static async getCurrentUser(): Promise<User> {
+    return Promise.resolve({ ...currentUser });
+  }
+
+  static async updateUser(updates: Partial<User>): Promise<User> {
+    currentUser = { ...currentUser, ...updates, last_active: new Date().toISOString() };
+    return Promise.resolve({ ...currentUser });
+  }
+
+  // Workout History methods
+  static async getWorkoutHistory(userEmail: string): Promise<WorkoutHistory[]> {
+    return Promise.resolve(
+      workoutHistory
+        .filter(w => w.userId === userEmail)
+        .sort((a, b) => new Date(b.completion_date).getTime() - new Date(a.completion_date).getTime())
+        .slice(0, 25)
+    );
+  }
+
+  static async addWorkoutHistory(workout: Omit<WorkoutHistory, 'id'>): Promise<WorkoutHistory> {
+    const newWorkout: WorkoutHistory = {
+      ...workout,
+      id: crypto.randomUUID()
+    };
+
+    // Add to history
+    workoutHistory.push(newWorkout);
+
+    // Keep only last 25 per user
+    const userWorkouts = workoutHistory.filter(w => w.userId === workout.userId);
+    if (userWorkouts.length > 25) {
+      // Remove oldest entries for this user
+      const sortedUserWorkouts = userWorkouts.sort((a, b) =>
+        new Date(a.completion_date).getTime() - new Date(b.completion_date).getTime()
+      );
+      const toRemove = sortedUserWorkouts.slice(0, userWorkouts.length - 25);
+      workoutHistory = workoutHistory.filter(w =>
+        w.userId !== workout.userId || !toRemove.some(r => r.id === w.id)
+      );
+    }
+
+    return Promise.resolve(newWorkout);
+  }
+
+  static async deleteWorkoutHistory(id: string): Promise<void> {
+    workoutHistory = workoutHistory.filter(w => w.id !== id);
+    return Promise.resolve();
+  }
+}

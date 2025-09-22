@@ -1,83 +1,53 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
 interface CardProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  className?: string;
 }
 
-export function Card({ children, style }: CardProps) {
+export function Card({ children, className = '' }: CardProps) {
   return (
-    <View style={[styles.card, style]}>
+    <div className={`bg-white rounded-xl p-4 my-2 card-shadow ${className}`}>
       {children}
-    </View>
+    </div>
   );
 }
 
 interface CardContentProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  className?: string;
 }
 
-export function CardContent({ children, style }: CardContentProps) {
+export function CardContent({ children, className = '' }: CardContentProps) {
   return (
-    <View style={[styles.content, style]}>
+    <div className={className}>
       {children}
-    </View>
+    </div>
   );
 }
 
 interface CardHeaderProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  className?: string;
 }
 
-export function CardHeader({ children, style }: CardHeaderProps) {
+export function CardHeader({ children, className = '' }: CardHeaderProps) {
   return (
-    <View style={[styles.header, style]}>
+    <div className={`mb-3 ${className}`}>
       {children}
-    </View>
+    </div>
   );
 }
 
 interface CardTitleProps {
   children: React.ReactNode;
-  style?: TextStyle;
+  className?: string;
 }
 
-export function CardTitle({ children, style }: CardTitleProps) {
+export function CardTitle({ children, className = '' }: CardTitleProps) {
   return (
-    <Text style={[styles.title, style]}>
+    <h3 className={`text-lg font-bold text-gray-900 text-right ${className}`}>
       {children}
-    </Text>
+    </h3>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3, // Android shadow
-  },
-  content: {
-    // Content specific styles can go here
-  },
-  header: {
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-    textAlign: 'right', // RTL for Hebrew
-  },
-});

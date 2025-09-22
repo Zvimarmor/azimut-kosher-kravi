@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useContext } from "react";
-import { View, Text, StyleSheet, SafeAreaView, Alert } from "react-native";
 import { StrengthExplosive } from "../../Entities/StrengthExplosive";
-import { WorkoutHistoryService } from "../../Entities/WorkoutHistory";
-import { User, UserService } from "../../Entities/User";
+import { WorkoutHistory } from "../../Entities/WorkoutHistory";
+import { User } from "../../Entities/User";
 import { Button } from "../../Components/ui/button";
 import { LanguageContext } from "../../Components/LanguageContext";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "../../utils";
 
 const pageTexts = {
   hebrew: {
@@ -23,7 +24,7 @@ const pageTexts = {
     difficulty: "רמת קושי",
     feeling: "איך הרגשת?",
     easy: "קל",
-    moderate: "בינוני", 
+    moderate: "בינוני",
     hard: "קשה",
     great: "מצוין",
     good: "טוב",
@@ -48,7 +49,7 @@ const pageTexts = {
     feeling: "How did you feel?",
     easy: "Easy",
     moderate: "Moderate",
-    hard: "Hard", 
+    hard: "Hard",
     great: "Great",
     good: "Good",
     okay: "Okay",
@@ -57,14 +58,11 @@ const pageTexts = {
   }
 };
 
-interface QuickWorkoutProps {
-  navigation?: any; // Will be properly typed when navigation is set up
-}
-
-export default function QuickWorkout({ navigation }: QuickWorkoutProps) {
+export default function QuickWorkout() {
   const languageContext = useContext(LanguageContext);
   const language = (languageContext as any)?.language || 'hebrew';
   const currentTexts = pageTexts[language as keyof typeof pageTexts];
+  const navigate = useNavigate();
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isWorkoutStarted, setIsWorkoutStarted] = useState(false);
@@ -72,7 +70,7 @@ export default function QuickWorkout({ navigation }: QuickWorkoutProps) {
   const [workoutTime, setWorkoutTime] = useState(0);
   const [exercises] = useState<StrengthExplosive[]>([
     {
-      title: "Push-ups",
+      title: "לחיצות",
       target_attributes: ['push_strength'],
       sets: 3,
       reps: 15,
@@ -81,7 +79,7 @@ export default function QuickWorkout({ navigation }: QuickWorkoutProps) {
       difficulty: 'beginner'
     },
     {
-      title: "Squats", 
+      title: "סקוואטים",
       target_attributes: ['weight_work'],
       sets: 3,
       reps: 20,
@@ -94,13 +92,30 @@ export default function QuickWorkout({ navigation }: QuickWorkoutProps) {
 
   useEffect(() => {
     // Initialize mock user - in real app this would come from auth
-    const mockUser = UserService.createUser({
-      name: "חייל דוגמה",
-      fitness_level: 'intermediate',
-      unit: "גדוד 101",
-      rank: "רב סמל"
+    User.me().then(user => {
+      setCurrentUser(user);
+    }).catch(() => {
+      // If no user found, create a mock one - in a real app this would be handled by auth
+      const mockUser = {
+        id: '1',
+        name: "חייל דוגמה",
+        fitness_level: 'intermediate' as const,
+        preferred_language: 'hebrew' as const,
+        attributes: {
+          push_strength: 5,
+          pull_strength: 5,
+          cardio_endurance: 5,
+          running_volume: 5,
+          rucking_volume: 5,
+          weight_work: 5
+        },
+        created_date: new Date().toISOString(),
+        last_active: new Date().toISOString(),
+        unit: "גדוד 101",
+        rank: "רב סמל"
+      };
+      setCurrentUser(mockUser);
     });
-    setCurrentUser(mockUser);
   }, []);
 
   const handleStartWorkout = () => {
@@ -108,249 +123,136 @@ export default function QuickWorkout({ navigation }: QuickWorkoutProps) {
     setWorkoutTime(Date.now());
   };
 
-  const handleFinishWorkout = () => {
+  const handleFinishWorkout = async () => {
     if (!currentUser) return;
-    
+
     const duration = Math.floor((Date.now() - workoutTime) / 60000); // minutes
     setIsWorkoutCompleted(true);
-    
-    // Create workout history entry
-    const workoutEntry = WorkoutHistoryService.createWorkoutHistory({
-      userId: currentUser.id,
-      workout_title: currentTexts.title,
-      duration_completed: duration,
-      difficulty: (feedback.difficulty as 'easy' | 'moderate' | 'hard') || 'moderate',
-      feeling: (feedback.feeling as 'great' | 'good' | 'okay' | 'tired') || 'okay',
-      exercises_completed: exercises.map(ex => ex.title)
-    });
 
-    Alert.alert(currentTexts.missionAccomplished, currentTexts.outstandingWork);
+    // Create workout history entry
+    try {
+      await WorkoutHistory.create({
+        userId: currentUser.id,
+        workout_title: currentTexts.title,
+        duration_completed: duration,
+        difficulty: (feedback.difficulty as 'easy' | 'moderate' | 'hard') || 'moderate',
+        feeling: (feedback.feeling as 'great' | 'good' | 'okay' | 'tired') || 'okay',
+        exercises_completed: exercises.map(ex => ex.title),
+        completion_date: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error saving workout:', error);
+    }
+
+    alert(`${currentTexts.missionAccomplished} ${currentTexts.outstandingWork}`);
   };
 
   const goHome = () => {
-    if (navigation) {
-      navigation.navigate('Home');
-    }
+    navigate('/');
   };
 
   if (!currentUser) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.loadingText}>טוען...</Text>
-      </SafeAreaView>
+      <div className="flex items-center justify-center h-full">
+        <p className="text-gray-600">טוען...</p>
+      </div>
     );
   }
 
   if (isWorkoutCompleted) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <Text style={styles.title}>{currentTexts.missionAccomplished}</Text>
-          <Text style={styles.subtitle}>{currentTexts.outstandingWork}</Text>
-          
-          <View style={styles.feedbackSection}>
-            <Text style={styles.sectionTitle}>{currentTexts.difficulty}</Text>
-            <View style={styles.buttonRow}>
-              <Button 
-                variant={feedback.difficulty === 'easy' ? 'default' : 'outline'}
-                onPress={() => setFeedback(prev => ({ ...prev, difficulty: 'easy' }))}
-              >
-                {currentTexts.easy}
-              </Button>
-              <Button 
-                variant={feedback.difficulty === 'moderate' ? 'default' : 'outline'}
-                onPress={() => setFeedback(prev => ({ ...prev, difficulty: 'moderate' }))}
-              >
-                {currentTexts.moderate}
-              </Button>
-              <Button 
-                variant={feedback.difficulty === 'hard' ? 'default' : 'outline'}
-                onPress={() => setFeedback(prev => ({ ...prev, difficulty: 'hard' }))}
-              >
-                {currentTexts.hard}
-              </Button>
-            </View>
+      <div className="p-6 h-full text-[var(--color-text-dark)]" dir={language === 'hebrew' ? 'rtl' : 'ltr'}>
+        <div className="max-w-md mx-auto">
+          <h1 className="text-2xl font-bold text-center mb-4">{currentTexts.missionAccomplished}</h1>
+          <p className="text-lg text-center mb-8">{currentTexts.outstandingWork}</p>
 
-            <Text style={styles.sectionTitle}>{currentTexts.feeling}</Text>
-            <View style={styles.buttonRow}>
-              <Button 
-                variant={feedback.feeling === 'great' ? 'default' : 'outline'}
-                onPress={() => setFeedback(prev => ({ ...prev, feeling: 'great' }))}
-              >
-                {currentTexts.great}
-              </Button>
-              <Button 
-                variant={feedback.feeling === 'good' ? 'default' : 'outline'}
-                onPress={() => setFeedback(prev => ({ ...prev, feeling: 'good' }))}
-              >
-                {currentTexts.good}
-              </Button>
-              <Button 
-                variant={feedback.feeling === 'okay' ? 'default' : 'outline'}
-                onPress={() => setFeedback(prev => ({ ...prev, feeling: 'okay' }))}
-              >
-                {currentTexts.okay}
-              </Button>
-              <Button 
-                variant={feedback.feeling === 'tired' ? 'default' : 'outline'}
-                onPress={() => setFeedback(prev => ({ ...prev, feeling: 'tired' }))}
-              >
-                {currentTexts.tired}
-              </Button>
-            </View>
-          </View>
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4 text-center">{currentTexts.difficulty}</h3>
+              <div className="flex gap-2 justify-center">
+                {['easy', 'moderate', 'hard'].map((level) => (
+                  <Button
+                    key={level}
+                    variant={feedback.difficulty === level ? 'default' : 'outline'}
+                    onClick={() => setFeedback(prev => ({ ...prev, difficulty: level }))}
+                    className="flex-1"
+                  >
+                    {currentTexts[level as keyof typeof currentTexts]}
+                  </Button>
+                ))}
+              </div>
+            </div>
 
-          <Button onPress={goHome} style={styles.homeButton}>
+            <div>
+              <h3 className="text-lg font-semibold mb-4 text-center">{currentTexts.feeling}</h3>
+              <div className="flex gap-2 justify-center">
+                {['great', 'good', 'okay', 'tired'].map((feeling) => (
+                  <Button
+                    key={feeling}
+                    variant={feedback.feeling === feeling ? 'default' : 'outline'}
+                    onClick={() => setFeedback(prev => ({ ...prev, feeling }))}
+                    className="flex-1"
+                  >
+                    {currentTexts[feeling as keyof typeof currentTexts]}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <Button onClick={goHome} className="w-full mt-8">
             {currentTexts.backHome}
           </Button>
-        </View>
-      </SafeAreaView>
+        </div>
+      </div>
     );
   }
 
   if (isWorkoutStarted) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <Text style={styles.title}>{currentTexts.title}</Text>
-          
-          <View style={styles.exerciseList}>
-            {exercises.map((exercise, index) => (
-              <View key={index} style={styles.exerciseCard}>
-                <Text style={styles.exerciseTitle}>{exercise.title}</Text>
-                <Text style={styles.exerciseDetails}>
-                  {exercise.sets} סטים × {exercise.reps} חזרות
-                </Text>
-                <Text style={styles.exerciseInstructions}>
-                  {exercise.instructions}
-                </Text>
-              </View>
-            ))}
-          </View>
+      <div className="p-6 h-full text-[var(--color-text-dark)]" dir={language === 'hebrew' ? 'rtl' : 'ltr'}>
+        <div className="max-w-md mx-auto">
+          <h1 className="text-2xl font-bold text-center mb-8">{currentTexts.title}</h1>
 
-          <Button onPress={handleFinishWorkout} style={styles.finishButton}>
+          <div className="space-y-4 mb-8">
+            {exercises.map((exercise, index) => (
+              <div key={index} className="bg-white rounded-xl p-4 card-shadow">
+                <h3 className="text-lg font-semibold mb-2">{exercise.title}</h3>
+                <p className="text-gray-600 mb-2">
+                  {exercise.sets} סטים × {exercise.reps} חזרות
+                </p>
+                <p className="text-sm text-gray-500">
+                  {exercise.instructions}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <Button onClick={handleFinishWorkout} className="w-full">
             {currentTexts.finished}
           </Button>
-        </View>
-      </SafeAreaView>
+        </div>
+      </div>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>{currentTexts.title}</Text>
-        <Text style={styles.subtitle}>{currentTexts.missionBrief}</Text>
-        <Text style={styles.message}>{currentTexts.message}</Text>
+    <div className="p-6 h-full text-[var(--color-text-dark)]" dir={language === 'hebrew' ? 'rtl' : 'ltr'}>
+      <div className="max-w-md mx-auto text-center">
+        <h1 className="text-2xl font-bold mb-4">{currentTexts.title}</h1>
+        <h2 className="text-lg text-gray-600 mb-4">{currentTexts.missionBrief}</h2>
+        <p className="text-gray-700 mb-8 leading-relaxed">{currentTexts.message}</p>
 
-        <Button onPress={handleStartWorkout} style={styles.startButton}>
-          {currentTexts.startMission}
-        </Button>
+        <div className="space-y-4">
+          <Button onClick={handleStartWorkout} className="w-full bg-[var(--color-accent-primary)] text-[var(--color-text-light)]">
+            {currentTexts.startMission}
+          </Button>
 
-        <Button variant="outline" onPress={goHome} style={styles.homeButton}>
-          {currentTexts.backHome}
-        </Button>
-      </View>
-    </SafeAreaView>
+          <Button variant="outline" onClick={goHome} className="w-full">
+            {currentTexts.backHome}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#2D5530',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  message: {
-    fontSize: 16,
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 40,
-    lineHeight: 24,
-  },
-  loadingText: {
-    fontSize: 18,
-    color: '#666',
-    textAlign: 'center',
-  },
-  exerciseList: {
-    width: '100%',
-    marginBottom: 30,
-  },
-  exerciseCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 12,
-    marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  exerciseTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2D5530',
-    textAlign: 'right',
-    marginBottom: 8,
-  },
-  exerciseDetails: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'right',
-    marginBottom: 8,
-  },
-  exerciseInstructions: {
-    fontSize: 14,
-    color: '#333',
-    textAlign: 'right',
-    lineHeight: 20,
-  },
-  feedbackSection: {
-    width: '100%',
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2D5530',
-    textAlign: 'right',
-    marginBottom: 12,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-  },
-  startButton: {
-    marginBottom: 20,
-    minWidth: 200,
-  },
-  finishButton: {
-    marginTop: 20,
-    minWidth: 200,
-  },
-  homeButton: {
-    minWidth: 200,
-  },
-});

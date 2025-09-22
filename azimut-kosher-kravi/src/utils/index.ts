@@ -1,15 +1,32 @@
+// Route mapping from page names to URLs
+const pageRoutes: Record<string, string> = {
+  'Home': '/',
+  'WorkoutSetup': '/create-workout',
+  'CreateWorkout': '/create-workout',
+  'SelectWorkout': '/select-workout',
+  'WorkoutHistory': '/workout-history',
+  'Settings': '/settings',
+  'QuickWorkout': '/quick-workout',
+  'Heritage': '/heritage',
+  'MilitaryChat': '/military-chat',
+  'AboutUs': '/about-us',
+  'Onboarding': '/onboarding'
+};
+
 export function createPageUrl(page: string, params?: Record<string, any>): string {
-  if (!params) return `/${page}`;
-  
+  const baseUrl = pageRoutes[page] || `/${page.toLowerCase()}`;
+
+  if (!params) return baseUrl;
+
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
       searchParams.append(key, String(value));
     }
   });
-  
+
   const queryString = searchParams.toString();
-  return queryString ? `/${page}?${queryString}` : `/${page}`;
+  return queryString ? `${baseUrl}?${queryString}` : baseUrl;
 }
 
 export function formatTime(milliseconds: number): string {

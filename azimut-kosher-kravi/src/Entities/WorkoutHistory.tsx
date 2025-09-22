@@ -11,6 +11,25 @@ export interface WorkoutHistory {
   rating?: number; // 1-5 stars
 }
 
+import { DataService } from '../services/DataService';
+
+export class WorkoutHistory {
+  static async filter(criteria: any, sortBy?: string, limit?: number): Promise<WorkoutHistory[]> {
+    if (criteria.created_by) {
+      return DataService.getWorkoutHistory(criteria.created_by);
+    }
+    return [];
+  }
+
+  static async create(data: Omit<WorkoutHistory, 'id'>): Promise<WorkoutHistory> {
+    return DataService.addWorkoutHistory(data);
+  }
+
+  static async delete(id: string): Promise<void> {
+    return DataService.deleteWorkoutHistory(id);
+  }
+}
+
 export class WorkoutHistoryService {
   private static readonly MAX_HISTORY_PER_USER = 25;
 

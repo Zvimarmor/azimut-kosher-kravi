@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { User, Globe, History, Settings, Info, Menu } from "lucide-react";
 import {
@@ -22,7 +22,7 @@ const allTexts = {
     proUser: "משתמש פרו",
   },
   english: {
-    appName: "AI Kosher Kravi", 
+    appName: "AI Kosher Kravi",
     aboutUs: "About Us",
     language: "עברית",
     workoutHistory: "Workout History",
@@ -33,9 +33,8 @@ const allTexts = {
   }
 };
 
-export default function Layout({ children }) {
-  const location = useLocation();
-  const [language, setLanguage] = useState('hebrew');
+export default function Layout({ children }: { children: React.ReactNode }) {
+  const [language, setLanguage] = useState<'hebrew' | 'english'>('hebrew');
 
   const currentTexts = allTexts[language];
 
@@ -94,7 +93,7 @@ export default function Layout({ children }) {
                 className="btn-press"
               >
                 <img 
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/5fcf26724_image.png" 
+                  src="/Users/zvimarmor/MyProjects/AI-kosher-kravi/logo.png" 
                   alt="Tactical Fit Logo" 
                   className="w-10 h-10 rounded-lg"
                 />

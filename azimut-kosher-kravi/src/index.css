@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg-primary: #000000;
+  --color-bg-neutral: #F5F5DC;
+  --color-accent-primary: #4B5320;
+  --color-accent-secondary: #6B8E23;
+  --color-highlight: #A6C36F;
+  --color-text-light: #F8F8F8;
+  --color-text-dark: #4B5320;
+}
+
+* {
+  font-family: 'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.card-shadow {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.btn-press {
+  transition: transform 0.1s ease;
+}
+
+.btn-press:active {
+  transform: scale(0.95);
+}
+
+/* Mobile viewport fix */
+html, body, #root {
+  height: 100vh;
+  height: 100dvh;
+  overflow-x: hidden;
+}

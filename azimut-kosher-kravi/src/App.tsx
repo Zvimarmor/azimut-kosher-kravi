@@ -1,23 +1,27 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
-import { LanguageContext } from './Components/LanguageContext';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Layout from './Layout';
+import Home from './Pages/Home';
+import CreateWorkout from './Pages/CreateWorkout';
+import SelectWorkout from './Pages/SelectWorkout';
+import WorkoutHistory from './Pages/WorkoutHistory';
+import Settings from './Pages/Settings';
 import QuickWorkout from './Pages/QuickWorkout';
 
 export default function App() {
-  const [language, setLanguage] = React.useState('hebrew');
-
   return (
-    <LanguageContext.Provider value={{ language, setLanguage }}>
-      <SafeAreaView style={styles.container}>
-        <QuickWorkout />
-      </SafeAreaView>
-    </LanguageContext.Provider>
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/create-workout" element={<CreateWorkout />} />
+          <Route path="/select-workout" element={<SelectWorkout />} />
+          <Route path="/workout-history" element={<WorkoutHistory />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/quick-workout" element={<QuickWorkout />} />
+        </Routes>
+      </Layout>
+    </Router>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-});
