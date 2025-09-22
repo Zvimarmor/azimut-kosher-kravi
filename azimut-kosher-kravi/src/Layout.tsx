@@ -88,17 +88,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <header className="bg-[var(--color-accent-primary)] relative z-10 flex-shrink-0">
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
-              <Link 
-                to={createPageUrl("Home")} 
-                className="btn-press"
-              >
-                <img 
-                  src="/Users/zvimarmor/MyProjects/AI-kosher-kravi/logo.png" 
-                  alt="Tactical Fit Logo" 
-                  className="w-10 h-10 rounded-lg"
-                />
-              </Link>
-
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="w-10 h-10 rounded bg-[var(--color-bg-neutral)] flex items-center justify-center btn-press card-shadow">
@@ -154,6 +143,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              <Link
+                to={createPageUrl("Home")}
+                className="btn-press"
+              >
+                <img
+                  src="/logo.png"
+                  alt="AI Kosher Kravi Logo"
+                  className="w-14 h-14 rounded-lg"
+                />
+              </Link>
             </div>
           </div>
         </header>
