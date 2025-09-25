@@ -23,7 +23,7 @@ export interface User {
   medical_restrictions?: string[];
 }
 
-import { DataService } from '../services/DataService';
+import { DataService } from '@/lib/services/DataService';
 
 export class User {
   static async me(): Promise<User> {

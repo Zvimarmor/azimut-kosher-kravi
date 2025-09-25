@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl } from "@/lib/utils";
 import { User, Globe, History, Settings, Info, Menu } from "lucide-react";
+import { useAuth } from "@/features/auth/AuthContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LanguageContext } from "@/components/LanguageContext";
+import { LanguageContext } from "@/components/shared/LanguageContext";
 
 const allTexts = {
   hebrew: {
@@ -35,6 +36,7 @@ const allTexts = {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<'hebrew' | 'english'>('hebrew');
+  const { currentUser } = useAuth();
 
   const currentTexts = allTexts[language];
 
@@ -85,7 +87,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           `}
         </style>
         
-        <header className="bg-[var(--color-accent-primary)] relative z-10 flex-shrink-0">
+        <header className="bg-[var(--color-accent-primary)] relative z-50 flex-shrink-0">
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <DropdownMenu>
@@ -100,12 +102,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 >
                   <div className="px-4 py-3 border-b border-gray-200">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-[var(--color-accent-primary)] flex items-center justify-center">
-                        <User className="w-6 h-6 text-[var(--color-text-light)]" />
-                      </div>
+                      {currentUser?.photoURL ? (
+                        <img
+                          src={currentUser.photoURL}
+                          alt="Profile"
+                          className="w-12 h-12 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-[var(--color-accent-primary)] flex items-center justify-center">
+                          <User className="w-6 h-6 text-[var(--color-text-light)]" />
+                        </div>
+                      )}
                       <div>
-                        <p className="font-semibold text-[var(--color-text-dark)]">משתמש</p>
-                        <p className="text-sm text-gray-500">{currentTexts.freeUser}</p>
+                        <p className="font-semibold text-[var(--color-text-dark)]">
+                          {currentUser?.displayName || (language === 'hebrew' ? 'משתמש אורח' : 'Guest User')}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {currentUser ? currentTexts.proUser : currentTexts.freeUser}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -158,7 +172,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="relative z-10 flex-1 overflow-hidden">
+        <main className="relative z-0 flex-1 overflow-hidden">
           {children}
         </main>
       </div>

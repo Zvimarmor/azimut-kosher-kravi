@@ -1,4 +1,36 @@
-import { User } from '@/entities/User';
+import { User } from '@/Entities/User';
+
+interface Exercise {
+  name: string;
+  primary_attribute: string;
+  base_value: number;
+  max_value: number;
+  scaling_type: 'reps' | 'time' | 'distance' | 'weight';
+  sets_base?: number;
+  sets_max?: number;
+  rest_seconds?: number;
+}
+
+interface WorkoutTemplate {
+  target_attributes: string[];
+  required_level: number;
+  exercises: Exercise[];
+}
+
+interface UserLevels {
+  [key: string]: number;
+}
+
+interface PersonalizedExercise {
+  name: string;
+  sets: number;
+  reps: number | null;
+  time: number | null;
+  distance: number | null;
+  weight: number | null;
+  rest: string;
+  instructions: string;
+}
 
 /**
  * Personalizes a workout template based on user fitness levels
@@ -6,7 +38,7 @@ import { User } from '@/entities/User';
  * @param {Object} userLevels - User fitness levels (0-10 for each attribute)
  * @returns {Object} Personalized workout with specific sets, reps, times
  */
-export function personalizeWorkout(workoutTemplate, userLevels) {
+export function personalizeWorkout(workoutTemplate: WorkoutTemplate, userLevels: UserLevels) {
     // Calculate user's overall level for this workout
     const relevantLevels = workoutTemplate.target_attributes.map(attr => userLevels[attr] || 0);
     const avgUserLevel = relevantLevels.reduce((sum, level) => sum + level, 0) / relevantLevels.length;
@@ -68,7 +100,7 @@ export function personalizeWorkout(workoutTemplate, userLevels) {
 /**
  * Scales a value based on user level using different progression curves
  */
-function scaleValue(baseValue, maxValue, userLevel, scalingType) {
+function scaleValue(baseValue: number, maxValue: number, userLevel: number, scalingType: string) {
     // Different scaling curves for different types
     let progressionFactor;
     
@@ -100,7 +132,7 @@ function scaleValue(baseValue, maxValue, userLevel, scalingType) {
 /**
  * Formats rest time in a readable format
  */
-function formatRestTime(seconds) {
+function formatRestTime(seconds: number) {
     if (seconds >= 60) {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
@@ -112,7 +144,7 @@ function formatRestTime(seconds) {
 /**
  * Generates specific instructions based on the exercise parameters
  */
-function generateInstructions(exercise, scaledValue, scalingType) {
+function generateInstructions(exercise: Exercise, scaledValue: number, scalingType: string) {
     switch (scalingType) {
         case 'reps':
             return `בצע ${scaledValue} חזרות בכל סט`;
@@ -130,7 +162,7 @@ function generateInstructions(exercise, scaledValue, scalingType) {
 /**
  * Estimates total workout duration based on exercises
  */
-function calculateWorkoutDuration(exercises) {
+function calculateWorkoutDuration(exercises: PersonalizedExercise[]) {
     let totalTime = 0;
     
     exercises.forEach(exercise => {
@@ -166,7 +198,7 @@ function calculateWorkoutDuration(exercises) {
 /**
  * Gets a personalized workout for a user
  */
-export async function getPersonalizedWorkout(workoutId) {
+export async function getPersonalizedWorkout(workoutId: string) {
     try {
         const user = await User.me();
         const userLevels = {

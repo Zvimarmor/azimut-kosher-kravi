@@ -1,16 +1,44 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Settings as SettingsIcon, Globe, Bell, Shield, Info } from "lucide-react";
+import { ArrowLeft, Settings as SettingsIcon, Globe, Bell, Shield, Info, User, LogOut, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
-import { LanguageContext } from "@/components/LanguageContext";
+import { createPageUrl } from "@/lib/utils";
+import { LanguageContext } from "@/components/shared/LanguageContext";
+import { useAuth } from "@/features/auth/AuthContext";
 
 export default function SettingsPage() {
-  const { language, setLanguage } = useContext(LanguageContext);
+  const context = useContext(LanguageContext);
+  const { language, setLanguage } = context || { language: 'hebrew', setLanguage: () => {} };
+  const { currentUser, login, logout } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
 
   const toggleLanguage = () => {
-    setLanguage(prev => prev === 'hebrew' ? 'english' : 'hebrew');
+    setLanguage((prev: 'hebrew' | 'english') => prev === 'hebrew' ? 'english' : 'hebrew');
+  };
+
+  const handleLogin = async (provider: 'google' | 'facebook') => {
+    try {
+      setIsLoading(true);
+      await login(provider);
+    } catch (error) {
+      console.error('Login failed:', error);
+      alert('Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      setIsLoading(true);
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+      alert('Logout failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -31,6 +59,78 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-6">
+          <Card className="bg-white card-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <User className="w-5 h-5 text-idf-olive" />
+                {language === 'hebrew' ? 'חשבון משתמש' : 'User Account'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {currentUser ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    {currentUser.photoURL && (
+                      <img
+                        src={currentUser.photoURL}
+                        alt="Profile"
+                        className="w-12 h-12 rounded-full"
+                      />
+                    )}
+                    <div>
+                      <p className="font-semibold">{currentUser.displayName}</p>
+                      <p className="text-sm text-gray-600">{currentUser.email}</p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={handleLogout}
+                    disabled={isLoading}
+                    className="bg-red-500 hover:bg-red-600 text-white w-full btn-press"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    {isLoading ?
+                      (language === 'hebrew' ? 'מתנתק...' : 'Signing out...') :
+                      (language === 'hebrew' ? 'התנתק' : 'Sign Out')
+                    }
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600 text-center">
+                    {language === 'hebrew' ?
+                      'התחבר כדי לשמור את ההתקדמות שלך ולסנכרן בין מכשירים' :
+                      'Sign in to save your progress and sync across devices'
+                    }
+                  </p>
+                  <div className="grid grid-cols-1 gap-3">
+                    <Button
+                      onClick={() => handleLogin('google')}
+                      disabled={isLoading}
+                      className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 w-full btn-press"
+                    >
+                      <LogIn className="w-4 h-4 mr-2" />
+                      {isLoading ?
+                        (language === 'hebrew' ? 'מתחבר...' : 'Signing in...') :
+                        (language === 'hebrew' ? 'התחבר עם Google' : 'Sign in with Google')
+                      }
+                    </Button>
+                    <Button
+                      onClick={() => handleLogin('facebook')}
+                      disabled={isLoading}
+                      className="bg-[#1877F2] hover:bg-[#166FE5] text-white w-full btn-press"
+                    >
+                      <LogIn className="w-4 h-4 mr-2" />
+                      {isLoading ?
+                        (language === 'hebrew' ? 'מתחבר...' : 'Signing in...') :
+                        (language === 'hebrew' ? 'התחבר עם Facebook' : 'Sign in with Facebook')
+                      }
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card className="bg-white card-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">

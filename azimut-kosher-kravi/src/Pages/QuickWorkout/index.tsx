@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useContext } from "react";
-import { StrengthExplosive } from "../../Entities/StrengthExplosive";
-import { WorkoutHistory } from "../../Entities/WorkoutHistory";
-import { User } from "../../Entities/User";
-import { Button } from "../../Components/ui/button";
-import { LanguageContext } from "../../Components/LanguageContext";
+import { StrengthExplosive } from "@/Entities/StrengthExplosive";
+import { WorkoutHistory } from "@/Entities/WorkoutHistory";
+import { User } from "@/Entities/User";
+import { Button } from "@/components/ui/button";
+import { LanguageContext } from "@/components/shared/LanguageContext";
 import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "../../utils";
+import { createPageUrl } from "@/lib/utils";
 
 const pageTexts = {
   hebrew: {

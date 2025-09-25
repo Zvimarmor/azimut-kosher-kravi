@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
-import { LanguageContext } from "@/components/LanguageContext";
+import { createPageUrl } from "@/lib/utils";
+import { LanguageContext } from "@/components/shared/LanguageContext";
 import { ChevronRight, Shuffle, Swords, Heart, Shield, BookOpen, ArrowLeft } from "lucide-react";
 
 const heritageButtons = [
@@ -40,7 +40,7 @@ export default function Heritage() {
           return (
             <Link 
               key={button.category} 
-              to={createPageUrl(`HeritageEntry?category=${button.category}`)} 
+              to={createPageUrl(`heritage-entry?category=${button.category}`)} 
               className="block"
             >
               <div 

@@ -2,8 +2,8 @@ import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Construction } from "lucide-react";
-import { createPageUrl } from "@/utils";
-import { LanguageContext } from "@/components/LanguageContext";
+import { createPageUrl } from "@/lib/utils";
+import { LanguageContext } from "@/components/shared/LanguageContext";
 
 const pageTexts = {
   hebrew: {

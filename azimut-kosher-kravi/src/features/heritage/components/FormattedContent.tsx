@@ -1,6 +1,10 @@
 import React from 'react';
 
-const FormattedContent = ({ content }) => {
+interface FormattedContentProps {
+  content: string | null;
+}
+
+const FormattedContent: React.FC<FormattedContentProps> = ({ content }) => {
     if (!content) return null;
 
     const isStructured = content.includes('\\n') && content.length > 300;

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useContext } from "react";
-import { HeritageStory } from "@/entities/HeritageStory";
+import { HeritageStory } from "@/Entities/HeritageStory";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, BookOpen, RotateCcw } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { createPageUrl } from "@/utils";
-import { LanguageContext } from "@/components/LanguageContext";
-import FormattedContent from '../components/heritage/FormattedContent';
+import { createPageUrl } from "@/lib/utils";
+import { LanguageContext } from "@/components/shared/LanguageContext";
+import FormattedContent from "@/features/heritage/components/FormattedContent";
 
 export default function HeritageEntry() {
   const [story, setStory] = useState(null);
@@ -58,7 +58,7 @@ export default function HeritageEntry() {
     <div className="p-6 text-dark-olive" dir="rtl">
       <div className="max-w-2xl mx-auto flex flex-col" style={{ height: 'calc(100vh - 73px - 3rem)' }}>
         <div className="flex items-center justify-between mb-4">
-          <Link to={createPageUrl("Heritage")}>
+          <Link to={createPageUrl("heritage")}>
             <button className="p-2 rounded-lg bg-white border border-gray-200 card-shadow btn-press">
               <ArrowLeft className="w-6 h-6 text-dark-olive" />
             </button>

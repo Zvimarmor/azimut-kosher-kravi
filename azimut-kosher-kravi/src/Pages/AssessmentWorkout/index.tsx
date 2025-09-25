@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { User } from '@/entities/User';
+import { User } from '@/Entities/User';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

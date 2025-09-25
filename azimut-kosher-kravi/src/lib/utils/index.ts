@@ -1,7 +1,7 @@
 // Route mapping from page names to URLs
 const pageRoutes: Record<string, string> = {
   'Home': '/',
-  'WorkoutSetup': '/create-workout',
+  'WorkoutSetup': '/workout-setup',
   'CreateWorkout': '/create-workout',
   'SelectWorkout': '/select-workout',
   'WorkoutHistory': '/workout-history',

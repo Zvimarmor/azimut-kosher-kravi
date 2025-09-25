@@ -1,9 +1,9 @@
 import React, { useContext } from "react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { createPageUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Shield, Heart } from "lucide-react";
-import { LanguageContext } from "@/components/LanguageContext";
+import { LanguageContext } from "@/components/shared/LanguageContext";
 
 const pageTexts = {
   hebrew: {

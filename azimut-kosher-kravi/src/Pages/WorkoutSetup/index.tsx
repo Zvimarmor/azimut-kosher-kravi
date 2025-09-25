@@ -1,12 +1,12 @@
 
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { LanguageContext } from '@/components/LanguageContext';
+import { createPageUrl } from '@/lib/utils';
+import { LanguageContext } from '@/components/shared/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Zap, Weight, Trees, Thermometer, Clock, Droplets, Check, Square, CheckSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { User } from '@/entities/User';
+import { User } from '@/Entities/User';
 
 
 const equipmentOptions = [
@@ -38,7 +38,7 @@ const rainOptions = [
     { id: 'no_rain', label: 'לא גשם' },
 ];
 
-const StyledCheckbox = ({ label, isChecked, onChange }) => (
+const StyledCheckbox = ({ label, isChecked, onChange }: { label: string; isChecked: boolean; onChange: () => void }) => (
   <button
     onClick={onChange}
     className={`flex items-center justify-center gap-2 w-full p-3 rounded-lg border transition-all btn-press card-shadow
@@ -51,7 +51,7 @@ const StyledCheckbox = ({ label, isChecked, onChange }) => (
   </button>
 );
 
-const StyledRadio = ({ label, isSelected, onClick }) => (
+const StyledRadio = ({ label, isSelected, onClick }: { label: string; isSelected: boolean; onClick: () => void }) => (
     <button
       onClick={onClick}
       className={`flex items-center justify-center gap-2 w-full p-3 rounded-lg border transition-all btn-press card-shadow
@@ -64,7 +64,7 @@ const StyledRadio = ({ label, isSelected, onClick }) => (
     </button>
 );
 
-const Section = ({ title, icon: Icon, children, gridCols = 2 }) => (
+const Section = ({ title, icon: Icon, children, gridCols = 2 }: { title: string; icon: React.ComponentType<any>; children: React.ReactNode; gridCols?: number }) => (
     <div className="bg-white p-4 rounded-xl card-shadow border border-gray-200">
         <h3 className="text-lg font-bold flex items-center gap-2 mb-4 text-idf-olive">
             <Icon className="w-6 h-6" />
