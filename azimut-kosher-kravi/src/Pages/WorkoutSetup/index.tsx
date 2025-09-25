@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/lib/utils';
 import { LanguageContext } from '@/components/shared/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Zap, Weight, Trees, Thermometer, Clock, Droplets, Check, Square, CheckSquare } from 'lucide-react';
+import { ArrowLeft, Zap, Dumbbell, Trees, Thermometer, Clock, Droplets, Check, Square, CheckSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { User } from '@/Entities/User';
 
@@ -64,17 +64,21 @@ const StyledRadio = ({ label, isSelected, onClick }: { label: string; isSelected
     </button>
 );
 
-const Section = ({ title, icon: Icon, children, gridCols = 2 }: { title: string; icon: React.ComponentType<any>; children: React.ReactNode; gridCols?: number }) => (
-    <div className="bg-white p-4 rounded-xl card-shadow border border-gray-200">
-        <h3 className="text-lg font-bold flex items-center gap-2 mb-4 text-idf-olive">
-            <Icon className="w-6 h-6" />
-            {title}
-        </h3>
-        <div className={`grid grid-cols-${gridCols} gap-3`}>
-            {children}
+const Section = ({ title, icon: Icon, children, gridCols = 2 }: { title: string; icon: React.ComponentType<any>; children: React.ReactNode; gridCols?: number }) => {
+    const gridClass = gridCols === 2 ? 'grid-cols-2' : gridCols === 3 ? 'grid-cols-3' : 'grid-cols-1';
+
+    return (
+        <div className="bg-white p-4 rounded-xl card-shadow border border-gray-200">
+            <h3 className="text-lg font-bold flex items-center gap-2 mb-4 text-idf-olive">
+                <Icon className="w-6 h-6" />
+                {title}
+            </h3>
+            <div className={`grid ${gridClass} gap-3`}>
+                {children}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 
 export default function WorkoutSetup() {
@@ -91,11 +95,12 @@ export default function WorkoutSetup() {
 
   useEffect(() => {
     const loadSettings = async () => {
-        const user = await User.me();
-        if (user && user.remember_workout_settings && user.workout_settings) {
-            setSelections(user.workout_settings);
-            setRememberSettings(true);
-        }
+        // TODO: Load workout settings when User model supports it
+        // const user = await User.me();
+        // if (user && user.remember_workout_settings && user.workout_settings) {
+        //     setSelections(user.workout_settings);
+        //     setRememberSettings(true);
+        // }
     };
     loadSettings();
   }, []);
@@ -117,9 +122,11 @@ export default function WorkoutSetup() {
 
   const handleGenerateWorkout = async () => {
     if (rememberSettings) {
-        await User.updateMyUserData({ workout_settings: selections, remember_workout_settings: true });
+        // TODO: Save workout settings when User model supports it
+        // await User.update({ workout_settings: selections, remember_workout_settings: true });
     } else {
-        await User.updateMyUserData({ workout_settings: null, remember_workout_settings: false });
+        // TODO: Clear workout settings when User model supports it
+        // await User.update({ workout_settings: null, remember_workout_settings: false });
     }
 
     const params = new URLSearchParams();
@@ -154,19 +161,19 @@ export default function WorkoutSetup() {
           </div>
         </div>
 
-        <div className="space-y-4">
-            <Section title="ציוד" icon={Weight}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Section title="ציוד" icon={Dumbbell} gridCols={2}>
                 {equipmentOptions.map(opt => (
                     <StyledCheckbox key={opt.id} label={opt.label} isChecked={selections.equipment.includes(opt.id)} onChange={() => handleToggleMulti('equipment', opt.id)} />
                 ))}
             </Section>
 
-            <Section title="סביבה" icon={Trees}>
+            <Section title="סביבה" icon={Trees} gridCols={2}>
                 {environmentOptions.map(opt => (
                     <StyledCheckbox key={opt.id} label={opt.label} isChecked={selections.environment.includes(opt.id)} onChange={() => handleToggleMulti('environment', opt.id)} />
                 ))}
             </Section>
-            
+
             <Section title="טמפרטורה" icon={Thermometer} gridCols={3}>
                  {temperatureOptions.map(opt => (
                     <StyledRadio key={opt.id} label={opt.label} isSelected={selections.temperature === opt.id} onClick={() => handleSelectSingle('temperature', opt.id)} />
@@ -178,19 +185,21 @@ export default function WorkoutSetup() {
                     <StyledRadio key={opt.id} label={opt.label} isSelected={selections.timeOfDay === opt.id} onClick={() => handleSelectSingle('timeOfDay', opt.id)} />
                 ))}
             </Section>
+        </div>
 
+        <div className="mt-4">
             <Section title="גשם" icon={Droplets} gridCols={2}>
                 {rainOptions.map(opt => (
                     <StyledRadio key={opt.id} label={opt.label} isSelected={selections.rain === opt.id} onClick={() => handleSelectSingle('rain', opt.id)} />
                 ))}
             </Section>
+        </div>
 
-            <div className="bg-white/50 p-3 rounded-xl mt-4">
-                 <button onClick={() => setRememberSettings(prev => !prev)} className="flex items-center gap-3 w-full text-right">
-                    {rememberSettings ? <CheckSquare className="w-6 h-6 text-idf-olive" /> : <Square className="w-6 h-6 text-idf-olive" />}
-                    <span className="font-semibold text-idf-olive">זכור סביבה זו</span>
-                </button>
-            </div>
+        <div className="bg-white/50 p-3 rounded-xl mt-4">
+             <button onClick={() => setRememberSettings(prev => !prev)} className="flex items-center gap-3 w-full text-right">
+                {rememberSettings ? <CheckSquare className="w-6 h-6 text-idf-olive" /> : <Square className="w-6 h-6 text-idf-olive" />}
+                <span className="font-semibold text-idf-olive">זכור סביבה זו</span>
+            </button>
         </div>
         
         <div className="mt-6">
