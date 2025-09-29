@@ -5,16 +5,18 @@ import { LanguageContext } from "../../components/shared/LanguageContext";
 import { ChevronRight, BookOpen, MessageCircle, Activity, Dumbbell } from "lucide-react";
 import { User } from '../../Entities/User';
 
-const mainButtons = [
-  { title: "צור אימון", subtitle: "אימון ארוך/מותאם אישית", href: createPageUrl("WorkoutSetup"), icon: Activity, isPrimary: true },
-  { title: "בחר אימון", subtitle: "בחר אימון קיים", href: createPageUrl("SelectWorkout"), icon: Dumbbell, isPrimary: false },
-  { title: "תרבות ומורשת", subtitle: null, href: createPageUrl("Heritage"), icon: BookOpen, isPrimary: false },
-  { title: "צ׳אט ייעוץ", subtitle: "צ׳אט מבוסס AI להתייעצות", href: createPageUrl("MilitaryChat"), icon: MessageCircle, isPrimary: false }
-];
-
 export default function Home() {
-  const { language } = useContext(LanguageContext);
+  const context = useContext(LanguageContext);
+  const language = context?.language || 'hebrew';
+  const t = context?.allTexts[language];
   const navigate = useNavigate();
+
+  const mainButtons = [
+    { title: t?.createWorkout || "צור אימון", subtitle: t?.createWorkoutDesc || "אימון ארוך/מותאם אישית", href: createPageUrl("WorkoutSetup"), icon: Activity, isPrimary: true },
+    { title: t?.selectWorkout || "בחר אימון", subtitle: t?.selectWorkoutDesc || "בחר אימון קיים", href: createPageUrl("SelectWorkout"), icon: Dumbbell, isPrimary: false },
+    { title: t?.heritage || "תרבות ומורשת", subtitle: null, href: createPageUrl("Heritage"), icon: BookOpen, isPrimary: false },
+    { title: t?.militaryChat || "צ׳אט ייעוץ", subtitle: t?.militaryChatDesc || "צ׳אט מבוסס AI להתייעצות", href: createPageUrl("MilitaryChat"), icon: MessageCircle, isPrimary: false }
+  ];
 
   useEffect(() => {
     const checkOnboarding = async () => {
@@ -83,7 +85,7 @@ export default function Home() {
 
       <div className="text-center py-4 flex-shrink-0">
         <p className="text-gray-600 text-xs leading-relaxed whitespace-pre-line">
-          {`לזכר אופק בכר ושילה הר-אבן ז״ל\nכל הזכויות שמורות ©`}
+          {t?.memorial || `לזכר אופק בכר ושילה הר-אבן ז״ל\nכל הזכויות שמורות ©`}
         </p>
       </div>
     </div>

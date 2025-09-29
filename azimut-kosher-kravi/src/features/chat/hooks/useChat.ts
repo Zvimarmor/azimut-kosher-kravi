@@ -2,27 +2,35 @@ import { useState, useEffect } from 'react';
 import { ChatSession, ChatMessage } from '../types';
 import { generateUUID, simulateAIResponse } from '../utils';
 import { INSTRUCTIONS_MESSAGE, DAILY_QUOTA } from '../constants';
+import { useAuth } from '../../auth/AuthContext';
 
 export const useChat = () => {
+  const { currentUser } = useAuth();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [dailyQuota, setDailyQuota] = useState(DAILY_QUOTA);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Generate user-specific keys for localStorage
+  const getUserKey = (suffix: string) => {
+    const userId = currentUser?.uid || 'anonymous';
+    return `militaryChat_${userId}_${suffix}`;
+  };
+
   // Load sessions and quota from localStorage
   useEffect(() => {
     try {
-      const savedSessions = localStorage.getItem('militaryChat_sessions');
-      const savedQuota = localStorage.getItem('militaryChat_quota');
-      const lastQuotaReset = localStorage.getItem('militaryChat_quotaReset');
+      const savedSessions = localStorage.getItem(getUserKey('sessions'));
+      const savedQuota = localStorage.getItem(getUserKey('quota'));
+      const lastQuotaReset = localStorage.getItem(getUserKey('quotaReset'));
 
       const today = new Date().toDateString();
 
       if (lastQuotaReset !== today) {
         // Reset quota for new day
         setDailyQuota(DAILY_QUOTA);
-        localStorage.setItem('militaryChat_quota', DAILY_QUOTA.toString());
-        localStorage.setItem('militaryChat_quotaReset', today);
+        localStorage.setItem(getUserKey('quota'), DAILY_QUOTA.toString());
+        localStorage.setItem(getUserKey('quotaReset'), today);
       } else if (savedQuota) {
         setDailyQuota(parseInt(savedQuota));
       }
@@ -46,18 +54,18 @@ export const useChat = () => {
       console.error('Error loading from localStorage:', e);
       createNewSession();
     }
-  }, []);
+  }, [currentUser]);
 
   // Save sessions to localStorage
   useEffect(() => {
     try {
-      if (sessions.length > 0) {
-        localStorage.setItem('militaryChat_sessions', JSON.stringify(sessions));
+      if (sessions.length > 0 && currentUser) {
+        localStorage.setItem(getUserKey('sessions'), JSON.stringify(sessions));
       }
     } catch (e) {
       console.error('Error saving to localStorage:', e);
     }
-  }, [sessions]);
+  }, [sessions, currentUser]);
 
   const createNewSession = () => {
     const newSession: ChatSession = {
@@ -92,6 +100,11 @@ export const useChat = () => {
   };
 
   const sendMessage = async (inputMessage: string) => {
+    // Require user to be logged in
+    if (!currentUser) {
+      throw new Error('You must be logged in to send messages');
+    }
+
     if (!inputMessage.trim() || isLoading || dailyQuota <= 0) return;
 
     const currentSession = getCurrentSession();
@@ -155,7 +168,7 @@ export const useChat = () => {
       // Update quota
       const newQuota = dailyQuota - 1;
       setDailyQuota(newQuota);
-      localStorage.setItem('militaryChat_quota', newQuota.toString());
+      localStorage.setItem(getUserKey('quota'), newQuota.toString());
 
     } catch (error) {
       const errorMessage: ChatMessage = {
@@ -213,5 +226,6 @@ export const useChat = () => {
     sendMessage,
     deleteSession,
     updateSession,
+    isLoggedIn: !!currentUser,
   };
 };

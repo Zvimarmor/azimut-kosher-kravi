@@ -23,7 +23,7 @@ const allTexts = {
     proUser: "משתמש פרו",
   },
   english: {
-    appName: "AI Kosher Kravi",
+    appName: "Azimut Kosher Kravi",
     aboutUs: "About Us",
     language: "עברית",
     workoutHistory: "Workout History",
@@ -164,7 +164,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               >
                 <img
                   src="/logo.png"
-                  alt="AI Kosher Kravi Logo"
+                  alt="Azimut Kosher Kravi Logo"
                   className="w-14 h-14 rounded-lg"
                 />
               </Link>

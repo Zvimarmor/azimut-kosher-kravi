@@ -5,11 +5,14 @@ import { Send, Plus, AlertTriangle, History, X, MoreVertical, Edit2, Trash2 } fr
 import { useChat } from '../../features/chat/hooks/useChat';
 import { CHAT_TEXTS } from '../../features/chat/constants';
 import { renderMarkdown } from '../../features/chat/utils/markdownRenderer';
+import { useAuth } from '../../features/auth/AuthContext';
 
 export default function MilitaryChat() {
   const context = useContext(LanguageContext);
   const language = context?.language || 'hebrew';
   const t = CHAT_TEXTS[language];
+  const allTexts = context?.allTexts[language];
+  const { login } = useAuth();
 
   const {
     sessions,
@@ -22,6 +25,7 @@ export default function MilitaryChat() {
     sendMessage: handleSendMessage,
     deleteSession,
     updateSession,
+    isLoggedIn,
   } = useChat();
 
   const [inputMessage, setInputMessage] = useState('');
@@ -294,7 +298,7 @@ export default function MilitaryChat() {
               <div className="text-red-600 font-medium">{t.quotaFinished}</div>
               <div className="text-sm text-gray-600 mt-1">{t.comeBackTomorrow}</div>
             </div>
-          ) : (
+          ) : isLoggedIn ? (
             <div className="flex gap-3 items-end">
               <button
                 onClick={sendMessage}
@@ -313,6 +317,30 @@ export default function MilitaryChat() {
                 className="flex-1 border border-gray-300 rounded-2xl px-4 py-3 text-right resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:border-transparent min-h-[44px] max-h-[120px]"
                 style={{ height: '44px' }}
               />
+            </div>
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 text-center">
+              <AlertTriangle className="w-8 h-8 text-yellow-500 mx-auto mb-3" />
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                {allTexts?.loginRequired || 'נדרש חשבון משתמש'}
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {allTexts?.loginRequiredMessage || 'על מנת לשאול שאלות בצ\'אט הצבאי, יש להתחבר תחילה לחשבון המשתמש שלך.'}
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => login('google')}
+                  className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
+                >
+                  {allTexts?.loginWithGoogle || 'התחבר עם Google'}
+                </button>
+                <button
+                  onClick={() => login('facebook')}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                >
+                  {allTexts?.loginWithFacebook || 'התחבר עם Facebook'}
+                </button>
+              </div>
             </div>
           )}
         </div>
