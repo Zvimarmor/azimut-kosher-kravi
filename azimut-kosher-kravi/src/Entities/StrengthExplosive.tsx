@@ -1,5 +1,5 @@
 import { AttributeType } from './Warmup';
-import { DataService } from '@/lib/services/DataService';
+import { DataService } from '../lib/services/DataService';
 
 export interface StrengthExplosive {
   title: string;

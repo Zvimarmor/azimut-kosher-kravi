@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/lib/utils";
+import { createPageUrl } from "./lib/utils";
 import { User, Globe, History, Settings, Info, Menu } from "lucide-react";
-import { useAuth } from "@/features/auth/AuthContext";
+import { useAuth } from "./features/auth/AuthContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { LanguageContext } from "@/components/shared/LanguageContext";
+} from "./components/ui/dropdown-menu";
+import { LanguageContext } from "./components/shared/LanguageContext";
 
 const allTexts = {
   hebrew: {

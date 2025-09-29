@@ -1,4 +1,4 @@
-import { DataService } from '@/lib/services/DataService';
+import { DataService } from '../lib/services/DataService';
 
 export type AttributeType = 'push_strength' | 'pull_strength' | 'cardio_endurance' | 'running_volume' | 'rucking_volume' | 'weight_work';
 

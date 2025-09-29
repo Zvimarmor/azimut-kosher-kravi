@@ -1,9 +1,9 @@
 import React, { useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/lib/utils";
-import { LanguageContext } from "@/components/shared/LanguageContext";
+import { createPageUrl } from "../../lib/utils";
+import { LanguageContext } from "../../components/shared/LanguageContext";
 import { ChevronRight, BookOpen, MessageCircle, Activity, Dumbbell } from "lucide-react";
-import { User } from '@/Entities/User';
+import { User } from '../../Entities/User';
 
 const mainButtons = [
   { title: "צור אימון", subtitle: "אימון ארוך/מותאם אישית", href: createPageUrl("WorkoutSetup"), icon: Activity, isPrimary: true },

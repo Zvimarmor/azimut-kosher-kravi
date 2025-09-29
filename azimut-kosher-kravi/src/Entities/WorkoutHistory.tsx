@@ -11,7 +11,7 @@ export interface WorkoutHistory {
   rating?: number; // 1-5 stars
 }
 
-import { DataService } from '@/lib/services/DataService';
+import { DataService } from '../lib/services/DataService';
 
 export class WorkoutHistory {
   static async filter(criteria: any, sortBy?: string, limit?: number): Promise<WorkoutHistory[]> {

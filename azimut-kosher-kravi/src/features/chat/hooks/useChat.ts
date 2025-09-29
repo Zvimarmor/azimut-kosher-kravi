@@ -124,7 +124,15 @@ export const useChat = () => {
     setIsLoading(true);
 
     try {
-      const aiResponse = await simulateAIResponse(inputMessage);
+      // Get conversation history for context
+      const conversationHistory = currentSession.messages
+        .filter(msg => msg.type === 'user' || msg.type === 'ai')
+        .map(msg => ({
+          role: msg.type === 'user' ? 'user' as const : 'assistant' as const,
+          content: msg.content
+        }));
+
+      const aiResponse = await simulateAIResponse(inputMessage, conversationHistory);
 
       const aiMessage: ChatMessage = {
         id: generateUUID(),

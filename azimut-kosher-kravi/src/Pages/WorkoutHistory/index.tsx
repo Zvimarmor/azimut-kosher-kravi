@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useContext } from "react";
-import { WorkoutHistory } from "@/Entities/WorkoutHistory";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { WorkoutHistory } from "../../Entities/WorkoutHistory";
+import { Button } from "../../components/ui/button";
+import { Card, CardContent } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
 import { ArrowLeft, Calendar, Timer, TrendingUp, Award } from "lucide-react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/lib/utils";
+import { createPageUrl } from "../../lib/utils";
 import { format } from "date-fns";
-import { LanguageContext } from "@/components/shared/LanguageContext";
-import { User } from "@/Entities/User";
+import { LanguageContext } from "../../components/shared/LanguageContext";
+import { User } from "../../Entities/User";
 
 const handleWorkoutHistory = async (workoutData) => {
     try {

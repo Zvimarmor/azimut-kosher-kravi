@@ -1,11 +1,12 @@
-// Mock data service for workout entities
+// Data service for workout entities - reads from CSV files
 
-import type { Warmup, AttributeType } from '../Entities/Warmup';
-import type { StrengthExplosive } from '../Entities/StrengthExplosive';
-import type { RunningEndurance } from '../Entities/RunningEndurance';
-import type { Special } from '../Entities/Special';
-import type { User } from '../Entities/User';
-import type { WorkoutHistory } from '../Entities/WorkoutHistory';
+import type { Warmup, AttributeType } from '../../Entities/Warmup';
+import type { StrengthExplosive } from '../../Entities/StrengthExplosive';
+import type { RunningEndurance } from '../../Entities/RunningEndurance';
+import type { Special } from '../../Entities/Special';
+import type { User } from '../../Entities/User';
+import type { WorkoutHistory } from '../../Entities/WorkoutHistory';
+import { fetchCSV, parseJSONField, type CSVRow } from '../utils/csvParser';
 
 // Mock workout data
 const mockWarmups: Warmup[] = [
@@ -218,26 +219,113 @@ let currentUser: User = {
 // Mock workout history storage
 let workoutHistory: WorkoutHistory[] = [];
 
+// CSV to Entity transformation functions
+function transformCSVToWarmup(row: CSVRow): Warmup {
+  const exercises = parseJSONField(row.exercises) || [];
+  return {
+    title: row.title || '',
+    target_attributes: parseJSONField(row.target_attributes) || [],
+    duration: parseInt(row.duration) || 0,
+    instructions: row.instructions || '',
+    difficulty: (row.difficulty?.toLowerCase() as 'beginner' | 'intermediate' | 'advanced') || 'beginner',
+    category: 'Warmup',
+    exercises: exercises,
+    rounds: parseInt(row.rounds) || 1
+  };
+}
+
+function transformCSVToStrengthExplosive(row: CSVRow): StrengthExplosive {
+  const exercises = parseJSONField(row.exercises) || [];
+  return {
+    title: row.title || '',
+    target_attributes: parseJSONField(row.target_attributes) || [],
+    sets: parseInt(row.rounds) || 3,
+    reps: parseInt(row.reps) || 10,
+    rest_between_sets: parseInt(row.rest_between_sets) || 60,
+    instructions: row.instructions || '',
+    difficulty: (row.difficulty?.toLowerCase() as 'beginner' | 'intermediate' | 'advanced') || 'beginner',
+    category: 'Strength',
+    exercises: exercises,
+    rounds: parseInt(row.rounds) || 3
+  };
+}
+
+function transformCSVToRunningEndurance(row: CSVRow): RunningEndurance {
+  const exercises = parseJSONField(row.exercises) || [];
+  return {
+    title: row.title || '',
+    target_attributes: parseJSONField(row.target_attributes) || [],
+    distance: parseInt(row.distance) || 3000,
+    duration: parseInt(row.duration) || 20,
+    intensity: (row.intensity as 'low' | 'moderate' | 'high') || 'moderate',
+    instructions: row.instructions || '',
+    difficulty: (row.difficulty?.toLowerCase() as 'beginner' | 'intermediate' | 'advanced') || 'beginner',
+    warmup_required: row.warmup_required === 'true',
+    cooldown_required: row.cooldown_required === 'true',
+    category: 'Cardio',
+    exercises: exercises,
+    rounds: parseInt(row.rounds) || 1
+  };
+}
+
+function transformCSVToSpecial(row: CSVRow): Special {
+  const exercises = parseJSONField(row.exercises) || [];
+  return {
+    title: row.title || '',
+    target_attributes: parseJSONField(row.target_attributes) || [],
+    category: (row.category?.toLowerCase() as 'military_skills' | 'tactical' | 'endurance_challenge' | 'team_building' | 'assessment') || 'tactical',
+    duration: parseInt(row.duration) || 20,
+    instructions: row.instructions || '',
+    difficulty: (row.difficulty?.toLowerCase() as 'beginner' | 'intermediate' | 'advanced' | 'elite') || 'intermediate',
+    exercises: exercises,
+    rounds: parseInt(row.rounds) || 1
+  };
+}
+
 // Data service class
 export class DataService {
   // Warmup methods
   static async getWarmups(): Promise<Warmup[]> {
-    return Promise.resolve([...mockWarmups]);
+    try {
+      const csvData = await fetchCSV('Warmup.csv');
+      return csvData.map(transformCSVToWarmup).filter(warmup => warmup.title);
+    } catch (error) {
+      console.error('Error fetching warmups from CSV:', error);
+      return [...mockWarmups]; // Fallback to mock data
+    }
   }
 
   // Strength Explosive methods
   static async getStrengthExplosive(): Promise<StrengthExplosive[]> {
-    return Promise.resolve([...mockStrengthExplosive]);
+    try {
+      const csvData = await fetchCSV('StrengthExplosive.csv');
+      return csvData.map(transformCSVToStrengthExplosive).filter(workout => workout.title);
+    } catch (error) {
+      console.error('Error fetching strength workouts from CSV:', error);
+      return [...mockStrengthExplosive]; // Fallback to mock data
+    }
   }
 
   // Running Endurance methods
   static async getRunningEndurance(): Promise<RunningEndurance[]> {
-    return Promise.resolve([...mockRunningEndurance]);
+    try {
+      const csvData = await fetchCSV('RunningEndurance.csv');
+      return csvData.map(transformCSVToRunningEndurance).filter(workout => workout.title);
+    } catch (error) {
+      console.error('Error fetching running workouts from CSV:', error);
+      return [...mockRunningEndurance]; // Fallback to mock data
+    }
   }
 
   // Special methods
   static async getSpecial(): Promise<Special[]> {
-    return Promise.resolve([...mockSpecial]);
+    try {
+      const csvData = await fetchCSV('Special.csv');
+      return csvData.map(transformCSVToSpecial).filter(workout => workout.title);
+    } catch (error) {
+      console.error('Error fetching special workouts from CSV:', error);
+      return [...mockSpecial]; // Fallback to mock data
+    }
   }
 
   // User methods

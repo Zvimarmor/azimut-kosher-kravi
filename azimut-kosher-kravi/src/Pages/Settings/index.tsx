@@ -1,11 +1,11 @@
 import React, { useContext, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { ArrowLeft, Settings as SettingsIcon, Globe, Bell, Shield, Info, User, LogOut, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/lib/utils";
-import { LanguageContext } from "@/components/shared/LanguageContext";
-import { useAuth } from "@/features/auth/AuthContext";
+import { createPageUrl } from "../../lib/utils";
+import { LanguageContext } from "../../components/shared/LanguageContext";
+import { useAuth } from "../../features/auth/AuthContext";
 
 export default function SettingsPage() {
   const context = useContext(LanguageContext);

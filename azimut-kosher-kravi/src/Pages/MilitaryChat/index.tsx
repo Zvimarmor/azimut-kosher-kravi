@@ -1,9 +1,10 @@
 import React, { useContext, useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { LanguageContext } from '@/components/shared/LanguageContext';
+import { LanguageContext } from '../../components/shared/LanguageContext';
 import { Send, Plus, AlertTriangle, History, X, MoreVertical, Edit2, Trash2 } from 'lucide-react';
-import { useChat } from '@/features/chat/hooks/useChat';
-import { CHAT_TEXTS } from '@/features/chat/constants';
+import { useChat } from '../../features/chat/hooks/useChat';
+import { CHAT_TEXTS } from '../../features/chat/constants';
+import { renderMarkdown } from '../../features/chat/utils/markdownRenderer';
 
 export default function MilitaryChat() {
   const context = useContext(LanguageContext);
@@ -257,7 +258,11 @@ export default function MilitaryChat() {
                     <span className="font-semibold">הוראות שימוש</span>
                   </div>
                 )}
-                <div className="whitespace-pre-wrap text-right">{message.content}</div>
+                {message.type === 'ai' ? (
+                  renderMarkdown(message.content)
+                ) : (
+                  <div className="whitespace-pre-wrap text-right">{message.content}</div>
+                )}
                 <div className="text-xs opacity-75 mt-2">
                   {new Date(message.timestamp).toLocaleTimeString('he-IL', {
                     hour: '2-digit',

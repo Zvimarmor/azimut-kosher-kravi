@@ -1,12 +1,12 @@
 
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/lib/utils';
-import { LanguageContext } from '@/components/shared/LanguageContext';
-import { Button } from '@/components/ui/button';
+import { createPageUrl } from '../../lib/utils';
+import { LanguageContext } from '../../components/shared/LanguageContext';
+import { Button } from '../../components/ui/button';
 import { ArrowLeft, Zap, Dumbbell, Trees, Thermometer, Clock, Droplets, Check, Square, CheckSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { User } from '@/Entities/User';
+import { User } from '../../Entities/User';
 
 
 const equipmentOptions = [
@@ -95,12 +95,18 @@ export default function WorkoutSetup() {
 
   useEffect(() => {
     const loadSettings = async () => {
-        // TODO: Load workout settings when User model supports it
-        // const user = await User.me();
-        // if (user && user.remember_workout_settings && user.workout_settings) {
-        //     setSelections(user.workout_settings);
-        //     setRememberSettings(true);
-        // }
+        try {
+            const savedSettings = localStorage.getItem('workoutSetup_settings');
+            const rememberFlag = localStorage.getItem('workoutSetup_remember');
+
+            if (rememberFlag === 'true' && savedSettings) {
+                const parsed = JSON.parse(savedSettings);
+                setSelections(parsed);
+                setRememberSettings(true);
+            }
+        } catch (error) {
+            console.error('Error loading workout settings:', error);
+        }
     };
     loadSettings();
   }, []);
@@ -121,22 +127,27 @@ export default function WorkoutSetup() {
   };
 
   const handleGenerateWorkout = async () => {
-    if (rememberSettings) {
-        // TODO: Save workout settings when User model supports it
-        // await User.update({ workout_settings: selections, remember_workout_settings: true });
-    } else {
-        // TODO: Clear workout settings when User model supports it
-        // await User.update({ workout_settings: null, remember_workout_settings: false });
+    try {
+        if (rememberSettings) {
+            localStorage.setItem('workoutSetup_settings', JSON.stringify(selections));
+            localStorage.setItem('workoutSetup_remember', 'true');
+        } else {
+            localStorage.removeItem('workoutSetup_settings');
+            localStorage.removeItem('workoutSetup_remember');
+        }
+    } catch (error) {
+        console.error('Error saving workout settings:', error);
     }
 
-    const params = new URLSearchParams();
-    if (selections.equipment.length > 0) params.append('equipment', selections.equipment.join(','));
-    if (selections.environment.length > 0) params.append('environment', selections.environment.join(','));
-    if (selections.temperature) params.append('temperature', selections.temperature);
-    if (selections.timeOfDay) params.append('timeOfDay', selections.timeOfDay);
-    if (selections.rain) params.append('rain', selections.rain);
-    
-    navigate(createPageUrl(`CreateWorkout?${params.toString()}`));
+    const params = {
+      equipment: selections.equipment.length > 0 ? selections.equipment.join(',') : undefined,
+      environment: selections.environment.length > 0 ? selections.environment.join(',') : undefined,
+      temperature: selections.temperature,
+      timeOfDay: selections.timeOfDay,
+      rain: selections.rain
+    };
+
+    navigate(createPageUrl('CreateWorkout', params));
   };
   
   const isSelectionComplete = () => {

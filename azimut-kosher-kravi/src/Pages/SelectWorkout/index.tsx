@@ -1,15 +1,15 @@
 
 import React, { useState, useEffect, useContext } from "react";
-import { StrengthExplosive } from "@/Entities/StrengthExplosive";
-import { Special } from "@/Entities/Special";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { StrengthExplosive } from "../../Entities/StrengthExplosive";
+import { Special } from "../../Entities/Special";
+import { Button } from "../../components/ui/button";
+import { Card, CardContent } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
 import { ArrowLeft, Dumbbell, Target, Search } from "lucide-react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/lib/utils";
-import { LanguageContext } from "@/components/shared/LanguageContext";
-import { Input } from "@/components/ui/input";
+import { createPageUrl } from "../../lib/utils";
+import { LanguageContext } from "../../components/shared/LanguageContext";
+import { Input } from "../../components/ui/input";
 
 export default function SelectWorkout() {
   const [workouts, setWorkouts] = useState([]);

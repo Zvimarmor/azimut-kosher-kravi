@@ -1,16 +1,16 @@
 
 import React, { useState, useEffect, useContext } from "react";
-import { Warmup } from "@/Entities/Warmup";
-import { RunningEndurance } from "@/Entities/RunningEndurance";
-import { StrengthExplosive } from "@/Entities/StrengthExplosive";
-import { Special } from "@/Entities/Special";
-import { WorkoutHistory } from "@/Entities/WorkoutHistory";
-import { User } from "@/Entities/User";
-import { Button } from "@/components/ui/button";
+import { Warmup } from "../../Entities/Warmup";
+import { RunningEndurance } from "../../Entities/RunningEndurance";
+import { StrengthExplosive } from "../../Entities/StrengthExplosive";
+import { Special } from "../../Entities/Special";
+import { WorkoutHistory } from "../../Entities/WorkoutHistory";
+import { User } from "../../Entities/User";
+import { Button } from "../../components/ui/button";
 import { ArrowLeft, Timer, Target, Zap, Play, Check, RotateCcw, ZapOff, Clock, ThumbsUp, Star, Coffee } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/lib/utils";
-import { LanguageContext } from "@/components/shared/LanguageContext";
+import { createPageUrl } from "../../lib/utils";
+import { LanguageContext } from "../../components/shared/LanguageContext";
 import { AnimatePresence, motion } from "framer-motion";
 
 const pageTexts = {

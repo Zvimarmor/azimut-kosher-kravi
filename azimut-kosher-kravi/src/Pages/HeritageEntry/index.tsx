@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useContext } from "react";
-import { HeritageStory } from "@/Entities/HeritageStory";
-import { Button } from "@/components/ui/button";
+import { HeritageStory } from "../../Entities/HeritageStory";
+import { Button } from "../../components/ui/button";
 import { ArrowLeft, BookOpen, RotateCcw } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { createPageUrl } from "@/lib/utils";
-import { LanguageContext } from "@/components/shared/LanguageContext";
-import FormattedContent from "@/features/heritage/components/FormattedContent";
+import { createPageUrl } from "../../lib/utils";
+import { LanguageContext } from "../../components/shared/LanguageContext";
+import FormattedContent from "../../features/heritage/components/FormattedContent";
 
 export default function HeritageEntry() {
   const [story, setStory] = useState(null);
