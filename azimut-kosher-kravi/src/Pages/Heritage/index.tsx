@@ -4,16 +4,20 @@ import { createPageUrl } from "../../lib/utils";
 import { LanguageContext } from "../../components/shared/LanguageContext";
 import { ChevronRight, Shuffle, Swords, Heart, Shield, BookOpen, ArrowLeft } from "lucide-react";
 
-const heritageButtons = [
-  { title: "ערך אקראי", category: "all", icon: Shuffle },
-  { title: "קרבות ישראל מהעבר", category: "PastBattles", icon: Swords },
-  { title: "חללי צה״ל", category: "FallenSoldiers", icon: Heart },
-  { title: "מושגים צבאיים וטקטיים", category: "MilitaryConcepts", icon: Shield },
-  { title: "פילוסופיה ויהדות בנושאי צבא", category: "PhilosophyAndJudaism", icon: BookOpen }
-];
+// Heritage buttons will be created inside component using translations
 
 export default function Heritage() {
-  const { language } = useContext(LanguageContext);
+  const context = useContext(LanguageContext);
+  const language = context?.language || 'hebrew';
+  const t = context?.allTexts[language];
+
+  const heritageButtons = [
+    { title: t?.randomEntry || "ערך אקראי", category: "all", icon: Shuffle },
+    { title: t?.pastBattles || "קרבות ישראל מהעבר", category: "PastBattles", icon: Swords },
+    { title: t?.fallenSoldiers || "חללי צה״ל", category: "FallenSoldiers", icon: Heart },
+    { title: t?.militaryConcepts || "מושגים צבאיים וטקטיים", category: "MilitaryConcepts", icon: Shield },
+    { title: t?.philosophyJudaism || "פילוסופיה ויהדות בנושאי צבא", category: "PhilosophyAndJudaism", icon: BookOpen }
+  ];
 
   return (
     <div 
@@ -30,7 +34,7 @@ export default function Heritage() {
       </div>
       
       <p className="text-sm text-center text-gray-500 mb-6">
-        לשילה הר-אבן, שזכיתי והיה המפקד שלי בפלגת לוחמים באגוז, היה משפט קבוע: תרבות מנצחת מלחמות.
+        {t?.heritageQuote || "לשילה הר-אבן, שזכיתי והיה המפקד שלי בפלגת לוחמים באגוז, היה משפט קבוע: תרבות מנצחת מלחמות."}
       </p>
 
       <div className="flex-grow flex flex-col justify-center gap-4 max-w-md mx-auto w-full">

@@ -17,7 +17,7 @@ const pageTexts = {
     title: "About Us",
     subtitle: "Built with a passion for combat fitness.",
     content: "This application is an elite, military-inspired training platform designed for warriors who demand excellence. Every workout, heritage story, and feature is built to support you on your journey.",
-    memorial: "This project is lovingly dedicated to the memory of Ofek Becher and Shila Har-Even. May their memory be a blessing.",
+    memorial: "This project is lovingly dedicated to the memory of Ofek Becher and Shilo Har-Even. May their memory be a blessing.",
     backHome: "Back to Home"
   }
 };

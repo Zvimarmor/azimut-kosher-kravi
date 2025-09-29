@@ -1,6 +1,6 @@
 import { createContext } from "react";
 
-const allTexts = {
+export const allTexts = {
   hebrew: {
     appName: "AI כושר קרבי",
     aboutUs: "קצת עלינו",
@@ -66,6 +66,55 @@ const allTexts = {
     loginRequiredMessage: "על מנת לשאול שאלות בצ'אט הצבאי, יש להתחבר תחילה לחשבון המשתמש שלך.",
     loginWithGoogle: "התחבר עם Google",
     loginWithFacebook: "התחבר עם Facebook",
+
+    // Categories and search
+    categoryStrength: "כוח",
+    categorySpecial: "מיוחד",
+
+    // User status
+    guestUser: "משתמש אורח",
+
+    // Workout Setup
+    workoutSetup: "הגדרת אימון",
+    workoutSetupDesc: "סמן את התנאים והציוד הזמינים (אופציונלי)",
+    equipment: "ציוד",
+    environment: "סביבה",
+    temperature: "טמפרטורה",
+    timeOfDay: "זמן ביום",
+    rain: "גשם",
+    rememberEnvironment: "זכור סביבה זו",
+
+    // Equipment options
+    weight: "משקל",
+    sandbag: "שק חול מלא",
+
+    // Environment options
+    dune: "דיונה",
+    track: "400מ משטח ישר",
+    pullupBar: "מתח",
+    dipStation: "מקבילים",
+
+    // Temperature options
+    hot: "חם",
+    mild: "נעים",
+    cold: "קר",
+
+    // Time of day options
+    morning: "בוקר",
+    noon: "צהריים",
+    evening: "ערב",
+
+    // Rain options
+    rainYes: "גשם",
+    rainNo: "לא גשם",
+
+    // Heritage page
+    heritageQuote: "לשילה הר-אבן, שזכיתי והיה המפקד שלי בפלגת לוחמים באגוז, היה משפט קבוע: תרבות מנצחת מלחמות.",
+    randomEntry: "ערך אקראי",
+    pastBattles: "קרבות ישראל מהעבר",
+    fallenSoldiers: "חללי צה״ל",
+    militaryConcepts: "מושגים צבאיים וטקטיים",
+    philosophyJudaism: "פילוסופיה ויהדות בנושאי צבא",
   },
   english: {
     appName: "Azimut Kosher Kravi",
@@ -73,7 +122,7 @@ const allTexts = {
     language: "עברית",
     workoutHistory: "Workout History",
     settings: "Settings",
-    memorial: "In memory of Ofek Becher and Shila Har-Even z\"l\n© All rights reserved",
+    memorial: "In memory of Ofek Becher and Shilo Har-Even z\"l\n© All rights reserved",
     freeUser: "Free User",
     proUser: "Pro User",
 
@@ -132,6 +181,55 @@ const allTexts = {
     loginRequiredMessage: "To ask questions in the military chat, please log in to your account first.",
     loginWithGoogle: "Login with Google",
     loginWithFacebook: "Login with Facebook",
+
+    // Categories and search
+    categoryStrength: "Strength",
+    categorySpecial: "Special",
+
+    // User status
+    guestUser: "Guest User",
+
+    // Workout Setup
+    workoutSetup: "Workout Setup",
+    workoutSetupDesc: "Mark available conditions and equipment (optional)",
+    equipment: "Equipment",
+    environment: "Environment",
+    temperature: "Temperature",
+    timeOfDay: "Time of Day",
+    rain: "Rain",
+    rememberEnvironment: "Remember this environment",
+
+    // Equipment options
+    weight: "Weight",
+    sandbag: "Sandbag",
+
+    // Environment options
+    dune: "Dune",
+    track: "400m Straight Surface",
+    pullupBar: "Pull-up Bar",
+    dipStation: "Parallel Bars",
+
+    // Temperature options
+    hot: "Hot",
+    mild: "Mild",
+    cold: "Cold",
+
+    // Time of day options
+    morning: "Morning",
+    noon: "Noon",
+    evening: "Evening",
+
+    // Rain options
+    rainYes: "Rain",
+    rainNo: "No Rain",
+
+    // Heritage page
+    heritageQuote: "To Shilo Har-Even, who I was privileged to have as my commander at Agoz, had a constant saying: Culture conquers wars.",
+    randomEntry: "Random Entry",
+    pastBattles: "Israel's Past Battles",
+    fallenSoldiers: "Fallen IDF Soldiers",
+    militaryConcepts: "Military and Tactical Concepts",
+    philosophyJudaism: "Philosophy and Judaism in Military Matters",
   }
 };
 

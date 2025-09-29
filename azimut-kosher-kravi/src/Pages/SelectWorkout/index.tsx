@@ -12,12 +12,14 @@ import { LanguageContext } from "../../components/shared/LanguageContext";
 import { Input } from "../../components/ui/input";
 
 export default function SelectWorkout() {
-  const [workouts, setWorkouts] = useState([]);
-  const [filteredWorkouts, setFilteredWorkouts] = useState([]);
+  const [workouts, setWorkouts] = useState<any[]>([]);
+  const [filteredWorkouts, setFilteredWorkouts] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
-  const { language } = useContext(LanguageContext);
+  const context = useContext(LanguageContext);
+  const language = context?.language || 'hebrew';
+  const t = context?.allTexts[language];
 
   useEffect(() => {
     loadWorkouts();
@@ -95,7 +97,7 @@ export default function SelectWorkout() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2 text-[var(--color-text-dark)]">
               <Target className="w-7 h-7 text-[var(--color-accent-primary)]" />
-              בחר אימון
+              {t?.selectWorkoutTitle || "בחר אימון"}
             </h1>
           </div>
         </div>
@@ -104,7 +106,7 @@ export default function SelectWorkout() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="חפש אימון..."
+              placeholder={t?.searchWorkout || "חפש אימון..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 bg-white border-gray-300"
@@ -118,7 +120,7 @@ export default function SelectWorkout() {
               onClick={() => setSelectedCategory("all")}
               className={selectedCategory === "all" ? "bg-[var(--color-accent-primary)]" : ""}
             >
-              הכל
+              {t?.allWorkouts || "הכל"}
             </Button>
             <Button
               variant={selectedCategory === "strength" ? "default" : "outline"}
@@ -126,7 +128,7 @@ export default function SelectWorkout() {
               onClick={() => setSelectedCategory("strength")}
               className={selectedCategory === "strength" ? "bg-[var(--color-accent-primary)]" : ""}
             >
-              כוח
+              {t?.categoryStrength || "כוח"}
             </Button>
             <Button
               variant={selectedCategory === "special" ? "default" : "outline"}
@@ -134,7 +136,7 @@ export default function SelectWorkout() {
               onClick={() => setSelectedCategory("special")}
               className={selectedCategory === "special" ? "bg-[var(--color-accent-primary)]" : ""}
             >
-              מיוחדים
+              {t?.categorySpecial || "מיוחדים"}
             </Button>
           </div>
         </div>
@@ -143,8 +145,8 @@ export default function SelectWorkout() {
           {filteredWorkouts.length === 0 ? (
             <Card className="bg-white card-shadow">
               <CardContent className="p-8 text-center">
-                <h3 className="text-xl font-bold text-[var(--color-text-dark)] mb-2">לא נמצאו אימונים</h3>
-                <p className="text-gray-600">נסה חיפוש אחר או שנה את הקטגוריה.</p>
+                <h3 className="text-xl font-bold text-[var(--color-text-dark)] mb-2">{t?.noWorkoutsFound || "לא נמצאו אימונים"}</h3>
+                <p className="text-gray-600">{t?.tryDifferentSearch || "נסה חיפוש אחר או שנה את הקטגוריה."}</p>
               </CardContent>
             </Card>
           ) : (
@@ -167,7 +169,7 @@ export default function SelectWorkout() {
                           {workout.difficulty}
                         </Badge>
                         <Badge className={`${categoryColors[workout.source]} font-medium text-xs`}>
-                          {workout.source === 'strength' ? 'כוח' : 'מיוחד'}
+                          {workout.source === 'strength' ? (t?.categoryStrength || 'כוח') : (t?.categorySpecial || 'מיוחד')}
                         </Badge>
                         {workout.category && (
                           <Badge variant="outline" className="font-medium text-xs">

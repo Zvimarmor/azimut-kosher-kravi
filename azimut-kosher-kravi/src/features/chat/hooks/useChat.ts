@@ -4,7 +4,7 @@ import { generateUUID, simulateAIResponse } from '../utils';
 import { INSTRUCTIONS_MESSAGE, DAILY_QUOTA } from '../constants';
 import { useAuth } from '../../auth/AuthContext';
 
-export const useChat = () => {
+export const useChat = (language: 'hebrew' | 'english' = 'hebrew') => {
   const { currentUser } = useAuth();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -145,7 +145,7 @@ export const useChat = () => {
           content: msg.content
         }));
 
-      const aiResponse = await simulateAIResponse(inputMessage, conversationHistory);
+      const aiResponse = await simulateAIResponse(inputMessage, conversationHistory, language);
 
       const aiMessage: ChatMessage = {
         id: generateUUID(),
@@ -174,7 +174,9 @@ export const useChat = () => {
       const errorMessage: ChatMessage = {
         id: generateUUID(),
         type: 'error',
-        content: 'אירעה שגיאה בקבלת התשובה. אנא נסה שוב.',
+        content: language === 'english'
+          ? 'An error occurred while getting the response. Please try again.'
+          : 'אירעה שגיאה בקבלת התשובה. אנא נסה שוב.',
         timestamp: new Date()
       };
 

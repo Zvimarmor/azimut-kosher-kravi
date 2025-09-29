@@ -26,7 +26,7 @@ export default function MilitaryChat() {
     deleteSession,
     updateSession,
     isLoggedIn,
-  } = useChat();
+  } = useChat(language);
 
   const [inputMessage, setInputMessage] = useState('');
   const [showHistorySidebar, setShowHistorySidebar] = useState(false);

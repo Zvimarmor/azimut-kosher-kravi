@@ -9,34 +9,15 @@ import { Link } from 'react-router-dom';
 import { User } from '../../Entities/User';
 
 
-const equipmentOptions = [
-  { id: 'weight', label: 'משקל' },
-  { id: 'sandbag', label: 'שק חול מלא' },
-];
+// Equipment options will be created inside the component
 
-const environmentOptions = [
-  { id: 'dune', label: 'דיונה' },
-  { id: 'track', label: '400מ’ משטח ישר' },
-  { id: 'pullup_bar', label: 'מתח' },
-  { id: 'dip_station', label: 'מקבילים' },
-];
+// Environment options will be created inside the component
 
-const temperatureOptions = [
-  { id: 'hot', label: 'חם' },
-  { id: 'mild', label: 'נעים' },
-  { id: 'cold', label: 'קר' },
-];
+// Temperature options will be created inside the component
 
-const timeOfDayOptions = [
-  { id: 'morning', label: 'בוקר' },
-  { id: 'noon', label: 'צהריים' },
-  { id: 'evening', label: 'ערב' },
-];
+// Time of day options will be created inside the component
 
-const rainOptions = [
-    { id: 'rain', label: 'גשם' },
-    { id: 'no_rain', label: 'לא גשם' },
-];
+// Rain options will be created inside the component
 
 const StyledCheckbox = ({ label, isChecked, onChange }: { label: string; isChecked: boolean; onChange: () => void }) => (
   <button
@@ -83,7 +64,39 @@ const Section = ({ title, icon: Icon, children, gridCols = 2 }: { title: string;
 
 export default function WorkoutSetup() {
   const navigate = useNavigate();
-  const { language } = useContext(LanguageContext);
+  const context = useContext(LanguageContext);
+  const language = context?.language || 'hebrew';
+  const t = context?.allTexts[language];
+
+  const equipmentOptions = [
+    { id: 'weight', label: t?.weight || 'משקל' },
+    { id: 'sandbag', label: t?.sandbag || 'שק חול מלא' },
+  ];
+
+  const environmentOptions = [
+    { id: 'dune', label: t?.dune || 'דיונה' },
+    { id: 'track', label: t?.track || '400מ׳ משטח ישר' },
+    { id: 'pullup_bar', label: t?.pullupBar || 'מתח' },
+    { id: 'dip_station', label: t?.dipStation || 'מקבילים' },
+  ];
+
+  const temperatureOptions = [
+    { id: 'hot', label: t?.hot || 'חם' },
+    { id: 'mild', label: t?.mild || 'נעים' },
+    { id: 'cold', label: t?.cold || 'קר' },
+  ];
+
+  const timeOfDayOptions = [
+    { id: 'morning', label: t?.morning || 'בוקר' },
+    { id: 'noon', label: t?.noon || 'צהריים' },
+    { id: 'evening', label: t?.evening || 'ערב' },
+  ];
+
+  const rainOptions = [
+    { id: 'rain', label: t?.rainYes || 'גשם' },
+    { id: 'no_rain', label: t?.rainNo || 'לא גשם' },
+  ];
+
   const [selections, setSelections] = useState({
     equipment: [],
     environment: [],
@@ -167,31 +180,31 @@ export default function WorkoutSetup() {
             </button>
           </Link>
           <div className='text-right'>
-            <h1 className="text-2xl font-bold text-dark-olive">הגדרת אימון</h1>
-            <p className="text-gray-600 text-sm font-light">סמן את התנאים והציוד הזמינים (אופציונלי)</p>
+            <h1 className="text-2xl font-bold text-dark-olive">{t?.workoutSetup || "הגדרת אימון"}</h1>
+            <p className="text-gray-600 text-sm font-light">{t?.workoutSetupDesc || "סמן את התנאים והציוד הזמינים (אופציונלי)"}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Section title="ציוד" icon={Dumbbell} gridCols={2}>
+            <Section title={t?.equipment || "ציוד"} icon={Dumbbell} gridCols={2}>
                 {equipmentOptions.map(opt => (
                     <StyledCheckbox key={opt.id} label={opt.label} isChecked={selections.equipment.includes(opt.id)} onChange={() => handleToggleMulti('equipment', opt.id)} />
                 ))}
             </Section>
 
-            <Section title="סביבה" icon={Trees} gridCols={2}>
+            <Section title={t?.environment || "סביבה"} icon={Trees} gridCols={2}>
                 {environmentOptions.map(opt => (
                     <StyledCheckbox key={opt.id} label={opt.label} isChecked={selections.environment.includes(opt.id)} onChange={() => handleToggleMulti('environment', opt.id)} />
                 ))}
             </Section>
 
-            <Section title="טמפרטורה" icon={Thermometer} gridCols={3}>
+            <Section title={t?.temperature || "טמפרטורה"} icon={Thermometer} gridCols={3}>
                  {temperatureOptions.map(opt => (
                     <StyledRadio key={opt.id} label={opt.label} isSelected={selections.temperature === opt.id} onClick={() => handleSelectSingle('temperature', opt.id)} />
                 ))}
             </Section>
 
-            <Section title="זמן ביום" icon={Clock} gridCols={3}>
+            <Section title={t?.timeOfDay || "זמן ביום"} icon={Clock} gridCols={3}>
                 {timeOfDayOptions.map(opt => (
                     <StyledRadio key={opt.id} label={opt.label} isSelected={selections.timeOfDay === opt.id} onClick={() => handleSelectSingle('timeOfDay', opt.id)} />
                 ))}
@@ -199,7 +212,7 @@ export default function WorkoutSetup() {
         </div>
 
         <div className="mt-4">
-            <Section title="גשם" icon={Droplets} gridCols={2}>
+            <Section title={t?.rain || "גשם"} icon={Droplets} gridCols={2}>
                 {rainOptions.map(opt => (
                     <StyledRadio key={opt.id} label={opt.label} isSelected={selections.rain === opt.id} onClick={() => handleSelectSingle('rain', opt.id)} />
                 ))}
@@ -209,7 +222,7 @@ export default function WorkoutSetup() {
         <div className="bg-white/50 p-3 rounded-xl mt-4">
              <button onClick={() => setRememberSettings(prev => !prev)} className="flex items-center gap-3 w-full text-right">
                 {rememberSettings ? <CheckSquare className="w-6 h-6 text-idf-olive" /> : <Square className="w-6 h-6 text-idf-olive" />}
-                <span className="font-semibold text-idf-olive">זכור סביבה זו</span>
+                <span className="font-semibold text-idf-olive">{t?.rememberEnvironment || "זכור סביבה זו"}</span>
             </button>
         </div>
         
@@ -220,7 +233,7 @@ export default function WorkoutSetup() {
                 disabled={!isSelectionComplete()}
             >
                 <Zap className="w-5 h-5 ml-2 inline" />
-                צור אימון
+                {t?.createWorkout || "צור אימון"}
             </Button>
         </div>
 

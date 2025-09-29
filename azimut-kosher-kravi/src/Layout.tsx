@@ -9,34 +9,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu";
-import { LanguageContext } from "./components/shared/LanguageContext";
-
-const allTexts = {
-  hebrew: {
-    appName: "AI כושר קרבי",
-    aboutUs: "קצת עלינו",
-    language: "English",
-    workoutHistory: "היסטוריית אימונים",
-    settings: "הגדרות",
-    memorial: "לזכר אופק בכר ושילה הר-אבן\n© כל הזכויות שמורות",
-    freeUser: "משתמש חינמי",
-    proUser: "משתמש פרו",
-  },
-  english: {
-    appName: "Azimut Kosher Kravi",
-    aboutUs: "About Us",
-    language: "עברית",
-    workoutHistory: "Workout History",
-    settings: "Settings",
-    memorial: "In memory of Ofek Becher and Shila Har-Even\n© All rights reserved",
-    freeUser: "Free User",
-    proUser: "Pro User",
-  }
-};
+import { LanguageContext, allTexts } from "./components/shared/LanguageContext";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<'hebrew' | 'english'>('hebrew');
   const { currentUser } = useAuth();
+
+  // Use the imported shared allTexts
 
   const currentTexts = allTexts[language];
 
@@ -115,7 +94,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       )}
                       <div>
                         <p className="font-semibold text-[var(--color-text-dark)]">
-                          {currentUser?.displayName || (language === 'hebrew' ? 'משתמש אורח' : 'Guest User')}
+                          {currentUser?.displayName || currentTexts.guestUser}
                         </p>
                         <p className="text-sm text-gray-500">
                           {currentUser ? currentTexts.proUser : currentTexts.freeUser}

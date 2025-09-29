@@ -9,7 +9,7 @@ export const generateUUID = () => {
   });
 };
 
-export const simulateAIResponse = async (userMessage: string, conversationHistory: Array<{role: 'user' | 'assistant', content: string}> = []): Promise<string> => {
+export const simulateAIResponse = async (userMessage: string, conversationHistory: Array<{role: 'user' | 'assistant', content: string}> = [], language: 'hebrew' | 'english' = 'hebrew'): Promise<string> => {
   try {
     // Convert conversation history to OpenAI format
     const messages = conversationHistory.map(msg => ({
@@ -24,11 +24,13 @@ export const simulateAIResponse = async (userMessage: string, conversationHistor
     });
 
     // Get response from OpenAI
-    return await generateResponse(messages);
+    return await generateResponse(messages, language);
   } catch (error) {
     console.error('Error getting AI response:', error);
 
     // Fallback to basic response if OpenAI fails
-    return 'מצטער, אירעה שגיאה זמנית. אנא נסה שוב מאוחר יותר או פנה לגורמים מקצועיים לקבלת מידע מדויק.';
+    return language === 'english'
+      ? 'Sorry, a temporary error occurred. Please try again later or consult professional sources for accurate information.'
+      : 'מצטער, אירעה שגיאה זמנית. אנא נסה שוב מאוחר יותר או פנה לגורמים מקצועיים לקבלת מידע מדויק.';
   }
 };
