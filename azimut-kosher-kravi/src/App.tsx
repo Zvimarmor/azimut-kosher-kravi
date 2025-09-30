@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './Layout';
 import { AuthProvider } from './features/auth/AuthContext';
+import { ThemeProvider } from './components/shared/ThemeContext';
 import Home from './Pages/Home';
 import CreateWorkout from './Pages/CreateWorkout';
 import SelectWorkout from './Pages/SelectWorkout';
@@ -15,24 +16,26 @@ import HeritageEntry from './Pages/HeritageEntry';
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/create-workout" element={<CreateWorkout />} />
-            <Route path="/select-workout" element={<SelectWorkout />} />
-            <Route path="/workout-history" element={<WorkoutHistory />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/quick-workout" element={<QuickWorkout />} />
-            <Route path="/workout-setup" element={<WorkoutSetup />} />
-            <Route path="/military-chat" element={<MilitaryChat />} />
-            <Route path="/heritage" element={<Heritage />} />
-            <Route path="/heritage-entry" element={<HeritageEntry />} />
-          </Routes>
-        </Layout>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/create-workout" element={<CreateWorkout />} />
+              <Route path="/select-workout" element={<SelectWorkout />} />
+              <Route path="/workout-history" element={<WorkoutHistory />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/quick-workout" element={<QuickWorkout />} />
+              <Route path="/workout-setup" element={<WorkoutSetup />} />
+              <Route path="/military-chat" element={<MilitaryChat />} />
+              <Route path="/heritage" element={<Heritage />} />
+              <Route path="/heritage-entry" element={<HeritageEntry />} />
+            </Routes>
+          </Layout>
       </Router>
     </AuthProvider>
+    </ThemeProvider>
   );
 }

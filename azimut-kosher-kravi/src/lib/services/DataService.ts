@@ -302,10 +302,13 @@ export class DataService {
   // Strength Explosive methods
   static async getStrengthExplosive(): Promise<StrengthExplosive[]> {
     try {
+      console.log('Attempting to fetch StrengthExplosive CSV...');
       const csvData = await fetchCSV('StrengthExplosive.csv');
+      console.log('CSV data fetched successfully, found:', csvData.length, 'entries');
       return csvData.map(transformCSVToStrengthExplosive).filter(workout => workout.title);
     } catch (error) {
       console.error('Error fetching strength workouts from CSV:', error);
+      console.log('Falling back to mock data. Mock data length:', mockStrengthExplosive.length);
       return [...mockStrengthExplosive]; // Fallback to mock data
     }
   }
@@ -324,10 +327,13 @@ export class DataService {
   // Special methods
   static async getSpecial(): Promise<Special[]> {
     try {
+      console.log('Attempting to fetch Special CSV...');
       const csvData = await fetchCSV('Special.csv');
+      console.log('CSV data fetched successfully, found:', csvData.length, 'entries');
       return csvData.map(transformCSVToSpecial).filter(workout => workout.title);
     } catch (error) {
       console.error('Error fetching special workouts from CSV:', error);
+      console.log('Falling back to mock data. Mock data length:', mockSpecial.length);
       return [...mockSpecial]; // Fallback to mock data
     }
   }

@@ -1,16 +1,18 @@
 import React, { useContext, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { ArrowLeft, Settings as SettingsIcon, Globe, Bell, Shield, Info, User, LogOut, LogIn } from "lucide-react";
+import { ArrowLeft, Settings as SettingsIcon, Globe, Bell, Shield, Info, User, LogOut, LogIn, Palette } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "../../lib/utils";
 import { LanguageContext } from "../../components/shared/LanguageContext";
 import { useAuth } from "../../features/auth/AuthContext";
+import { useTheme } from "../../components/shared/ThemeContext";
 
 export default function SettingsPage() {
   const context = useContext(LanguageContext);
   const { language, setLanguage } = context || { language: 'hebrew', setLanguage: () => {} };
   const { currentUser, login, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
 
   const toggleLanguage = () => {
@@ -141,6 +143,31 @@ export default function SettingsPage() {
             <CardContent>
               <Button onClick={toggleLanguage} className="bg-idf-olive text-light-sand w-full btn-press">
                 {language === 'hebrew' ? 'Switch to English' : 'עבור לעברית'}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white card-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Palette className="w-5 h-5 text-idf-olive" />
+                {language === 'hebrew' ? 'ערכת צבעים' : 'Color Theme'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button
+                onClick={() => setTheme('default')}
+                variant={theme === 'default' ? 'default' : 'outline'}
+                className="w-full btn-press"
+              >
+                {language === 'hebrew' ? 'ברירת מחדל (בהיר)' : 'Default (Light)'}
+              </Button>
+              <Button
+                onClick={() => setTheme('ranger-green')}
+                variant={theme === 'ranger-green' ? 'default' : 'outline'}
+                className="w-full btn-press"
+              >
+                {language === 'hebrew' ? 'רינג\'ר ירוק (כהה)' : 'Ranger Green (Dark)'}
               </Button>
             </CardContent>
           </Card>

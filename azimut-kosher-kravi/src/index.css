@@ -36,3 +36,29 @@ html, body, #root {
   height: 100dvh;
   overflow-x: hidden;
 }
+
+/* Theme-specific overrides */
+.theme-default {
+  /* Default theme uses original styles - no overrides needed */
+}
+
+.theme-ranger-green {
+  /* Dark theme overrides for elements that need different styling */
+}
+
+.theme-ranger-green .card-bg {
+  background-color: var(--color-bg-neutral) !important;
+  border-color: #4a5568 !important;
+}
+
+.theme-ranger-green .card-text {
+  color: var(--color-text-light) !important;
+}
+
+.theme-ranger-green .subtitle-text {
+  color: #cbd5e0 !important;
+}
+
+.theme-ranger-green .menu-icon {
+  color: var(--color-text-light) !important;
+}

@@ -65,11 +65,11 @@ export default function Home() {
 
             return (
               <Link key={index + 1} to={button.href} className="block">
-                <div className="bg-white text-[var(--color-text-dark)] border border-gray-200 rounded-xl px-6 py-5 card-shadow btn-press transition-all duration-200 flex items-center justify-between hover:border-[var(--color-accent-primary)] hover:shadow-md">
+                <div className="bg-white card-bg text-[var(--color-text-dark)] card-text border border-gray-200 rounded-xl px-6 py-5 card-shadow btn-press transition-all duration-200 flex items-center justify-between hover:border-[var(--color-accent-primary)] hover:shadow-md">
                   <div className="flex-1 text-right">
                     <h3 className="text-lg font-semibold mb-1">{button.title}</h3>
                     {button.subtitle && (
-                      <p className="text-sm text-gray-600">{button.subtitle}</p>
+                      <p className="text-sm text-gray-600 subtitle-text">{button.subtitle}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-3 mr-3">
@@ -84,7 +84,7 @@ export default function Home() {
       </div>
 
       <div className="text-center py-4 flex-shrink-0">
-        <p className="text-gray-600 text-xs leading-relaxed whitespace-pre-line">
+        <p className="text-gray-600 subtitle-text text-xs leading-relaxed whitespace-pre-line">
           {t?.memorial || `לזכר אופק בכר ושילה הר-אבן ז״ל\nכל הזכויות שמורות ©`}
         </p>
       </div>

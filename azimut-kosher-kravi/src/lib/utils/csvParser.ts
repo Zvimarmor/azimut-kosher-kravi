@@ -97,14 +97,28 @@ export function parseJSONField(value: string): any {
  */
 export async function fetchCSV(filename: string): Promise<CSVRow[]> {
   try {
+    console.log(`🔍 Attempting to fetch CSV: /data/${filename}`);
     const response = await fetch(`/data/${filename}`);
+    console.log(`📊 Response status for ${filename}:`, response.status, response.statusText);
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch ${filename}: ${response.statusText}`);
+      throw new Error(`Failed to fetch ${filename}: ${response.status} ${response.statusText}`);
     }
+
     const csvText = await response.text();
-    return parseCSV(csvText);
+    console.log(`📄 CSV text length for ${filename}:`, csvText.length, 'characters');
+
+    if (csvText.length === 0) {
+      console.warn(`⚠️ Empty CSV file: ${filename}`);
+      return [];
+    }
+
+    const parsed = parseCSV(csvText);
+    console.log(`✅ Successfully parsed ${filename}:`, parsed.length, 'rows');
+    return parsed;
   } catch (error) {
-    console.error(`Error fetching CSV file ${filename}:`, error);
+    console.error(`❌ Error fetching CSV file ${filename}:`, error);
+    console.error(`🔗 Full URL attempted: ${window.location.origin}/data/${filename}`);
     return [];
   }
 }

@@ -72,7 +72,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="w-10 h-10 rounded bg-[var(--color-bg-neutral)] flex items-center justify-center btn-press card-shadow">
-                    <Menu className="w-6 h-6 text-[var(--color-text-dark)]" />
+                    <Menu className="w-6 h-6 text-[var(--color-text-dark)] menu-icon" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
