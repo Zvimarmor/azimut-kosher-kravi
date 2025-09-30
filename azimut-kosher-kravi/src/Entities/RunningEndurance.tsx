@@ -2,6 +2,7 @@ import { AttributeType } from './Warmup';
 import { DataService } from '../lib/services/DataService';
 
 export interface RunningEndurance {
+  id?: string;
   title: string;
   target_attributes: AttributeType[];
   distance?: number; // in meters
@@ -13,6 +14,14 @@ export interface RunningEndurance {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   warmup_required: boolean;
   cooldown_required: boolean;
+  category?: string;
+  exercises?: Array<{
+    name: string;
+    type: string;
+    values: number[] | { [key: string]: number | null };
+    rest_seconds?: number;
+  }>;
+  rounds?: number;
 }
 
 export class RunningEndurance {

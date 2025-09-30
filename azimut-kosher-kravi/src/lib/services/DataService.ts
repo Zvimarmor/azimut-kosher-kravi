@@ -223,6 +223,7 @@ let workoutHistory: WorkoutHistory[] = [];
 function transformCSVToWarmup(row: CSVRow): Warmup {
   const exercises = parseJSONField(row.exercises) || [];
   return {
+    id: row.id || '',
     title: row.title || '',
     target_attributes: parseJSONField(row.target_attributes) || [],
     duration: parseInt(row.duration) || 0,
@@ -237,6 +238,7 @@ function transformCSVToWarmup(row: CSVRow): Warmup {
 function transformCSVToStrengthExplosive(row: CSVRow): StrengthExplosive {
   const exercises = parseJSONField(row.exercises) || [];
   return {
+    id: row.id || '',
     title: row.title || '',
     target_attributes: parseJSONField(row.target_attributes) || [],
     sets: parseInt(row.rounds) || 3,
@@ -253,6 +255,7 @@ function transformCSVToStrengthExplosive(row: CSVRow): StrengthExplosive {
 function transformCSVToRunningEndurance(row: CSVRow): RunningEndurance {
   const exercises = parseJSONField(row.exercises) || [];
   return {
+    id: row.id || '',
     title: row.title || '',
     target_attributes: parseJSONField(row.target_attributes) || [],
     distance: parseInt(row.distance) || 3000,
@@ -271,6 +274,7 @@ function transformCSVToRunningEndurance(row: CSVRow): RunningEndurance {
 function transformCSVToSpecial(row: CSVRow): Special {
   const exercises = parseJSONField(row.exercises) || [];
   return {
+    id: row.id || '',
     title: row.title || '',
     target_attributes: parseJSONField(row.target_attributes) || [],
     category: (row.category?.toLowerCase() as 'military_skills' | 'tactical' | 'endurance_challenge' | 'team_building' | 'assessment') || 'tactical',

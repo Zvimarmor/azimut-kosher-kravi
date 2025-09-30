@@ -124,60 +124,86 @@ const formatTime = (milliseconds) => {
 
 const generateTasksFromWorkout = (workout, userLevel) => {
     const tasks = [];
-    const level = Math.round(userLevel);
+    const level = Math.max(0, Math.min(10, Math.round(userLevel))); // Ensure level is 0-10
 
     if (!workout || !workout.exercises) {
         console.warn("Invalid workout object provided to generateTasksFromWorkout:", workout);
         return [];
     }
 
-    if (workout.category === "Strength" && workout.rounds && workout.rounds > 1) {
-        for (let i = 0; i < workout.rounds; i++) {
-            const exerciseDescriptions = workout.exercises.map(ex => {
-                const value = ex.values[level];
+    // Helper function to get value for user level
+    const getValue = (exercise) => {
+        if (Array.isArray(exercise.values)) {
+            // Mock data format: array of values
+            return exercise.values[level] || exercise.values[0] || 1;
+        } else if (typeof exercise.values === 'object') {
+            // CSV data format: object with string keys
+            const value = exercise.values[level.toString()] || exercise.values['0'] || exercise.values[Object.keys(exercise.values)[0]];
+            return value !== null && value !== undefined ? value : 1;
+        }
+        return 1; // Fallback
+    };
+
+    // Handle Fartlek/Interval training
+    if (workout.title && (workout.title.includes("פארטלק") || workout.title.includes("Fartlek"))) {
+        const rounds = parseInt(workout.rounds) || 1;
+
+        for (let round = 0; round < rounds; round++) {
+            workout.exercises.forEach((ex, index) => {
+                const value = getValue(ex);
                 const unit = ex.type === 'rep_based' ? pageTexts.hebrew.reps : pageTexts.hebrew.seconds;
-                return `${ex.name}: ${value} ${unit}`;
-            });
-            tasks.push({ 
-                type: 'active', 
-                title: `${pageTexts.hebrew.round} ${i + 1} / ${workout.rounds}`,
-                description: exerciseDescriptions.join('\n'),
-            });
-            if (i < workout.rounds - 1) {
-                 const restTime = workout.exercises[0]?.rest_seconds || 60;
-                 tasks.push({ type: 'rest', duration: restTime });
-            }
-        }
-    } else if (workout.title === "Fartlek Run") {
-        const totalDurationMins = workout.exercises.find(e => e.name.includes("Total Duration"))?.values[level] || 10;
-        const fastIntervalSecs = workout.exercises.find(e => e.name.includes("Fast Interval"))?.values[level] || 30;
-        const slowIntervalSecs = workout.exercises.find(e => e.name.includes("Slow Interval"))?.values[level] || 90;
-        const totalDurationSecs = totalDurationMins * 60;
-        let elapsed = 0;
-        let isFast = true;
 
-        while(elapsed < totalDurationSecs) {
-            const intervalDuration = isFast ? fastIntervalSecs : slowIntervalSecs;
-            tasks.push({
-                type: 'active',
-                title: isFast ? 'ריצה מהירה' : 'ריצה קלה',
-                description: `${intervalDuration} ${pageTexts.hebrew.seconds}`
-            });
-            elapsed += intervalDuration;
-            isFast = !isFast;
-        }
+                tasks.push({
+                    type: 'active',
+                    title: `${ex.name} (${round + 1}/${rounds})`,
+                    description: `${value} ${unit}`
+                });
 
-    } else { // Volume Run or other simple workouts
-        workout.exercises.forEach(ex => {
-            const value = ex.values[level];
-            const unit = ex.type === 'distance_based' ? pageTexts.hebrew.km : (ex.type === 'time_based' ? pageTexts.hebrew.seconds : pageTexts.hebrew.reps);
+                // Add rest between exercises (but not after the last exercise of the last round)
+                if (!(round === rounds - 1 && index === workout.exercises.length - 1) && ex.rest_seconds > 0) {
+                    tasks.push({ type: 'rest', duration: ex.rest_seconds });
+                }
+            });
+        }
+    }
+    // Handle Strength training with multiple rounds
+    else if (workout.category === "Strength" && parseInt(workout.rounds) > 1) {
+        const rounds = parseInt(workout.rounds) || 1;
+
+        for (let round = 0; round < rounds; round++) {
+            workout.exercises.forEach((ex, index) => {
+                const value = getValue(ex);
+                const unit = ex.type === 'rep_based' ? pageTexts.hebrew.reps : pageTexts.hebrew.seconds;
+
+                tasks.push({
+                    type: 'active',
+                    title: `${ex.name} (${round + 1}/${rounds})`,
+                    description: `${value} ${unit}`
+                });
+
+                // Add rest between exercises
+                if (ex.rest_seconds > 0 && !(round === rounds - 1 && index === workout.exercises.length - 1)) {
+                    tasks.push({ type: 'rest', duration: ex.rest_seconds });
+                }
+            });
+        }
+    }
+    // Handle single exercises or cardio
+    else {
+        workout.exercises.forEach((ex, index) => {
+            const value = getValue(ex);
+            const unit = ex.type === 'distance_based' ? pageTexts.hebrew.km :
+                        (ex.type === 'time_based' ? pageTexts.hebrew.seconds : pageTexts.hebrew.reps);
+
             tasks.push({
                 type: 'active',
                 title: ex.name,
                 description: `${value} ${unit}`
             });
-            if (ex.rest_seconds > 0) {
-                 tasks.push({ type: 'rest', duration: ex.rest_seconds });
+
+            // Add rest if specified and not the last exercise
+            if (ex.rest_seconds > 0 && index < workout.exercises.length - 1) {
+                tasks.push({ type: 'rest', duration: ex.rest_seconds });
             }
         });
     }
@@ -270,20 +296,48 @@ export default function CreateWorkout() {
     const generateWorkoutSequence = async () => {
       setIsLoading(true);
       try {
-        const assembledWorkouts = await assembleFullWorkout();
+        // Check URL parameters for specific workout
+        const urlParams = new URLSearchParams(location.search);
+        const workoutId = urlParams.get('workoutId');
+        const source = urlParams.get('source');
+
+        let assembledWorkouts;
+
+        if (workoutId && source) {
+          // Load specific workout
+          let workout;
+          if (source === 'strength') {
+            const strengthWorkouts = await StrengthExplosive.list();
+            workout = strengthWorkouts.find(w => w.id === workoutId);
+          } else if (source === 'special') {
+            const specialWorkouts = await Special.list();
+            workout = specialWorkouts.find(w => w.id === workoutId);
+          }
+
+          if (workout) {
+            assembledWorkouts = [workout];
+          } else {
+            console.warn(`Workout with ID ${workoutId} not found in ${source}`);
+            assembledWorkouts = await assembleFullWorkout();
+          }
+        } else {
+          // Generate random workout sequence
+          assembledWorkouts = await assembleFullWorkout();
+        }
+
         setCurrentWorkouts(assembledWorkouts);
-        setCurrentWorkoutIndex(0); 
-        
+        setCurrentWorkoutIndex(0);
+
         const user = await User.me();
         const userLevels = {
-          push_strength: user.push_strength || 1,
-          pull_strength: user.pull_strength || 1,
-          cardio_endurance: user.cardio_endurance || 1,
-          running_volume: user.running_volume || 1,
-          rucking_volume: user.rucking_volume || 1,
-          weight_work: user.weight_work || 1
+          push_strength: user.attributes?.push_strength || 1,
+          pull_strength: user.attributes?.pull_strength || 1,
+          cardio_endurance: user.attributes?.cardio_endurance || 1,
+          running_volume: user.attributes?.running_volume || 1,
+          rucking_volume: user.attributes?.rucking_volume || 1,
+          weight_work: user.attributes?.weight_work || 1
         };
-        
+
         if (assembledWorkouts.length > 0) {
           const firstWorkout = assembledWorkouts[0];
           const relevantLevels = firstWorkout.target_attributes.map(attr => userLevels[attr] || 0);
@@ -331,12 +385,12 @@ export default function CreateWorkout() {
           const nextWorkout = currentWorkouts[nextWorkoutIndex];
           const user = await User.me();
           const userLevels = {
-            push_strength: user.push_strength || 1,
-            pull_strength: user.pull_strength || 1,
-            cardio_endurance: user.cardio_endurance || 1,
-            running_volume: user.running_volume || 1,
-            rucking_volume: user.rucking_volume || 1,
-            weight_work: user.weight_work || 1
+            push_strength: user.attributes?.push_strength || 1,
+            pull_strength: user.attributes?.pull_strength || 1,
+            cardio_endurance: user.attributes?.cardio_endurance || 1,
+            running_volume: user.attributes?.running_volume || 1,
+            rucking_volume: user.attributes?.rucking_volume || 1,
+            weight_work: user.attributes?.weight_work || 1
           };
           const relevantLevels = nextWorkout.target_attributes.map(attr => userLevels[attr] || 0);
           const avgUserLevel = relevantLevels.length > 0 ? relevantLevels.reduce((a, b) => a + b, 0) / relevantLevels.length : 1;

@@ -2,6 +2,7 @@ import { AttributeType } from './Warmup';
 import { DataService } from '../lib/services/DataService';
 
 export interface StrengthExplosive {
+  id?: string;
   title: string;
   target_attributes: AttributeType[];
   sets: number;
@@ -16,7 +17,7 @@ export interface StrengthExplosive {
   exercises?: Array<{
     name: string;
     type: string;
-    values: number[];
+    values: number[] | { [key: string]: number | null };
     rest_seconds?: number;
   }>;
   rounds?: number;

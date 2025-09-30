@@ -2,6 +2,7 @@ import { AttributeType } from './Warmup';
 import { DataService } from '../lib/services/DataService';
 
 export interface Special {
+  id?: string;
   title: string;
   target_attributes: AttributeType[];
   category: 'military_skills' | 'tactical' | 'endurance_challenge' | 'team_building' | 'assessment';
@@ -17,7 +18,7 @@ export interface Special {
   exercises?: Array<{
     name: string;
     type: string;
-    values: number[];
+    values: number[] | { [key: string]: number | null };
     rest_seconds?: number;
   }>;
   rounds?: number;

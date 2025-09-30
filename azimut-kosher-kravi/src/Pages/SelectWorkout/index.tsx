@@ -152,7 +152,7 @@ export default function SelectWorkout() {
           ) : (
             <div className="space-y-3">
               {filteredWorkouts.map((workout) => (
-                <Link key={workout.id} to={createPageUrl(`CreateWorkout?workoutId=${workout.id}&source=${workout.source}`)}>
+                <Link key={workout.id} to={createPageUrl('CreateWorkout', { workoutId: workout.id, source: workout.source })}>
                   <Card className="bg-white card-shadow btn-press transition-all hover:shadow-lg">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-2">

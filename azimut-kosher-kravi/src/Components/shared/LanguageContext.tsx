@@ -2,14 +2,14 @@ import { createContext } from "react";
 
 export const allTexts = {
   hebrew: {
-    appName: "AI כושר קרבי",
+    appName: "אזימוט כושר קרבי",
     aboutUs: "קצת עלינו",
     language: "English",
     workoutHistory: "היסטוריית אימונים",
     settings: "הגדרות",
     memorial: "לזכר אופק בכר ושילה הר-אבן ז״ל\nכל הזכויות שמורות ©",
     freeUser: "משתמש חינמי",
-    proUser: "משתמש פרו",
+    proUser: "משתמש pro",
 
     // Home page
     createWorkout: "צור אימון",
@@ -76,7 +76,7 @@ export const allTexts = {
 
     // Workout Setup
     workoutSetup: "הגדרת אימון",
-    workoutSetupDesc: "סמן את התנאים והציוד הזמינים (אופציונלי)",
+    workoutSetupDesc: "סמן את התנאים והציוד הזמינים",
     equipment: "ציוד",
     environment: "סביבה",
     temperature: "טמפרטורה",

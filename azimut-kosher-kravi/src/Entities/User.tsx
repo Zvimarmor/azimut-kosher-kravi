@@ -63,6 +63,15 @@ export class User {
       medical_restrictions: data.medical_restrictions || []
     };
   }
+
+  static async updateMyUserData(performanceData: Partial<UserAttributes>): Promise<User> {
+    const currentUser = await this.me();
+    const updatedAttributes = {
+      ...currentUser.attributes,
+      ...performanceData
+    };
+    return this.update({ attributes: updatedAttributes });
+  }
 }
 
 export class UserService {

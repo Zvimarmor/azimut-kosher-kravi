@@ -3,6 +3,7 @@ import { DataService } from '../lib/services/DataService';
 export type AttributeType = 'push_strength' | 'pull_strength' | 'cardio_endurance' | 'running_volume' | 'rucking_volume' | 'weight_work';
 
 export interface Warmup {
+  id?: string;
   title: string;
   target_attributes: AttributeType[];
   duration: number;
@@ -14,7 +15,7 @@ export interface Warmup {
   exercises?: Array<{
     name: string;
     type: string;
-    values: number[];
+    values: number[] | { [key: string]: number | null };
     rest_seconds?: number;
   }>;
   rounds?: number;
