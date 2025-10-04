@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
+import { User, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
 import { auth } from '../../lib/firebase/config';
 
 interface AuthContextType {
@@ -59,6 +59,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    // Handle redirect result when returning from OAuth provider
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result) {
+          // User successfully signed in via redirect
+          console.log('Redirect login successful:', result.user);
+        }
+      })
+      .catch((error) => {
+        console.error('Redirect result error:', error);
+      });
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setLoading(false);
