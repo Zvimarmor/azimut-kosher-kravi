@@ -97,7 +97,7 @@ export default function WorkoutHistoryPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Calendar className="w-7 h-7 text-[var(--color-accent-primary)]" />
-              היסטוריית אימונים
+              {language === 'hebrew' ? 'היסטוריית אימונים' : 'Workout History'}
             </h1>
           </div>
         </div>
@@ -107,21 +107,21 @@ export default function WorkoutHistoryPage() {
             <CardContent className="p-4 text-center">
               <Award className="w-6 h-6 text-[var(--color-accent-primary)] mx-auto mb-2" />
               <div className="text-2xl font-bold text-[var(--color-text-dark)]">{stats.totalWorkouts}</div>
-              <div className="text-xs text-gray-500">אימונים</div>
+              <div className="text-xs text-gray-500">{language === 'hebrew' ? 'אימונים' : 'Workouts'}</div>
             </CardContent>
           </Card>
           <Card className="bg-white card-shadow">
             <CardContent className="p-4 text-center">
               <Timer className="w-6 h-6 text-[var(--color-accent-primary)] mx-auto mb-2" />
               <div className="text-2xl font-bold text-[var(--color-text-dark)]">{stats.totalTime}</div>
-              <div className="text-xs text-gray-500">דקות</div>
+              <div className="text-xs text-gray-500">{language === 'hebrew' ? 'דקות' : 'Minutes'}</div>
             </CardContent>
           </Card>
           <Card className="bg-white card-shadow">
             <CardContent className="p-4 text-center">
               <TrendingUp className="w-6 h-6 text-[var(--color-accent-primary)] mx-auto mb-2" />
               <div className="text-2xl font-bold text-[var(--color-text-dark)]">{stats.completionRate}%</div>
-              <div className="text-xs text-gray-500">הצלחה</div>
+              <div className="text-xs text-gray-500">{language === 'hebrew' ? 'הצלחה' : 'Success Rate'}</div>
             </CardContent>
           </Card>
         </div>
@@ -129,11 +129,11 @@ export default function WorkoutHistoryPage() {
         {history.length === 0 ? (
           <Card className="bg-white card-shadow">
             <CardContent className="p-8 text-center">
-              <h3 className="text-xl font-bold text-[var(--color-text-dark)] mb-2">אין היסטוריה</h3>
-              <p className="text-gray-600 mb-6">השלם אימון כדי להתחיל.</p>
+              <h3 className="text-xl font-bold text-[var(--color-text-dark)] mb-2">{language === 'hebrew' ? 'אין היסטוריית אימונים' : 'No Workout History'}</h3>
+              <p className="text-gray-600 mb-6">{language === 'hebrew' ? 'השלם אימון ראשון כדי לראות את ההיסטוריה שלך כאן.' : 'Complete your first workout to see your history here.'}</p>
               <Link to={createPageUrl("Home")}>
                 <Button className="bg-[var(--color-accent-primary)] text-[var(--color-text-light)] btn-press">
-                  התחל אימון ראשון
+                  {language === 'hebrew' ? 'חזור לדף הבית' : 'Back to Home Page'}
                 </Button>
               </Link>
             </CardContent>

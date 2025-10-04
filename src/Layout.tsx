@@ -12,8 +12,16 @@ import {
 import { LanguageContext, allTexts } from "./components/shared/LanguageContext";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<'hebrew' | 'english'>('hebrew');
+  const [language, setLanguage] = useState<'hebrew' | 'english'>(() => {
+    const saved = localStorage.getItem('language');
+    return (saved === 'english' || saved === 'hebrew') ? saved : 'hebrew';
+  });
   const { currentUser } = useAuth();
+
+  // Save language preference to localStorage when it changes
+  React.useEffect(() => {
+    localStorage.setItem('language', language);
+  }, [language]);
 
   // Use the imported shared allTexts
 
