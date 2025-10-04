@@ -180,7 +180,7 @@ export default function SettingsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center text-gray-600">
-              <p>TACTICAL FIT v1.0</p>
+              <p> {language === 'hebrew' ? 'אזימוט כושר קרבי גרסא 1.0.0' : 'Azimut Kosher Kravi Version 1.0.0'}</p>
               
               <p className="text-sm"> {language === 'hebrew' ?
                 'פלטפורמת אימון בהשראת יחידות מיוחדות' :
