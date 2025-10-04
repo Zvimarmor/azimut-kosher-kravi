@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
+import { User, onAuthStateChanged, signInWithPopup, signInWithRedirect, signOut, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
 import { auth } from '../../lib/firebase/config';
 
 interface AuthContextType {
@@ -19,6 +19,11 @@ export const useAuth = () => {
   return context;
 };
 
+// Detect if we're on mobile
+const isMobile = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +37,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authProvider = new FacebookAuthProvider();
       }
 
-      await signInWithPopup(auth, authProvider);
+      // Use redirect on mobile, popup on desktop
+      if (isMobile()) {
+        await signInWithRedirect(auth, authProvider);
+      } else {
+        await signInWithPopup(auth, authProvider);
+      }
     } catch (error) {
       console.error('Login error:', error);
       throw error;
