@@ -137,7 +137,7 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Globe className="w-5 h-5 text-idf-olive" />
-                שפה
+                {language === 'hebrew' ? 'שפה' : 'Language'}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -176,13 +176,17 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Info className="w-5 h-5 text-idf-olive" />
-                אודות
+                {language === 'hebrew' ? 'אודות' : 'About'}
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center text-gray-600">
               <p>TACTICAL FIT v1.0</p>
-              <p className="text-sm">פלטפורמת אימון בהשראת יחידות מיוחדות.</p>
-              <p className="text-xs mt-4">לזכר אופק בכר ושילה הר-אבן</p>
+              
+              <p className="text-sm"> {language === 'hebrew' ?
+                'פלטפורמת אימון בהשראת יחידות מיוחדות' :
+                'A training platform inspired by special forces units'
+              }</p>
+              <p className="text-xs mt-4">{language === 'hebrew' ? 'לזכר אופק בכר ושילה הר-אבן' : 'In memory of Ofek Bechar and Shilo Har-Even'}</p>
             </CardContent>
           </Card>
         </div>
