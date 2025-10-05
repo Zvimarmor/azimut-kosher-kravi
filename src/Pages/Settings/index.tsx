@@ -21,12 +21,19 @@ export default function SettingsPage() {
 
   const handleLogin = async (provider: 'google' | 'facebook') => {
     try {
+      console.log('Settings: Starting login with provider:', provider);
       setIsLoading(true);
       await login(provider);
-    } catch (error) {
-      console.error('Login failed:', error);
+      console.log('Settings: Login function completed');
+    } catch (error: any) {
+      console.error('Settings: Login failed:', {
+        code: error?.code,
+        message: error?.message,
+        fullError: error
+      });
       alert('Login failed. Please try again.');
     } finally {
+      console.log('Settings: Setting isLoading to false');
       setIsLoading(false);
     }
   };
