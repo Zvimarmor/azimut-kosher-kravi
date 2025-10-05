@@ -11,9 +11,17 @@ const firebaseConfig = {
   measurementId: "G-XJ2YXJP2Z7"
 };
 
+console.log('Firebase: Initializing with config:', {
+  authDomain: firebaseConfig.authDomain,
+  projectId: firebaseConfig.projectId
+});
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+console.log('Firebase: App initialized');
 
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
+console.log('Firebase: Auth initialized');
+
 export default app;
