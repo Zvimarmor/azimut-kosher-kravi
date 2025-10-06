@@ -34,18 +34,6 @@ export default function SettingsPage() {
     setLanguage((prev: 'hebrew' | 'english') => prev === 'hebrew' ? 'english' : 'hebrew');
   };
 
-  const toggleMeasurementSystem = async () => {
-    const newSystem = measurementSystem === 'metric' ? 'imperial' : 'metric';
-    setMeasurementSystem(newSystem);
-    try {
-      await UserEntity.update({ measurement_system: newSystem });
-    } catch (error) {
-      console.error('Error updating measurement system:', error);
-      // Revert on error
-      setMeasurementSystem(measurementSystem);
-    }
-  };
-
   const handleLogin = async (provider: 'google' | 'facebook') => {
     try {
       console.log('Settings: Starting login with provider:', provider);
@@ -188,19 +176,31 @@ export default function SettingsPage() {
                 {language === 'hebrew' ? 'יחידות מדידה' : 'Measurement Units'}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <Button onClick={toggleMeasurementSystem} className="bg-idf-olive text-light-sand w-full btn-press">
-                {measurementSystem === 'metric'
-                  ? (language === 'hebrew' ? 'עבור למערכת אימפריאלית (מיילים)' : 'Switch to Imperial (miles)')
-                  : (language === 'hebrew' ? 'עבור למערכת מטרית (ק"מ)' : 'Switch to Metric (km)')
-                }
+            <CardContent className="space-y-3">
+              <Button
+                onClick={() => {
+                  if (measurementSystem !== 'metric') {
+                    setMeasurementSystem('metric');
+                    UserEntity.update({ measurement_system: 'metric' }).catch(console.error);
+                  }
+                }}
+                variant={measurementSystem === 'metric' ? 'default' : 'outline'}
+                className="w-full btn-press"
+              >
+                {language === 'hebrew' ? 'מטרי (ק"מ, ק"ג)' : 'Metric (km, kg)'}
               </Button>
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                {measurementSystem === 'metric'
-                  ? (language === 'hebrew' ? 'כרגע: מטרי (ק"מ, ק"ג)' : 'Current: Metric (km, kg)')
-                  : (language === 'hebrew' ? 'כרגע: אימפריאלי (מייל, פאונד)' : 'Current: Imperial (miles, lbs)')
-                }
-              </p>
+              <Button
+                onClick={() => {
+                  if (measurementSystem !== 'imperial') {
+                    setMeasurementSystem('imperial');
+                    UserEntity.update({ measurement_system: 'imperial' }).catch(console.error);
+                  }
+                }}
+                variant={measurementSystem === 'imperial' ? 'default' : 'outline'}
+                className="w-full btn-press"
+              >
+                {language === 'hebrew' ? 'אימפריאלי (מייל, פאונד)' : 'Imperial (miles, lbs)'}
+              </Button>
             </CardContent>
           </Card>
 
