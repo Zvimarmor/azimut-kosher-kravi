@@ -255,20 +255,11 @@ const assembleFullWorkout = async () => {
     }
 };
 
-const handleWorkoutHistory = async (workoutData) => {
+const handleWorkoutHistory = async (workoutData: Omit<WorkoutHistory, 'id'>) => {
     try {
-        const user = await User.me();
-        // Fetch all history entries, sorted by creation date (oldest first)
-        const history = await WorkoutHistory.filter({ created_by: user.email }, 'created_date', 100);
-
-        // If history exceeds the limit, delete the oldest entry
-        if (history.length >= 25) {
-            const oldestWorkout = history[0];
-            await WorkoutHistory.delete(oldestWorkout.id);
-        }
-
         // Create the new history entry
         await WorkoutHistory.create(workoutData);
+        console.log('Workout history saved successfully');
     } catch (error) {
         console.error("Error managing workout history:", error);
     }
@@ -489,12 +480,22 @@ export default function CreateWorkout() {
   const markWorkoutComplete = async () => {
     if (!workoutStartTime) return;
     try {
+      const user = await User.me();
       const totalWorkoutDuration = Math.round((Date.now() - workoutStartTime) / 60000); // in minutes
+
+      // Collect all exercise names from completed tasks
+      const exerciseNames = completedTasks
+        .filter(task => task.type === 'active')
+        .map(task => task.title);
+
       await handleWorkoutHistory({
+        userId: user.email || user.id,
         workout_title: currentWorkouts.map(w => w.title).join(" + "),
         duration_completed: totalWorkoutDuration,
-        difficulty: currentWorkouts[currentWorkouts.length - 1]?.difficulty || "Moderate", 
-        completion_status: "Completed",
+        difficulty: (currentWorkouts[currentWorkouts.length - 1]?.difficulty?.toLowerCase() || "moderate") as 'easy' | 'moderate' | 'hard',
+        feeling: 'okay', // Default, will be updated with feedback
+        completion_date: new Date().toISOString(),
+        exercises_completed: exerciseNames,
       });
       setIsCompleted(true);
       setShowSummary(true);
