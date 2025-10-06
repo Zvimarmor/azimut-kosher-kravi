@@ -1,12 +1,13 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { ArrowLeft, Settings as SettingsIcon, Globe, Bell, Shield, Info, User, LogOut, LogIn, Palette } from "lucide-react";
+import { ArrowLeft, Settings as SettingsIcon, Globe, Bell, Shield, Info, User, LogOut, LogIn, Palette, Ruler } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "../../lib/utils";
 import { LanguageContext } from "../../components/shared/LanguageContext";
 import { useAuth } from "../../features/auth/AuthContext";
 import { useTheme } from "../../components/shared/ThemeContext";
+import { User as UserEntity } from "../../Entities/User";
 
 export default function SettingsPage() {
   const context = useContext(LanguageContext);
@@ -14,9 +15,35 @@ export default function SettingsPage() {
   const { currentUser, login, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
+  const [measurementSystem, setMeasurementSystem] = useState<'metric' | 'imperial'>('metric');
+
+  // Load measurement system preference on mount
+  useEffect(() => {
+    const loadMeasurementSystem = async () => {
+      try {
+        const user = await UserEntity.me();
+        setMeasurementSystem(user.measurement_system || 'metric');
+      } catch (error) {
+        console.error('Error loading measurement system:', error);
+      }
+    };
+    loadMeasurementSystem();
+  }, []);
 
   const toggleLanguage = () => {
     setLanguage((prev: 'hebrew' | 'english') => prev === 'hebrew' ? 'english' : 'hebrew');
+  };
+
+  const toggleMeasurementSystem = async () => {
+    const newSystem = measurementSystem === 'metric' ? 'imperial' : 'metric';
+    setMeasurementSystem(newSystem);
+    try {
+      await UserEntity.update({ measurement_system: newSystem });
+    } catch (error) {
+      console.error('Error updating measurement system:', error);
+      // Revert on error
+      setMeasurementSystem(measurementSystem);
+    }
   };
 
   const handleLogin = async (provider: 'google' | 'facebook') => {
@@ -151,6 +178,29 @@ export default function SettingsPage() {
               <Button onClick={toggleLanguage} className="bg-idf-olive text-light-sand w-full btn-press">
                 {language === 'hebrew' ? 'Switch to English' : 'עבור לעברית'}
               </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white card-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Ruler className="w-5 h-5 text-idf-olive" />
+                {language === 'hebrew' ? 'יחידות מדידה' : 'Measurement Units'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={toggleMeasurementSystem} className="bg-idf-olive text-light-sand w-full btn-press">
+                {measurementSystem === 'metric'
+                  ? (language === 'hebrew' ? 'עבור למערכת אימפריאלית (מיילים)' : 'Switch to Imperial (miles)')
+                  : (language === 'hebrew' ? 'עבור למערכת מטרית (ק"מ)' : 'Switch to Metric (km)')
+                }
+              </Button>
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                {measurementSystem === 'metric'
+                  ? (language === 'hebrew' ? 'כרגע: מטרי (ק"מ, ק"ג)' : 'Current: Metric (km, kg)')
+                  : (language === 'hebrew' ? 'כרגע: אימפריאלי (מייל, פאונד)' : 'Current: Imperial (miles, lbs)')
+                }
+              </p>
             </CardContent>
           </Card>
 

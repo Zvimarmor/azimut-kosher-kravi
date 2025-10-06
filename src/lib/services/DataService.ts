@@ -204,6 +204,7 @@ let currentUser: User = {
   email: 'test@example.com',
   fitness_level: 'intermediate',
   preferred_language: 'hebrew',
+  measurement_system: 'metric',
   attributes: {
     push_strength: 5,
     pull_strength: 4,

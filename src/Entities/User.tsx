@@ -14,6 +14,7 @@ export interface User {
   age?: number;
   fitness_level: 'beginner' | 'intermediate' | 'advanced' | 'elite';
   preferred_language: 'hebrew' | 'english';
+  measurement_system?: 'metric' | 'imperial'; // Metric (km, kg) or Imperial (miles, lbs)
   attributes: UserAttributes;
   created_date: string;
   last_active: string;
@@ -47,6 +48,7 @@ export class User {
       age: data.age,
       fitness_level: data.fitness_level || 'beginner',
       preferred_language: data.preferred_language || 'hebrew',
+      measurement_system: data.measurement_system || 'metric',
       attributes: data.attributes || {
         push_strength: 5,
         pull_strength: 5,
@@ -83,6 +85,7 @@ export class UserService {
       age: data.age,
       fitness_level: data.fitness_level || 'beginner',
       preferred_language: data.preferred_language || 'hebrew',
+      measurement_system: data.measurement_system || 'metric',
       attributes: data.attributes || {
         push_strength: 5,
         pull_strength: 5,

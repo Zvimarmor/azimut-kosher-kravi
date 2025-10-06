@@ -1,0 +1,328 @@
+// GPS tracking service for running workouts
+
+export interface GPSPosition {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+  timestamp: number;
+}
+
+export interface GPSStats {
+  totalDistance: number; // in meters
+  averagePace: number; // in minutes per km (metric) or minutes per mile (imperial)
+  currentSpeed: number; // in km/h (metric) or mph (imperial)
+  duration: number; // in seconds
+}
+
+export type MeasurementSystem = 'metric' | 'imperial';
+
+class GPSTrackingService {
+  private watchId: number | null = null;
+  private positions: GPSPosition[] = [];
+  private startTime: number | null = null;
+  private onUpdateCallback: ((stats: GPSStats) => void) | null = null;
+  private isTracking: boolean = false;
+  private measurementSystem: MeasurementSystem = 'metric';
+
+  /**
+   * Set the measurement system
+   */
+  setMeasurementSystem(system: MeasurementSystem): void {
+    this.measurementSystem = system;
+  }
+
+  /**
+   * Get the current measurement system
+   */
+  getMeasurementSystem(): MeasurementSystem {
+    return this.measurementSystem;
+  }
+
+  /**
+   * Convert meters to the appropriate distance unit
+   */
+  private convertDistance(meters: number): number {
+    if (this.measurementSystem === 'imperial') {
+      return meters * 0.000621371; // Convert to miles
+    }
+    return meters / 1000; // Convert to kilometers
+  }
+
+  /**
+   * Convert m/s to the appropriate speed unit
+   */
+  private convertSpeed(metersPerSecond: number): number {
+    if (this.measurementSystem === 'imperial') {
+      return metersPerSecond * 2.23694; // Convert to mph
+    }
+    return metersPerSecond * 3.6; // Convert to km/h
+  }
+
+  /**
+   * Calculate distance between two GPS coordinates using Haversine formula
+   * Returns distance in meters
+   */
+  private calculateDistance(pos1: GPSPosition, pos2: GPSPosition): number {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = (pos1.latitude * Math.PI) / 180;
+    const φ2 = (pos2.latitude * Math.PI) / 180;
+    const Δφ = ((pos2.latitude - pos1.latitude) * Math.PI) / 180;
+    const Δλ = ((pos2.longitude - pos1.longitude) * Math.PI) / 180;
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Distance in meters
+  }
+
+  /**
+   * Calculate total distance from all recorded positions (in meters)
+   */
+  private getTotalDistanceMeters(): number {
+    if (this.positions.length < 2) return 0;
+
+    let totalDistance = 0;
+    for (let i = 1; i < this.positions.length; i++) {
+      totalDistance += this.calculateDistance(this.positions[i - 1], this.positions[i]);
+    }
+    return totalDistance;
+  }
+
+  /**
+   * Calculate average pace in minutes per km/mile
+   */
+  private getAveragePace(): number {
+    const distanceMeters = this.getTotalDistanceMeters();
+    const duration = this.getDuration();
+
+    if (distanceMeters === 0 || duration === 0) return 0;
+
+    const distance = this.convertDistance(distanceMeters);
+    const durationMinutes = duration / 60;
+
+    return durationMinutes / distance; // min/km or min/mile
+  }
+
+  /**
+   * Calculate current speed in km/h or mph
+   */
+  private getCurrentSpeed(): number {
+    if (this.positions.length < 2) return 0;
+
+    const lastTwo = this.positions.slice(-2);
+    const distanceMeters = this.calculateDistance(lastTwo[0], lastTwo[1]);
+    const timeDiff = (lastTwo[1].timestamp - lastTwo[0].timestamp) / 1000; // in seconds
+
+    if (timeDiff === 0) return 0;
+
+    const speedMs = distanceMeters / timeDiff; // m/s
+    return this.convertSpeed(speedMs);
+  }
+
+  /**
+   * Get duration in seconds
+   */
+  private getDuration(): number {
+    if (!this.startTime) return 0;
+    return (Date.now() - this.startTime) / 1000;
+  }
+
+  /**
+   * Get current GPS stats
+   */
+  private getStats(): GPSStats {
+    return {
+      totalDistance: this.getTotalDistanceMeters(),
+      averagePace: this.getAveragePace(),
+      currentSpeed: this.getCurrentSpeed(),
+      duration: this.getDuration()
+    };
+  }
+
+  /**
+   * Handle position update from GPS
+   */
+  private handlePosition = (position: GeolocationPosition) => {
+    const gpsPosition: GPSPosition = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+      timestamp: position.timestamp
+    };
+
+    // Only add position if accuracy is reasonable (within 50 meters)
+    if (gpsPosition.accuracy <= 50) {
+      this.positions.push(gpsPosition);
+
+      // Notify callback with updated stats
+      if (this.onUpdateCallback) {
+        this.onUpdateCallback(this.getStats());
+      }
+    } else {
+      console.warn('GPS accuracy too low, skipping position:', gpsPosition.accuracy);
+    }
+  };
+
+  /**
+   * Handle GPS error
+   */
+  private handleError = (error: GeolocationPositionError) => {
+    console.error('GPS error:', error.message);
+
+    switch (error.code) {
+      case error.PERMISSION_DENIED:
+        throw new Error('Location permission denied. Please enable location access.');
+      case error.POSITION_UNAVAILABLE:
+        throw new Error('Location information unavailable.');
+      case error.TIMEOUT:
+        throw new Error('Location request timed out.');
+      default:
+        throw new Error('Unknown GPS error occurred.');
+    }
+  };
+
+  /**
+   * Check if GPS tracking is supported
+   */
+  isSupported(): boolean {
+    return 'geolocation' in navigator;
+  }
+
+  /**
+   * Request location permission
+   */
+  async requestPermission(): Promise<boolean> {
+    if (!this.isSupported()) {
+      throw new Error('Geolocation is not supported by this browser.');
+    }
+
+    try {
+      // Try to get current position to trigger permission request
+      await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          timeout: 10000
+        });
+      });
+      return true;
+    } catch (error: any) {
+      if (error.code === 1) {
+        // Permission denied
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Start GPS tracking
+   */
+  startTracking(onUpdate: (stats: GPSStats) => void, measurementSystem?: MeasurementSystem): void {
+    if (this.isTracking) {
+      console.warn('GPS tracking already started');
+      return;
+    }
+
+    if (!this.isSupported()) {
+      throw new Error('Geolocation is not supported by this browser.');
+    }
+
+    if (measurementSystem) {
+      this.measurementSystem = measurementSystem;
+    }
+
+    this.isTracking = true;
+    this.positions = [];
+    this.startTime = Date.now();
+    this.onUpdateCallback = onUpdate;
+
+    // Start watching position with high accuracy
+    this.watchId = navigator.geolocation.watchPosition(
+      this.handlePosition,
+      this.handleError,
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    );
+
+    console.log('GPS tracking started with', this.measurementSystem, 'units');
+  }
+
+  /**
+   * Stop GPS tracking and return final stats
+   */
+  stopTracking(): GPSStats {
+    if (this.watchId !== null) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = null;
+    }
+
+    this.isTracking = false;
+    const finalStats = this.getStats();
+
+    console.log('GPS tracking stopped. Final stats:', finalStats);
+    console.log('Total positions recorded:', this.positions.length);
+
+    return finalStats;
+  }
+
+  /**
+   * Reset tracking data
+   */
+  reset(): void {
+    this.stopTracking();
+    this.positions = [];
+    this.startTime = null;
+    this.onUpdateCallback = null;
+  }
+
+  /**
+   * Get current tracking status
+   */
+  getIsTracking(): boolean {
+    return this.isTracking;
+  }
+
+  /**
+   * Get all recorded positions (for debugging or route display)
+   */
+  getPositions(): GPSPosition[] {
+    return [...this.positions];
+  }
+
+  /**
+   * Format distance for display
+   */
+  formatDistance(meters: number): string {
+    const distance = this.convertDistance(meters);
+    const unit = this.measurementSystem === 'metric' ? 'km' : 'mi';
+    return `${distance.toFixed(2)} ${unit}`;
+  }
+
+  /**
+   * Format pace for display
+   */
+  formatPace(minutesPerUnit: number): string {
+    if (minutesPerUnit === 0 || !isFinite(minutesPerUnit)) return '--:--';
+
+    const minutes = Math.floor(minutesPerUnit);
+    const seconds = Math.floor((minutesPerUnit - minutes) * 60);
+    const unit = this.measurementSystem === 'metric' ? 'km' : 'mi';
+
+    return `${minutes}:${seconds.toString().padStart(2, '0')}/${unit}`;
+  }
+
+  /**
+   * Format speed for display
+   */
+  formatSpeed(speed: number): string {
+    const unit = this.measurementSystem === 'metric' ? 'km/h' : 'mph';
+    return `${speed.toFixed(1)} ${unit}`;
+  }
+}
+
+// Export singleton instance
+export const gpsService = new GPSTrackingService();
