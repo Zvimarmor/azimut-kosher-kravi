@@ -7,11 +7,14 @@ import { Special } from "../../Entities/Special";
 import { WorkoutHistory } from "../../Entities/WorkoutHistory";
 import { User } from "../../Entities/User";
 import { Button } from "../../components/ui/button";
-import { ArrowLeft, Timer, Target, Zap, Play, Check, RotateCcw, ZapOff, Clock, ThumbsUp, Star, Coffee } from "lucide-react";
+import { ArrowLeft, Timer, Target, Zap, Play, Check, RotateCcw, ZapOff, Clock, ThumbsUp, Star, Coffee, MapPin, Navigation } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "../../lib/utils";
 import { LanguageContext } from "../../components/shared/LanguageContext";
 import { AnimatePresence, motion } from "framer-motion";
+import { gpsService, type GPSStats } from "../../lib/services/gpsService";
+import { GPSPermissionModal } from "../../components/gps/GPSPermissionModal";
+import { GPSWarningModal } from "../../components/gps/GPSWarningModal";
 
 const pageTexts = {
   hebrew: {
@@ -288,9 +291,22 @@ export default function CreateWorkout() {
   const { language } = useContext(LanguageContext);
   const location = useLocation();
 
+  // GPS tracking states
+  const [showGPSPermission, setShowGPSPermission] = useState(false);
+  const [showGPSWarning, setShowGPSWarning] = useState(false);
+  const [gpsWarningType, setGPSWarningType] = useState<'unavailable' | 'poor_signal'>('unavailable');
+  const [gpsStats, setGPSStats] = useState<GPSStats | null>(null);
+  const [isGPSActive, setIsGPSActive] = useState(false);
+  const [skipGPS, setSkipGPS] = useState(false);
+
   const currentTexts = pageTexts[language];
   const currentTask = tasks[currentTaskIndex];
   const currentWorkout = currentWorkouts[currentWorkoutIndex];
+
+  // Check if current workout is a running workout
+  const isRunningWorkout = (workout: any): workout is RunningEndurance => {
+    return workout && 'distance' in workout && workout.category === 'Cardio';
+  };
 
   useEffect(() => {
     const generateWorkoutSequence = async () => {
@@ -354,7 +370,61 @@ export default function CreateWorkout() {
     generateWorkoutSequence();
   }, [location.search]);
 
-  const startWorkout = () => {
+  // GPS initialization
+  const initializeGPS = async () => {
+    if (!gpsService.isSupported()) {
+      setGPSWarningType('unavailable');
+      setShowGPSWarning(true);
+      return;
+    }
+
+    try {
+      const hasPermission = await gpsService.requestPermission();
+      if (!hasPermission) {
+        setGPSWarningType('unavailable');
+        setShowGPSWarning(true);
+        return;
+      }
+
+      // Get user's measurement system preference
+      const user = await User.me();
+      const measurementSystem = user.measurement_system || 'metric';
+
+      // Start GPS tracking
+      gpsService.startTracking((stats) => {
+        setGPSStats(stats);
+      }, measurementSystem);
+
+      setIsGPSActive(true);
+    } catch (error) {
+      console.error('GPS initialization error:', error);
+      setGPSWarningType('unavailable');
+      setShowGPSWarning(true);
+    }
+  };
+
+  // Stop GPS tracking
+  const stopGPS = () => {
+    if (isGPSActive) {
+      const finalStats = gpsService.stopTracking();
+      setGPSStats(finalStats);
+      setIsGPSActive(false);
+    }
+  };
+
+  // Cleanup GPS on unmount
+  useEffect(() => {
+    return () => {
+      stopGPS();
+    };
+  }, []);
+
+  const startWorkout = async () => {
+      // Check if this is a running workout and GPS not skipped
+      if (isRunningWorkout(currentWorkout) && !skipGPS) {
+        await initializeGPS();
+      }
+
       setCurrentTaskIndex(0);
       setTaskStartTime(Date.now());
       setWorkoutStartTime(Date.now());
@@ -378,11 +448,22 @@ export default function CreateWorkout() {
              setTaskStartTime(Date.now());
           }
       } else if (currentWorkoutIndex < currentWorkouts.length - 1) {
+          // Stop GPS if leaving a running workout
+          if (isRunningWorkout(currentWorkout)) {
+            stopGPS();
+          }
+
           const nextWorkoutIndex = currentWorkoutIndex + 1;
           setCurrentWorkoutIndex(nextWorkoutIndex);
           setCurrentTaskIndex(0);
 
           const nextWorkout = currentWorkouts[nextWorkoutIndex];
+
+          // Start GPS if next workout is running
+          if (isRunningWorkout(nextWorkout) && !skipGPS) {
+            await initializeGPS();
+          }
+
           const user = await User.me();
           const userLevels = {
             push_strength: user.attributes?.push_strength || 1,
@@ -399,6 +480,8 @@ export default function CreateWorkout() {
           setTaskStartTime(Date.now());
       }
       else {
+          // Stop GPS before completing workout
+          stopGPS();
           markWorkoutComplete();
       }
   };
@@ -594,27 +677,73 @@ export default function CreateWorkout() {
 
   // Workout Player Screen
   if (currentTask && currentWorkout) {
+    const showGPSStats = isRunningWorkout(currentWorkout) && isGPSActive && gpsStats;
+
     return (
-        <div className="p-6 flex flex-col items-center justify-center text-dark-olive" style={{ height: 'calc(100vh - 73px)' }} dir="rtl">
-           <AnimatePresence mode="wait">
-            {currentTask.type === 'active' ? (
-                 <motion.div key="active" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full max-w-md text-center">
-                    <h3 className="text-lg font-semibold text-gray-500 mb-2">{currentWorkout.title} ({currentWorkoutIndex + 1}/{currentWorkouts.length})</h3>
-                    <h2 className="text-3xl font-bold text-idf-olive mb-2">{currentTask.title}</h2>
-                    <p className="text-gray-600 text-lg whitespace-pre-wrap mb-8">{currentTask.description}</p>
-                    <TimerDisplay startTime={taskStartTime} />
-                    <Button onClick={advanceTask} className="w-full bg-idf-olive text-light-sand font-bold py-4 rounded-xl btn-press card-shadow mt-12 text-lg">
-                        <Check className="w-5 h-5 ml-2" />
-                        {currentTexts.finished}
-                    </Button>
-                 </motion.div>
-            ) : (
-                <motion.div key="rest" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                    <RestDisplay duration={currentTask.duration} onComplete={advanceTask} />
-                </motion.div>
-            )}
-           </AnimatePresence>
-        </div>
+        <>
+          <div className="p-6 flex flex-col items-center justify-center text-dark-olive" style={{ height: 'calc(100vh - 73px)' }} dir="rtl">
+             <AnimatePresence mode="wait">
+              {currentTask.type === 'active' ? (
+                   <motion.div key="active" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full max-w-md text-center">
+                      <h3 className="text-lg font-semibold text-gray-500 mb-2">{currentWorkout.title} ({currentWorkoutIndex + 1}/{currentWorkouts.length})</h3>
+                      <h2 className="text-3xl font-bold text-idf-olive mb-2">{currentTask.title}</h2>
+                      <p className="text-gray-600 text-lg whitespace-pre-wrap mb-8">{currentTask.description}</p>
+
+                      <TimerDisplay startTime={taskStartTime} />
+
+                      {/* GPS Stats Display */}
+                      {showGPSStats && (
+                        <div className="mt-8 grid grid-cols-2 gap-4">
+                          <div className="bg-white rounded-lg p-4 card-shadow">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                              <Navigation className="w-4 h-4 text-idf-olive" />
+                              <span className="text-xs text-gray-500">{language === 'hebrew' ? 'מרחק' : 'Distance'}</span>
+                            </div>
+                            <div className="text-2xl font-bold text-dark-olive">
+                              {gpsService.formatDistance(gpsStats.totalDistance)}
+                            </div>
+                          </div>
+                          <div className="bg-white rounded-lg p-4 card-shadow">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                              <Timer className="w-4 h-4 text-idf-olive" />
+                              <span className="text-xs text-gray-500">{language === 'hebrew' ? 'קצב ממוצע' : 'Avg Pace'}</span>
+                            </div>
+                            <div className="text-2xl font-bold text-dark-olive">
+                              {gpsService.formatPace(gpsStats.averagePace)}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <Button onClick={advanceTask} className="w-full bg-idf-olive text-light-sand font-bold py-4 rounded-xl btn-press card-shadow mt-12 text-lg">
+                          <Check className="w-5 h-5 ml-2" />
+                          {currentTexts.finished}
+                      </Button>
+                   </motion.div>
+              ) : (
+                  <motion.div key="rest" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                      <RestDisplay duration={currentTask.duration} onComplete={advanceTask} />
+                  </motion.div>
+              )}
+             </AnimatePresence>
+          </div>
+
+          {/* GPS Warning Modal */}
+          {showGPSWarning && (
+            <GPSWarningModal
+              language={language}
+              warningType={gpsWarningType}
+              onContinueWithoutGPS={() => {
+                setShowGPSWarning(false);
+                setSkipGPS(true);
+              }}
+              onWaitForGPS={() => {
+                setShowGPSWarning(false);
+                initializeGPS();
+              }}
+            />
+          )}
+        </>
     );
   }
 
