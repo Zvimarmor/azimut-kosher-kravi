@@ -217,8 +217,26 @@ let currentUser: User = {
   last_active: new Date().toISOString()
 };
 
-// Mock workout history storage
-let workoutHistory: WorkoutHistory[] = [];
+// Workout history storage in localStorage
+const WORKOUT_HISTORY_KEY = 'workout_history';
+
+function getStoredWorkoutHistory(): WorkoutHistory[] {
+  try {
+    const stored = localStorage.getItem(WORKOUT_HISTORY_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('Error reading workout history from storage:', error);
+    return [];
+  }
+}
+
+function setStoredWorkoutHistory(history: WorkoutHistory[]): void {
+  try {
+    localStorage.setItem(WORKOUT_HISTORY_KEY, JSON.stringify(history));
+  } catch (error) {
+    console.error('Error saving workout history to storage:', error);
+  }
+}
 
 // CSV to Entity transformation functions
 function transformCSVToWarmup(row: CSVRow): Warmup {
@@ -341,51 +359,116 @@ export class DataService {
 
   // User methods
   static async getCurrentUser(): Promise<User> {
+    // If no user exists, create one with default values
+    if (!currentUser.id || !currentUser.attributes) {
+      currentUser = {
+        id: crypto.randomUUID(),
+        name: currentUser.name || 'User',
+        email: currentUser.email || undefined,
+        fitness_level: 'beginner',
+        preferred_language: 'hebrew',
+        measurement_system: 'metric',
+        attributes: {
+          push_strength: 5,
+          pull_strength: 5,
+          cardio_endurance: 5,
+          running_volume: 5,
+          rucking_volume: 5,
+          weight_work: 5
+        },
+        created_date: new Date().toISOString(),
+        last_active: new Date().toISOString(),
+        goals: [],
+        medical_restrictions: []
+      };
+    }
+
+    // Always ensure attributes exist with default values
+    if (!currentUser.attributes) {
+      currentUser.attributes = {
+        push_strength: 5,
+        pull_strength: 5,
+        cardio_endurance: 5,
+        running_volume: 5,
+        rucking_volume: 5,
+        weight_work: 5
+      };
+    }
+
+    // Ensure required fields have values
+    currentUser.fitness_level = currentUser.fitness_level || 'beginner';
+    currentUser.preferred_language = currentUser.preferred_language || 'hebrew';
+    currentUser.measurement_system = currentUser.measurement_system || 'metric';
+    
     return Promise.resolve({ ...currentUser });
   }
 
   static async updateUser(updates: Partial<User>): Promise<User> {
-    currentUser = { ...currentUser, ...updates, last_active: new Date().toISOString() };
+    // Get current user with defaults ensured
+    const current = await this.getCurrentUser();
+    
+    // Merge updates with current user, preserving defaults
+    currentUser = { 
+      ...current, 
+      ...updates,
+      // Always preserve attributes structure
+      attributes: {
+        ...current.attributes,
+        ...(updates.attributes || {})
+      },
+      last_active: new Date().toISOString()
+    };
+    
     return Promise.resolve({ ...currentUser });
   }
 
   // Workout History methods
   static async getWorkoutHistory(userEmail: string): Promise<WorkoutHistory[]> {
-    return Promise.resolve(
-      workoutHistory
-        .filter(w => w.userId === userEmail)
-        .sort((a, b) => new Date(b.completion_date).getTime() - new Date(a.completion_date).getTime())
-        .slice(0, 25)
-    );
+    const history = getStoredWorkoutHistory()
+      .filter((w: WorkoutHistory) => w.userId === userEmail)
+      .sort((a: WorkoutHistory, b: WorkoutHistory) => 
+        new Date(b.completion_date).getTime() - new Date(a.completion_date).getTime()
+      )
+      .slice(0, 25);
+
+    return Promise.resolve(history);
   }
 
   static async addWorkoutHistory(workout: Omit<WorkoutHistory, 'id'>): Promise<WorkoutHistory> {
+    const history = getStoredWorkoutHistory();
+    
     const newWorkout: WorkoutHistory = {
       ...workout,
       id: crypto.randomUUID()
     };
 
     // Add to history
-    workoutHistory.push(newWorkout);
+    history.push(newWorkout);
 
     // Keep only last 25 per user
-    const userWorkouts = workoutHistory.filter(w => w.userId === workout.userId);
+    const userWorkouts = history.filter((w: WorkoutHistory) => w.userId === workout.userId);
     if (userWorkouts.length > 25) {
       // Remove oldest entries for this user
-      const sortedUserWorkouts = userWorkouts.sort((a, b) =>
+      const sortedUserWorkouts = userWorkouts.sort((a: WorkoutHistory, b: WorkoutHistory) =>
         new Date(a.completion_date).getTime() - new Date(b.completion_date).getTime()
       );
       const toRemove = sortedUserWorkouts.slice(0, userWorkouts.length - 25);
-      workoutHistory = workoutHistory.filter(w =>
-        w.userId !== workout.userId || !toRemove.some(r => r.id === w.id)
+      const updatedHistory = history.filter((w: WorkoutHistory) =>
+        w.userId !== workout.userId || !toRemove.some((r: WorkoutHistory) => r.id === w.id)
       );
+      
+      setStoredWorkoutHistory(updatedHistory);
+    } else {
+      setStoredWorkoutHistory(history);
     }
 
     return Promise.resolve(newWorkout);
   }
 
   static async deleteWorkoutHistory(id: string): Promise<void> {
-    workoutHistory = workoutHistory.filter(w => w.id !== id);
+    const history = getStoredWorkoutHistory();
+    const updatedHistory = history.filter((w: WorkoutHistory) => w.id !== id);
+    setStoredWorkoutHistory(updatedHistory);
     return Promise.resolve();
   }
 }

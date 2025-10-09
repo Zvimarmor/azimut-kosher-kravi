@@ -5,18 +5,28 @@ import { Special } from "../../Entities/Special";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
-import { ArrowLeft, Dumbbell, Target, Search } from "lucide-react";
+import { ArrowLeft, Dumbbell, Target, Search, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "../../lib/utils";
 import { LanguageContext } from "../../components/shared/LanguageContext";
 import { Input } from "../../components/ui/input";
 
+type WorkoutType = {
+  id: string;
+  title: string;
+  instructions?: string;
+  difficulty: "beginner" | "intermediate" | "advanced" | "elite";
+  source: "strength" | "special";
+  category?: string;
+};
+
 export default function SelectWorkout() {
-  const [workouts, setWorkouts] = useState<any[]>([]);
-  const [filteredWorkouts, setFilteredWorkouts] = useState<any[]>([]);
+  const [workouts, setWorkouts] = useState<WorkoutType[]>([]);
+  const [filteredWorkouts, setFiltereredWorkouts] = useState<WorkoutType[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const context = useContext(LanguageContext);
   const language = context?.language || 'hebrew';
   const t = context?.allTexts[language];
@@ -26,13 +36,13 @@ export default function SelectWorkout() {
   }, []);
 
   useEffect(() => {
-    const filterWorkouts = () => { // Moved filterWorkouts inside useEffect
+    const filterWorkouts = () => {
       let filtered = workouts;
       
       if (searchTerm) {
         filtered = filtered.filter(workout => 
-          workout.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          workout.category?.toLowerCase().includes(searchTerm.toLowerCase())
+          (workout.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+          (workout.category?.toLowerCase() || '').includes(searchTerm.toLowerCase())
         );
       }
       
@@ -40,36 +50,67 @@ export default function SelectWorkout() {
         filtered = filtered.filter(workout => workout.source === selectedCategory);
       }
       
-      setFilteredWorkouts(filtered);
+      setFiltereredWorkouts(filtered);
     };
 
     filterWorkouts();
   }, [workouts, searchTerm, selectedCategory]);
 
   const loadWorkouts = async () => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
       const [strengthWorkouts, specialWorkouts] = await Promise.all([
-        StrengthExplosive.list(),
-        Special.list()
+        StrengthExplosive.list().catch(err => {
+          console.error('Failed to load strength workouts:', err);
+          throw new Error('Failed to load strength workouts');
+        }),
+        Special.list().catch(err => {
+          console.error('Failed to load special workouts:', err);
+          throw new Error('Failed to load special workouts');
+        })
       ]);
-      
-      const allWorkouts = [
-        ...strengthWorkouts.map(w => ({ ...w, source: 'strength' })),
-        ...specialWorkouts.map(w => ({ ...w, source: 'special' }))
+
+      // Check if we got any workouts at all
+      if (!strengthWorkouts?.length && !specialWorkouts?.length) {
+        throw new Error('No workout data available. The required files may be missing or corrupted.');
+      }
+
+      const allWorkouts: WorkoutType[] = [
+        ...strengthWorkouts.map(w => ({
+          id: w.id || '',
+          title: w.title,
+          instructions: w.instructions,
+          difficulty: w.difficulty || 'Beginner',
+          source: 'strength' as const,
+          category: w.category
+        })),
+        ...specialWorkouts.map(w => ({
+          id: w.id || '',
+          title: w.title,
+          instructions: w.instructions,
+          difficulty: w.difficulty || 'Beginner',
+          source: 'special' as const,
+          category: w.category
+        }))
       ];
-      
+
       setWorkouts(allWorkouts);
-    } catch (error) {
+      setFiltereredWorkouts(allWorkouts);
+    } catch (error: unknown) {
       console.error("Error loading workouts:", error);
+      setError(error instanceof Error ? error.message : 'Failed to load workouts. Please try refreshing the page.');
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
-  const difficultyColors = {
-    "Beginner": "bg-green-100 text-green-800",
-    "Intermediate": "bg-yellow-100 text-yellow-800", 
-    "Advanced": "bg-orange-100 text-orange-800",
-    "Elite": "bg-red-100 text-red-800"
+  const difficultyColors: Record<WorkoutType['difficulty'], string> = {
+    "beginner": "bg-green-100 text-green-800",
+    "intermediate": "bg-yellow-100 text-yellow-800", 
+    "advanced": "bg-orange-100 text-orange-800",
+    "elite": "bg-red-100 text-red-800"
   };
 
   const categoryColors = {
@@ -81,6 +122,23 @@ export default function SelectWorkout() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="w-16 h-16 border-4 border-[var(--color-accent-primary)] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 h-full flex flex-col items-center justify-center" dir={language === 'hebrew' ? 'rtl' : 'ltr'}>
+        <Card className="bg-white card-shadow max-w-md w-full">
+          <CardContent className="p-8 text-center">
+            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-[var(--color-text-dark)] mb-2">{error}</h3>
+            <p className="text-gray-600 mb-4">{"אירעה שגיאה בטעינת האימונים."}</p>
+            <Button onClick={loadWorkouts}>
+              {"נסה שנית"}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

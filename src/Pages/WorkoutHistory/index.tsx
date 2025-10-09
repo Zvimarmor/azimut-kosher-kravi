@@ -10,41 +10,36 @@ import { format } from "date-fns";
 import { LanguageContext } from "../../components/shared/LanguageContext";
 import { User } from "../../Entities/User";
 
-const handleWorkoutHistory = async (workoutData) => {
-    try {
-        const user = await User.me();
-        // Fetch all history entries for the user, sorted by creation date (oldest first)
-        // We fetch up to 100 to ensure we can accurately determine the oldest if the limit is slightly exceeded.
-        const history = await WorkoutHistory.filter({ created_by: user.email }, 'created_date', 100);
+const handleWorkoutHistory = async (workoutData: Partial<WorkoutHistory>) => {
+  try {
+    const user = await User.me();
+    // Use userId consistently for identifying user's workouts
+    const history = await WorkoutHistory.filter({ userId: user.email || user.id });
 
-        // If history count is 25 or more, delete the oldest entry to make space for the new one.
-        // This ensures we maintain a maximum of 25 entries after adding a new one.
-        if (history.length >= 25) {
-            const oldestWorkout = history[0]; // The first element is the oldest because of 'created_date' sort
-            await WorkoutHistory.delete(oldestWorkout.id);
-            console.log("Deleted oldest workout history entry:", oldestWorkout.id);
-        }
-
-        // Create the new history entry
-        await WorkoutHistory.create(workoutData);
-        console.log("Created new workout history entry.");
-    } catch (error) {
-        console.error("Error managing workout history:", error);
-    }
+    // No need to manually manage the history limit as DataService handles it
+    await WorkoutHistory.create({
+      ...workoutData,
+      userId: user.email || user.id // Ensure userId is set correctly
+    });
+    console.log("Created new workout history entry.");
+  } catch (error) {
+    console.error("Error managing workout history:", error);
+  }
 };
 
 export default function WorkoutHistoryPage() {
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState<WorkoutHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { language } = useContext(LanguageContext);
+  const languageContext = useContext(LanguageContext);
+  const language = languageContext?.language || 'hebrew';
 
   useEffect(() => {
     const loadHistory = async () => {
       setIsLoading(true);
       try {
         const user = await User.me();
-        // Load only user's own workouts, sorted by most recent first, capped at 25.
-        const data = await WorkoutHistory.filter({ created_by: user.email }, "-created_date", 25);
+        // Load user's workouts, using either email or id as userId
+        const data = await WorkoutHistory.filter({ userId: user.email || user.id });
         setHistory(data);
       } catch (error) {
         console.error("Error loading workout history:", error);
@@ -57,24 +52,17 @@ export default function WorkoutHistoryPage() {
   const getStats = () => {
     const totalWorkouts = history.length;
     const totalTime = history.reduce((sum, workout) => sum + (workout.duration_completed || 0), 0);
-    const completedWorkouts = history.filter(w => w.completion_status === "Completed").length;
-    const completionRate = totalWorkouts > 0 ? Math.round((completedWorkouts / totalWorkouts) * 100) : 0;
+    const completedWorkouts = history.length; // All workouts are considered completed
+    const completionRate = 100; // Since we don't track partial completions anymore
     return { totalWorkouts, totalTime, completionRate };
   };
 
   const stats = getStats();
 
-  const difficultyColors = {
-    "Beginner": "bg-green-100 text-green-800",
-    "Intermediate": "bg-yellow-100 text-yellow-800", 
-    "Advanced": "bg-orange-100 text-orange-800",
-    "Elite": "bg-red-100 text-red-800"
-  };
-
-  const statusColors = {
-    "Completed": "bg-blue-100 text-blue-800",
-    "Partial": "bg-gray-100 text-gray-800",
-    "Skipped": "bg-pink-100 text-pink-800"
+  const difficultyColors: Record<string, string> = {
+    "easy": "bg-green-100 text-green-800",
+    "moderate": "bg-yellow-100 text-yellow-800", 
+    "hard": "bg-orange-100 text-orange-800"
   };
 
   if (isLoading) {
@@ -150,16 +138,20 @@ export default function WorkoutHistoryPage() {
                         <Timer className="w-4 h-4" />
                         <span>{workout.duration_completed} דקות</span>
                         <span>•</span>
-                        <span>{format(new Date(workout.created_date), "MMM d, yyyy")}</span>
+                        <span>{format(new Date(workout.completion_date), "MMM d, yyyy")}</span>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge className={`${difficultyColors[workout.difficulty]} font-medium text-xs`}>
-                      {workout.difficulty}
+                      {language === 'hebrew' 
+                        ? workout.difficulty === 'easy' ? 'קל'
+                          : workout.difficulty === 'moderate' ? 'בינוני'
+                          : 'קשה'
+                        : workout.difficulty}
                     </Badge>
-                    <Badge className={`${statusColors[workout.completion_status]} font-medium text-xs`}>
-                      {workout.completion_status}
+                    <Badge className="bg-blue-100 text-blue-800 font-medium text-xs">
+                      {language === 'hebrew' ? 'הושלם' : 'Completed'}
                     </Badge>
                   </div>
                 </CardContent>

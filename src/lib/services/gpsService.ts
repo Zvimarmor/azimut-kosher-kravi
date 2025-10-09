@@ -23,6 +23,19 @@ class GPSTrackingService {
   private onUpdateCallback: ((stats: GPSStats) => void) | null = null;
   private isTracking: boolean = false;
   private measurementSystem: MeasurementSystem = 'metric';
+  private permissionRequested: boolean = false;
+  private hasPermission: boolean = false;
+  private handleVisibilityChange = () => {
+    if (document.hidden) {
+      this.saveCurrentData();
+    } else {
+      this.loadSavedData();
+      // Update callback with restored data
+      if (this.onUpdateCallback) {
+        this.onUpdateCallback(this.getStats());
+      }
+    }
+  };
 
   /**
    * Set the measurement system
@@ -198,6 +211,11 @@ class GPSTrackingService {
       throw new Error('Geolocation is not supported by this browser.');
     }
 
+    // If we've already checked permission in this session, return cached result
+    if (this.permissionRequested) {
+      return this.hasPermission;
+    }
+
     try {
       // Try to get current position to trigger permission request
       await new Promise<GeolocationPosition>((resolve, reject) => {
@@ -205,13 +223,59 @@ class GPSTrackingService {
           timeout: 10000
         });
       });
+      
+      this.permissionRequested = true;
+      this.hasPermission = true;
       return true;
     } catch (error: any) {
+      this.permissionRequested = true;
       if (error.code === 1) {
         // Permission denied
+        this.hasPermission = false;
         return false;
       }
       throw error;
+    }
+  }
+
+  /**
+   * Load saved GPS data from storage
+   */
+  loadSavedData(): void {
+    try {
+      const savedData = localStorage.getItem('gps_buffer');
+      if (savedData) {
+        const { positions, startTime, measurementSystem } = JSON.parse(savedData);
+        if (positions && positions.length > 0) {
+          this.positions = positions;
+          this.startTime = startTime || Date.now();
+          if (measurementSystem) {
+            this.measurementSystem = measurementSystem;
+          }
+          console.log('Restored GPS data from storage:', {
+            positions: positions.length,
+            startTime: new Date(startTime).toISOString()
+          });
+        }
+        localStorage.removeItem('gps_buffer');
+      }
+    } catch (error) {
+      console.error('Error loading saved GPS data:', error);
+    }
+  }
+
+  /**
+   * Save current GPS data to storage
+   */
+  saveCurrentData(): void {
+    try {
+      localStorage.setItem('gps_buffer', JSON.stringify({
+        positions: this.positions,
+        startTime: this.startTime,
+        measurementSystem: this.measurementSystem
+      }));
+    } catch (error) {
+      console.error('Error saving GPS data:', error);
     }
   }
 
@@ -232,10 +296,29 @@ class GPSTrackingService {
       this.measurementSystem = measurementSystem;
     }
 
+    // Try to restore any saved data before starting new tracking
+    this.loadSavedData();
+
     this.isTracking = true;
-    this.positions = [];
-    this.startTime = Date.now();
+    if (!this.startTime) {
+      this.startTime = Date.now();
+    }
     this.onUpdateCallback = onUpdate;
+
+    // Set up visibility change handler
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        this.saveCurrentData();
+      } else {
+        this.loadSavedData();
+        // Update callback with restored data
+        if (this.onUpdateCallback) {
+          this.onUpdateCallback(this.getStats());
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Start watching position with high accuracy
     this.watchId = navigator.geolocation.watchPosition(
@@ -263,6 +346,16 @@ class GPSTrackingService {
     this.isTracking = false;
     const finalStats = this.getStats();
 
+    // Clean up visibility change listener
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+
+    // Clean up stored data
+    try {
+      localStorage.removeItem('gps_buffer');
+    } catch (error) {
+      console.error('Error clearing GPS buffer:', error);
+    }
+
     console.log('GPS tracking stopped. Final stats:', finalStats);
     console.log('Total positions recorded:', this.positions.length);
 
@@ -270,13 +363,22 @@ class GPSTrackingService {
   }
 
   /**
-   * Reset tracking data
+   * Reset tracking data and permission state
    */
   reset(): void {
     this.stopTracking();
     this.positions = [];
     this.startTime = null;
     this.onUpdateCallback = null;
+    this.permissionRequested = false;
+    this.hasPermission = false;
+    
+    // Clear stored data
+    try {
+      localStorage.removeItem('gps_buffer');
+    } catch (error) {
+      console.error('Error clearing GPS buffer:', error);
+    }
   }
 
   /**
