@@ -130,32 +130,41 @@ export default function CreateWorkout() {
 
   // GPS initialization
   const initializeGPS = async () => {
+    console.log('[GPS] Initializing GPS...');
+
     if (!gpsService.isSupported()) {
+      console.log('[GPS] GPS not supported');
       setGPSWarningType('unavailable');
       setShowGPSWarning(true);
-      return;
+      return false;
     }
 
     try {
       const hasPermission = await gpsService.requestPermission();
       if (!hasPermission) {
+        console.log('[GPS] Permission denied');
         setGPSWarningType('unavailable');
         setShowGPSWarning(true);
-        return;
+        return false;
       }
 
       const user = await User.me();
       const measurementSystem = user.measurement_system || 'metric';
 
+      console.log('[GPS] Starting GPS tracking with', measurementSystem);
       gpsService.startTracking((stats) => {
+        console.log('[GPS] Stats updated:', stats);
         setGPSStats(stats);
       }, measurementSystem);
 
       setIsGPSActive(true);
+      console.log('[GPS] GPS active');
+      return true;
     } catch (error) {
-      console.error('GPS initialization error:', error);
+      console.error('[GPS] Initialization error:', error);
       setGPSWarningType('unavailable');
       setShowGPSWarning(true);
+      return false;
     }
   };
 

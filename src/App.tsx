@@ -13,6 +13,8 @@ import WorkoutSetup from './Pages/WorkoutSetup';
 import MilitaryChat from './Pages/MilitaryChat';
 import Heritage from './Pages/Heritage';
 import HeritageEntry from './Pages/HeritageEntry';
+import ExerciseLibrary from './Pages/ExerciseLibrary';
+import ExerciseDetail from './Pages/ExerciseDetail';
 
 export default function App() {
   return (
@@ -32,6 +34,8 @@ export default function App() {
               <Route path="/military-chat" element={<MilitaryChat />} />
               <Route path="/heritage" element={<Heritage />} />
               <Route path="/heritage-entry" element={<HeritageEntry />} />
+              <Route path="/exercise-library" element={<ExerciseLibrary />} />
+              <Route path="/exercise-detail/:id" element={<ExerciseDetail />} />
             </Routes>
           </Layout>
       </Router>

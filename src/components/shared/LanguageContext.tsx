@@ -115,6 +115,33 @@ export const allTexts = {
     fallenSoldiers: "חללי צה״ל",
     militaryConcepts: "מושגים צבאיים וטקטיים",
     philosophyJudaism: "פילוסופיה ויהדות בנושאי צבא",
+
+    // Exercise Library
+    exerciseLibrary: "הסבר תרגילים",
+    exerciseDetails: "פרטי תרגיל",
+    formTips: "טיפים לביצוע נכון",
+    commonMistakes: "טעויות נפוצות",
+    targetMuscles: "שרירים מעורבים",
+    relatedExercises: "תרגילים קשורים",
+    watchVideo: "צפה בסרטון",
+    searchExercises: "חפש תרגיל...",
+    allCategories: "הכל",
+
+    // Group Training
+    groupTraining: "אימון קבוצתי",
+    inviteOthers: "הזמן אחרים להצטרף",
+    joinWorkout: "הצטרף לאימון",
+    sessionCode: "קוד הצטרפות",
+    enterSessionCode: "הזן קוד הצטרפות",
+    createSession: "צור סשן חדש",
+    waitingForParticipants: "ממתין למשתתפים",
+    participants: "משתתפים",
+    maxParticipants: "עד 4 משתתפים",
+    leaveSession: "עזוב סשן",
+    waitingForOthers: "ממתין לשאר המשתתפים...",
+    allCompleted: "כולם סיימו!",
+    copyCode: "העתק קוד",
+    codeCopied: "הקוד הועתק!",
   },
   english: {
     appName: "Azimut Kosher Kravi",
@@ -230,6 +257,33 @@ export const allTexts = {
     fallenSoldiers: "Fallen IDF Soldiers",
     militaryConcepts: "Military and Tactical Concepts",
     philosophyJudaism: "Philosophy and Judaism in Military Matters",
+
+    // Exercise Library
+    exerciseLibrary: "Exercise Explanation",
+    exerciseDetails: "Exercise Details",
+    formTips: "Form Tips",
+    commonMistakes: "Common Mistakes",
+    targetMuscles: "Target Muscles",
+    relatedExercises: "Related Exercises",
+    watchVideo: "Watch Video",
+    searchExercises: "Search exercises...",
+    allCategories: "All",
+
+    // Group Training
+    groupTraining: "Group Training",
+    inviteOthers: "Invite Others to Join",
+    joinWorkout: "Join Workout",
+    sessionCode: "Session Code",
+    enterSessionCode: "Enter Session Code",
+    createSession: "Create New Session",
+    waitingForParticipants: "Waiting for Participants",
+    participants: "Participants",
+    maxParticipants: "Up to 4 Participants",
+    leaveSession: "Leave Session",
+    waitingForOthers: "Waiting for other participants...",
+    allCompleted: "Everyone Completed!",
+    copyCode: "Copy Code",
+    codeCopied: "Code Copied!",
   }
 };
 
