@@ -142,6 +142,7 @@ export const allTexts = {
     allCompleted: "כולם סיימו!",
     copyCode: "העתק קוד",
     codeCopied: "הקוד הועתק!",
+    or: "או",
   },
   english: {
     appName: "Azimut Kosher Kravi",
@@ -284,6 +285,7 @@ export const allTexts = {
     allCompleted: "Everyone Completed!",
     copyCode: "Copy Code",
     codeCopied: "Code Copied!",
+    or: "or",
   }
 };
 

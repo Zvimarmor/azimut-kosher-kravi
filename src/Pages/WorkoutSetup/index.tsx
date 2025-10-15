@@ -4,9 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '../../lib/utils';
 import { LanguageContext } from '../../components/shared/LanguageContext';
 import { Button } from '../../components/ui/button';
-import { ArrowLeft, Zap, Dumbbell, Trees, Thermometer, Clock, Droplets, Check, Square, CheckSquare } from 'lucide-react';
+import { Input } from '../../components/ui/input';
+import { ArrowLeft, Zap, Dumbbell, Trees, Thermometer, Clock, Droplets, Check, Square, CheckSquare, Users, Copy, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { User } from '../../Entities/User';
+import { useAuth } from '../../features/auth/AuthContext';
+import * as groupTrainingService from '../../lib/services/groupTrainingService';
+import { GroupSession } from '../../Entities/GroupSession';
 
 
 // Equipment options will be created inside the component
@@ -97,14 +101,23 @@ export default function WorkoutSetup() {
     { id: 'no_rain', label: t?.rainNo || 'לא גשם' },
   ];
 
+  const { currentUser } = useAuth();
+
   const [selections, setSelections] = useState({
-    equipment: [],
-    environment: [],
-    temperature: null,
-    timeOfDay: null,
-    rain: null
+    equipment: [] as string[],
+    environment: [] as string[],
+    temperature: null as string | null,
+    timeOfDay: null as string | null,
+    rain: null as string | null
   });
   const [rememberSettings, setRememberSettings] = useState(false);
+
+  // Group training state
+  const [groupSession, setGroupSession] = useState<GroupSession | null>(null);
+  const [showCreateSessionModal, setShowCreateSessionModal] = useState(false);
+  const [showJoinSessionModal, setShowJoinSessionModal] = useState(false);
+  const [joinCode, setJoinCode] = useState('');
+  const [joinError, setJoinError] = useState('');
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -124,7 +137,7 @@ export default function WorkoutSetup() {
     loadSettings();
   }, []);
 
-  const handleToggleMulti = (category, value) => {
+  const handleToggleMulti = (category: 'equipment' | 'environment', value: string) => {
     setSelections(prev => {
       const currentValues = prev[category];
       if (currentValues.includes(value)) {
@@ -135,8 +148,63 @@ export default function WorkoutSetup() {
     });
   };
 
-  const handleSelectSingle = (category, value) => {
+  const handleSelectSingle = (category: 'temperature' | 'timeOfDay' | 'rain', value: string) => {
     setSelections(prev => ({ ...prev, [category]: value }));
+  };
+
+  // Group training handlers
+  const handleCreateSession = () => {
+    try {
+      const userId = currentUser?.uid || crypto.randomUUID();
+      const userName = currentUser?.displayName || 'משתמש';
+
+      const session = groupTrainingService.createSession(
+        userId,
+        userName,
+        'אימון משותף'
+      );
+
+      setGroupSession(session);
+      setShowCreateSessionModal(true);
+    } catch (error) {
+      console.error('Error creating session:', error);
+      alert('שגיאה ביצירת אימון משותף');
+    }
+  };
+
+  const handleJoinSession = () => {
+    setShowJoinSessionModal(true);
+    setJoinError('');
+  };
+
+  const handleJoinSessionSubmit = () => {
+    try {
+      const userId = currentUser?.uid || crypto.randomUUID();
+      const userName = currentUser?.displayName || 'משתמש';
+
+      const session = groupTrainingService.joinSession(joinCode.toUpperCase(), userId, userName);
+      setGroupSession(session);
+      setShowJoinSessionModal(false);
+      setJoinCode('');
+
+      // Navigate to workout with session
+      navigate(createPageUrl('CreateWorkout', { sessionId: session.id }));
+    } catch (error: any) {
+      setJoinError(error.message || 'שגיאה בהצטרפות לאימון');
+    }
+  };
+
+  const handleCopyCode = () => {
+    if (groupSession) {
+      navigator.clipboard.writeText(groupSession.code);
+      alert(t?.codeCopied || 'הקוד הועתק!');
+    }
+  };
+
+  const handleStartGroupWorkout = () => {
+    if (groupSession) {
+      navigate(createPageUrl('CreateWorkout', { sessionId: groupSession.id }));
+    }
   };
 
   const handleGenerateWorkout = async () => {
@@ -225,10 +293,45 @@ export default function WorkoutSetup() {
                 <span className="font-semibold text-idf-olive">{t?.rememberEnvironment || "זכור סביבה זו"}</span>
             </button>
         </div>
-        
+
+        {/* Group Training Section */}
+        <div className="mt-6 bg-white p-4 rounded-xl card-shadow border border-gray-200">
+          <h3 className="text-lg font-bold flex items-center gap-2 mb-4 text-idf-olive">
+            <Users className="w-6 h-6" />
+            {t?.groupTraining || 'אימון קבוצתי'}
+          </h3>
+
+          <div className="grid grid-cols-1 gap-3">
+            {/* Create Session Button */}
+            <Button
+              onClick={handleCreateSession}
+              className="w-full bg-[var(--color-accent-secondary)] hover:bg-[var(--color-accent-primary)] text-white font-semibold py-3 rounded-lg btn-press"
+            >
+              <Users className="w-5 h-5 ml-2 inline" />
+              {t?.createSession || 'צור אימון משותף'}
+            </Button>
+
+            {/* Divider */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-px bg-gray-300"></div>
+              <span className="text-gray-500 text-sm">{t?.or || 'או'}</span>
+              <div className="flex-1 h-px bg-gray-300"></div>
+            </div>
+
+            {/* Join Session Button */}
+            <Button
+              onClick={handleJoinSession}
+              variant="outline"
+              className="w-full border-2 border-[var(--color-accent-primary)] text-[var(--color-accent-primary)] font-semibold py-3 rounded-lg btn-press"
+            >
+              {t?.joinWorkout || 'הצטרף לאימון'}
+            </Button>
+          </div>
+        </div>
+
         <div className="mt-6">
-            <Button 
-                onClick={handleGenerateWorkout} 
+            <Button
+                onClick={handleGenerateWorkout}
                 className="w-full bg-idf-olive text-light-sand font-bold py-4 rounded-xl btn-press card-shadow text-lg disabled:opacity-50"
                 disabled={!isSelectionComplete()}
             >
@@ -238,6 +341,109 @@ export default function WorkoutSetup() {
         </div>
 
       </div>
+
+      {/* Create Session Modal */}
+      {showCreateSessionModal && groupSession && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full card-shadow">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-idf-olive">{t?.sessionCode || 'קוד הצטרפות'}</h2>
+              <button
+                onClick={() => setShowCreateSessionModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="text-center mb-6">
+              <p className="text-gray-600 mb-4">
+                {t?.maxParticipants || 'עד 4 משתתפים'}
+              </p>
+              <div className="bg-gray-100 p-4 rounded-lg mb-4">
+                <p className="text-4xl font-bold text-idf-olive tracking-widest">
+                  {groupSession.code}
+                </p>
+              </div>
+              <Button
+                onClick={handleCopyCode}
+                variant="outline"
+                className="w-full mb-2"
+              >
+                <Copy className="w-4 h-4 ml-2" />
+                {t?.copyCode || 'העתק קוד'}
+              </Button>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                {t?.participants || 'משתתפים'}: {groupSession.participants.length}/4
+              </p>
+              <div className="space-y-2">
+                {groupSession.participants.map((participant) => (
+                  <div key={participant.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm">{participant.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              onClick={handleStartGroupWorkout}
+              className="w-full bg-idf-olive text-light-sand font-bold py-3"
+            >
+              {t?.continue || 'המשך'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Join Session Modal */}
+      {showJoinSessionModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full card-shadow">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-idf-olive">{t?.joinWorkout || 'הצטרף לאימון'}</h2>
+              <button
+                onClick={() => {
+                  setShowJoinSessionModal(false);
+                  setJoinCode('');
+                  setJoinError('');
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                {t?.enterSessionCode || 'הזן קוד הצטרפות'}
+              </label>
+              <Input
+                type="text"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                placeholder="ABC123"
+                maxLength={6}
+                className="w-full text-center text-2xl tracking-widest uppercase"
+              />
+              {joinError && (
+                <p className="text-red-500 text-sm mt-2">{joinError}</p>
+              )}
+            </div>
+
+            <Button
+              onClick={handleJoinSessionSubmit}
+              disabled={joinCode.length !== 6}
+              className="w-full bg-idf-olive text-light-sand font-bold py-3 disabled:opacity-50"
+            >
+              {t?.joinWorkout || 'הצטרף'}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
