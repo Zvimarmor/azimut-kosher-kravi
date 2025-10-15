@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
 import { auth } from '../../lib/firebase/config';
+import { logger } from '../../lib/utils/logger';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -30,7 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (provider: 'google' | 'facebook') => {
     try {
-      console.log('AuthContext: Starting login with provider:', provider);
+      logger.log('AuthContext: Starting login with provider:', provider);
       let authProvider;
 
       if (provider === 'google') {
@@ -50,19 +51,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const mobile = isMobile();
-      console.log('AuthContext: Device is mobile?', mobile);
-      console.log('AuthContext: User agent:', navigator.userAgent);
+      logger.log('AuthContext: Device is mobile?', mobile);
+      logger.log('AuthContext: User agent:', navigator.userAgent);
 
       // Use redirect on mobile, popup on desktop
       if (mobile) {
-        console.log('AuthContext: Using signInWithRedirect');
+        logger.log('AuthContext: Using signInWithRedirect');
         await signInWithRedirect(auth, authProvider);
-        console.log('AuthContext: signInWithRedirect initiated (will redirect now)');
+        logger.log('AuthContext: signInWithRedirect initiated (will redirect now)');
         // Note: execution stops here as page redirects
       } else {
-        console.log('AuthContext: Using signInWithPopup');
+        logger.log('AuthContext: Using signInWithPopup');
         const result = await signInWithPopup(auth, authProvider);
-        console.log('AuthContext: signInWithPopup successful', {
+        logger.log('AuthContext: signInWithPopup successful', {
           userEmail: result.user.email,
           userDisplayName: result.user.displayName,
           userUid: result.user.uid,
@@ -71,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // User state will be updated by onAuthStateChanged listener
       }
     } catch (error: any) {
-      console.error('Login error:', {
+      logger.error('Login error:', {
         code: error.code,
         message: error.message,
         fullError: error
@@ -84,15 +85,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signOut(auth);
     } catch (error) {
-      console.error('Logout error:', error);
+      logger.error('Logout error:', error);
       throw error;
     }
   };
 
   useEffect(() => {
-    console.log('AuthContext: Component mounted, setting up auth listeners');
-    console.log('AuthContext: Current URL:', window.location.href);
-    console.log('AuthContext: Auth instance state:', {
+    logger.log('AuthContext: Component mounted, setting up auth listeners');
+    logger.log('AuthContext: Current URL:', window.location.href);
+    logger.log('AuthContext: Auth instance state:', {
       currentUser: auth.currentUser?.email,
       isSignInWithEmailLink: auth.currentUser !== null
     });
@@ -102,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Set up auth state listener immediately
     authUnsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('AuthContext: onAuthStateChanged fired', {
+      logger.log('AuthContext: onAuthStateChanged fired', {
         hasUser: !!user,
         userEmail: user?.email,
         userDisplayName: user?.displayName,
@@ -120,10 +121,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     // Handle redirect result in parallel
-    console.log('AuthContext: Checking for redirect result...');
+    logger.log('AuthContext: Checking for redirect result...');
     getRedirectResult(auth)
       .then((result) => {
-        console.log('AuthContext: getRedirectResult resolved', {
+        logger.log('AuthContext: getRedirectResult resolved', {
           hasResult: !!result,
           userEmail: result?.user?.email,
           userDisplayName: result?.user?.displayName,
@@ -132,15 +133,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (result) {
           // User successfully signed in via redirect
-          console.log('Redirect login successful:', result.user);
+          logger.log('Redirect login successful:', result.user);
           setCurrentUser(result.user);
           setLoading(false);
         } else {
-          console.log('No redirect result (user may have logged in via popup or not redirected)');
+          logger.log('No redirect result (user may have logged in via popup or not redirected)');
         }
       })
       .catch((error) => {
-        console.error('Redirect result error:', {
+        logger.error('Redirect result error:', {
           code: error.code,
           message: error.message,
           fullError: error

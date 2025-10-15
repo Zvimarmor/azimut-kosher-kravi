@@ -17,7 +17,7 @@ export interface Participant {
 export interface GroupSession {
   // Session identification
   id: string; // Unique session ID
-  code: string; // 6-character alphanumeric code for joining
+  code: string; // 8-character alphanumeric code for joining
 
   // Session metadata
   createdAt: string; // ISO timestamp
@@ -51,17 +51,58 @@ export interface GroupSession {
 
 export class GroupSession {
   /**
-   * Generate a unique 6-character session code
+   * Validate a session code format
    *
-   * @returns 6-character alphanumeric code (uppercase)
+   * @param code - The code to validate
+   * @returns true if code is valid format, false otherwise
+   */
+  static isValidCodeFormat(code: string): boolean {
+    if (!code || typeof code !== 'string') {
+      return false;
+    }
+
+    // Must be exactly 8 characters
+    if (code.length !== 8) {
+      return false;
+    }
+
+    // Must contain only allowed characters
+    const validChars = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]+$/;
+    return validChars.test(code.toUpperCase());
+  }
+
+  /**
+   * Sanitize a session code input
+   *
+   * @param code - Raw input code
+   * @returns Sanitized code or empty string if invalid
+   */
+  static sanitizeCode(code: string): string {
+    if (!code || typeof code !== 'string') {
+      return '';
+    }
+
+    // Convert to uppercase and remove any invalid characters
+    const sanitized = code.toUpperCase().replace(/[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/g, '');
+
+    // Limit to 8 characters
+    return sanitized.slice(0, 8);
+  }
+
+  /**
+   * Generate a cryptographically secure 8-character session code
+   * Uses Web Crypto API for secure random generation
+   *
+   * @returns 8-character alphanumeric code (uppercase)
    */
   static generateSessionCode(): string {
     const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed confusing chars: 0, O, I, 1
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-      code += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return code;
+    const array = new Uint8Array(8); // Increased from 6 to 8 for better security
+    crypto.getRandomValues(array);
+
+    return Array.from(array, byte =>
+      characters[byte % characters.length]
+    ).join('');
   }
 
   /**
