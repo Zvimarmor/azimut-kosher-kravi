@@ -1,27 +1,38 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { logger } from '../utils/logger';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDmgVkbnvnvdGbSMtT6hPPvFD1gSW08F_Q",
-  authDomain: "azimut-kosher-kravi.firebaseapp.com",
-  projectId: "azimut-kosher-kravi",
-  storageBucket: "azimut-kosher-kravi.firebasestorage.app",
-  messagingSenderId: "867971195310",
-  appId: "1:867971195310:web:997a7273220f7d7efd283f",
-  measurementId: "G-XJ2YXJP2Z7"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-console.log('Firebase: Initializing with config:', {
+logger.log('Firebase: Initializing with config:', {
   authDomain: firebaseConfig.authDomain,
   projectId: firebaseConfig.projectId
 });
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-console.log('Firebase: App initialized');
+logger.log('Firebase: App initialized');
 
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
-console.log('Firebase: Auth initialized');
+
+// Set auth persistence to local storage (persists even when browser is closed)
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    logger.log('Firebase: Auth persistence set to LOCAL');
+  })
+  .catch((error) => {
+    logger.error('Firebase: Error setting auth persistence:', error);
+  });
+
+logger.log('Firebase: Auth initialized');
 
 export default app;

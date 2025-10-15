@@ -70,12 +70,18 @@ export function createSession(
 /**
  * Find a session by its code
  *
- * @param code - The 6-character session code
+ * @param code - The 8-character session code
  * @returns The session if found, null otherwise
  */
 export function findSessionByCode(code: string): GroupSession | null {
+  // Validate and sanitize the code
+  const sanitizedCode = GroupSession.sanitizeCode(code);
+  if (!GroupSession.isValidCodeFormat(sanitizedCode)) {
+    return null;
+  }
+
   const sessions = getAllSessions();
-  const session = sessions.find(s => s.code.toUpperCase() === code.toUpperCase());
+  const session = sessions.find(s => s.code.toUpperCase() === sanitizedCode.toUpperCase());
 
   if (!session) return null;
   if (GroupSession.isExpired(session)) return null;
@@ -108,8 +114,14 @@ export function joinSession(
   participantId: string,
   participantName: string
 ): GroupSession {
+  // Validate and sanitize the code
+  const sanitizedCode = GroupSession.sanitizeCode(code);
+  if (!GroupSession.isValidCodeFormat(sanitizedCode)) {
+    throw new Error('קוד לא תקין - חייב להיות 8 תווים');
+  }
+
   const sessions = getAllSessions();
-  const sessionIndex = sessions.findIndex(s => s.code.toUpperCase() === code.toUpperCase());
+  const sessionIndex = sessions.findIndex(s => s.code.toUpperCase() === sanitizedCode.toUpperCase());
 
   if (sessionIndex === -1) {
     throw new Error('קוד לא נמצא');
