@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDmgVkbnvnvdGbSMtT6hPPvFD1gSW08F_Q",
@@ -22,6 +22,16 @@ console.log('Firebase: App initialized');
 
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
+
+// Set auth persistence to local storage (persists even when browser is closed)
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    console.log('Firebase: Auth persistence set to LOCAL');
+  })
+  .catch((error) => {
+    console.error('Firebase: Error setting auth persistence:', error);
+  });
+
 console.log('Firebase: Auth initialized');
 
 export default app;
