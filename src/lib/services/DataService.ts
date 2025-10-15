@@ -6,6 +6,7 @@ import type { RunningEndurance } from '../../Entities/RunningEndurance';
 import type { Special } from '../../Entities/Special';
 import type { User } from '../../Entities/User';
 import type { WorkoutHistory } from '../../Entities/WorkoutHistory';
+import type { Exercise } from '../../Entities/Exercise';
 import { fetchCSV, parseJSONField, type CSVRow } from '../utils/csvParser';
 
 // Mock workout data
@@ -197,6 +198,146 @@ const mockSpecial: Special[] = [
   }
 ];
 
+// Mock exercise data
+const mockExercises: Exercise[] = [
+  {
+    id: 'ex_001',
+    name: 'לחיצות סטנדרטיות',
+    nameEnglish: 'Standard Push-ups',
+    category: 'strength',
+    difficulty: 'beginner',
+    description: 'תרגיל יסוד לחיזוק חזה, כתפיים וטריצפס. שכיבה על הבטן, הידיים ברוחב הכתפיים, דחיפה של הגוף למעלה תוך שמירה על גב ישר.',
+    descriptionEnglish: 'Basic exercise for strengthening chest, shoulders and triceps. Lie face down, hands shoulder-width apart, push body up while keeping back straight.',
+    formTips: [
+      'שמור על גב ישר לאורך כל התרגיל',
+      'ירד עד שהמרפקים ביוצרים זווית של 90 מעלות',
+      'שמור על הליבה מתוחה',
+      'נשימה: שאוף בירידה, נשוף בעלייה'
+    ],
+    formTipsEnglish: [
+      'Keep back straight throughout the exercise',
+      'Lower until elbows form a 90-degree angle',
+      'Keep core tight',
+      'Breathing: inhale on the way down, exhale on the way up'
+    ],
+    commonMistakes: [
+      'גב קעור או מקושת',
+      'ישבן מורם גבוה מדי',
+      'טווח תנועה חלקי',
+      'מרפקים פתוחים רחוק מדי מהגוף'
+    ],
+    thumbnailUrl: '/exercises/pushup_thumb.jpg',
+    images: ['/exercises/pushup_1.jpg', '/exercises/pushup_2.jpg'],
+    videoUrl: 'https://www.youtube.com/watch?v=IODxDxX7oi4',
+    videoType: 'youtube',
+    targetMuscles: ['חזה', 'טריצפס', 'כתפיים קדמיות', 'ליבה'],
+    equipment: ['משקל גוף'],
+    targetAttributes: ['push_strength']
+  },
+  {
+    id: 'ex_002',
+    name: 'משיכות',
+    nameEnglish: 'Pull-ups',
+    category: 'strength',
+    difficulty: 'intermediate',
+    description: 'תרגיל מתקדם לחיזוק גב עליון, כתפיים אחוריות וביצפס. תלייה על מוט, משיכה של הגוף למעלה עד שהסנטר מגיע לגובה המוט.',
+    descriptionEnglish: 'Advanced exercise for upper back, rear shoulders and biceps. Hang from a bar, pull body up until chin reaches bar level.',
+    formTips: [
+      'אחיזה מלאה על המוט',
+      'משוך עם שרירי הגב, לא רק הזרועות',
+      'עלה עד שהסנטר עובר את המוט',
+      'ירד באופן מבוקר'
+    ],
+    formTipsEnglish: [
+      'Full grip on the bar',
+      'Pull with back muscles, not just arms',
+      'Rise until chin passes the bar',
+      'Lower in a controlled manner'
+    ],
+    commonMistakes: [
+      'שימוש בתנופה',
+      'טווח תנועה חלקי',
+      'כתפיים מורמות לאוזניים',
+      'חוסר שליטה בירידה'
+    ],
+    thumbnailUrl: '/exercises/pullup_thumb.jpg',
+    images: ['/exercises/pullup_1.jpg', '/exercises/pullup_2.jpg'],
+    videoUrl: 'https://www.youtube.com/watch?v=eGo4IYlbE5g',
+    videoType: 'youtube',
+    targetMuscles: ['גב עליון', 'ביצפס', 'כתפיים אחוריות'],
+    equipment: ['מתח'],
+    targetAttributes: ['pull_strength']
+  },
+  {
+    id: 'ex_003',
+    name: 'בטן - סיטאפים',
+    nameEnglish: 'Sit-ups',
+    category: 'strength',
+    difficulty: 'beginner',
+    description: 'תרגיל בסיסי לחיזוק שרירי הבטן והליבה. שכיבה על הגב עם ברכיים כפופות, הרמת הגו עד שהידיים נוגעות בברכיים.',
+    descriptionEnglish: 'Basic exercise for abdominal and core muscles. Lie on back with knees bent, raise torso until hands touch knees.',
+    formTips: [
+      'שמור על הרגליים יציבות',
+      'השתמש בשרירי הבטן, לא בתנופה',
+      'נשימה עמוקה',
+      'אל תמשוך בצוואר'
+    ],
+    formTipsEnglish: [
+      'Keep legs stable',
+      'Use abdominal muscles, not momentum',
+      'Deep breathing',
+      'Don\'t pull on neck'
+    ],
+    commonMistakes: [
+      'משיכה של הראש בידיים',
+      'שימוש בתנופה',
+      'רגליים לא יציבות',
+      'גב תחתון מרים מהקרקע'
+    ],
+    thumbnailUrl: '/exercises/situp_thumb.jpg',
+    images: ['/exercises/situp_1.jpg', '/exercises/situp_2.jpg'],
+    videoUrl: 'https://www.youtube.com/watch?v=1fbU_MkV7NE',
+    videoType: 'youtube',
+    targetMuscles: ['בטן', 'ליבה'],
+    equipment: ['משקל גוף'],
+    targetAttributes: ['push_strength']
+  },
+  {
+    id: 'ex_004',
+    name: 'ריצה',
+    nameEnglish: 'Running',
+    category: 'cardio',
+    difficulty: 'beginner',
+    description: 'תרגיל אירובי בסיסי לשיפור סיבולת לב-ריאה. ריצה בקצב מתון עד מהיר, תלוי במטרה.',
+    descriptionEnglish: 'Basic aerobic exercise for improving cardiovascular endurance. Run at moderate to fast pace, depending on goal.',
+    formTips: [
+      'נחיתה על אמצע כף הרגל',
+      'שמור על גב זקוף',
+      'זרועות בזווית 90 מעלות',
+      'קצב נשימה סדיר'
+    ],
+    formTipsEnglish: [
+      'Land on midfoot',
+      'Keep back upright',
+      'Arms at 90-degree angle',
+      'Regular breathing pace'
+    ],
+    commonMistakes: [
+      'נחיתה על העקב',
+      'גוף מוטה קדימה מדי',
+      'זרועות נעות רוחבית',
+      'צעדים ארוכים מדי'
+    ],
+    thumbnailUrl: '/exercises/running_thumb.jpg',
+    images: ['/exercises/running_1.jpg', '/exercises/running_2.jpg'],
+    videoUrl: 'https://www.youtube.com/watch?v=brFHyOtTwH4',
+    videoType: 'youtube',
+    targetMuscles: ['רגליים', 'ליבה', 'מערכת לב-ריאה'],
+    equipment: ['נעלי ריצה'],
+    targetAttributes: ['cardio_endurance', 'running_volume']
+  }
+];
+
 // Mock user data
 let currentUser: User = {
   id: '1',
@@ -302,6 +443,30 @@ function transformCSVToSpecial(row: CSVRow): Special {
     difficulty: (row.difficulty?.toLowerCase() as 'beginner' | 'intermediate' | 'advanced' | 'elite') || 'intermediate',
     exercises: exercises,
     rounds: parseInt(row.rounds) || 1
+  };
+}
+
+function transformCSVToExercise(row: CSVRow): Exercise {
+  return {
+    id: row.id || '',
+    name: row.name || '',
+    nameEnglish: row.nameEnglish || '',
+    category: (row.category?.toLowerCase() as 'warmup' | 'strength' | 'cardio' | 'special') || 'strength',
+    difficulty: (row.difficulty?.toLowerCase() as 'beginner' | 'intermediate' | 'advanced') || 'beginner',
+    description: row.description || '',
+    descriptionEnglish: row.descriptionEnglish || '',
+    formTips: parseJSONField(row.formTips) || [],
+    formTipsEnglish: parseJSONField(row.formTipsEnglish) || [],
+    commonMistakes: parseJSONField(row.commonMistakes) || [],
+    thumbnailUrl: row.thumbnailUrl || '',
+    images: parseJSONField(row.images) || [],
+    videoUrl: row.videoUrl || undefined,
+    videoType: (row.videoType as 'youtube' | 'local') || 'youtube',
+    targetMuscles: parseJSONField(row.targetMuscles) || [],
+    equipment: parseJSONField(row.equipment) || [],
+    targetAttributes: parseJSONField(row.targetAttributes) || [],
+    relatedExercises: parseJSONField(row.relatedExercises) || undefined,
+    progressions: parseJSONField(row.progressions) || undefined
   };
 }
 
@@ -470,5 +635,26 @@ export class DataService {
     const updatedHistory = history.filter((w: WorkoutHistory) => w.id !== id);
     setStoredWorkoutHistory(updatedHistory);
     return Promise.resolve();
+  }
+
+  // Exercise methods
+  static async getExercises(): Promise<Exercise[]> {
+    try {
+      const csvData = await fetchCSV('Exercises.csv');
+      return csvData.map(transformCSVToExercise).filter(ex => ex.name);
+    } catch (error) {
+      console.error('Error fetching exercises from CSV:', error);
+      return [...mockExercises]; // Fallback to mock data
+    }
+  }
+
+  static async getExerciseById(id: string): Promise<Exercise | null> {
+    const exercises = await this.getExercises();
+    return exercises.find(ex => ex.id === id) || null;
+  }
+
+  static async getExercisesByCategory(category: string): Promise<Exercise[]> {
+    const exercises = await this.getExercises();
+    return exercises.filter(ex => ex.category === category);
   }
 }
