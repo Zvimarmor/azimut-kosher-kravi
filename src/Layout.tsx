@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "./lib/utils";
-import { User, Globe, History, Settings, Info, Menu } from "lucide-react";
+import { User, Globe, History, Settings, Info, Menu, Dumbbell } from "lucide-react";
 import { useAuth } from "./features/auth/AuthContext";
 import {
   DropdownMenu,
@@ -121,14 +121,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       <span>{currentTexts.language}</span>
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="text-[var(--color-text-dark)] hover:bg-gray-200 cursor-pointer"
                     onClick={() => window.location.href = createPageUrl("WorkoutHistory")}
                   >
                     <History className="w-4 h-4 mr-3" />
                     <span>{currentTexts.workoutHistory}</span>
                   </DropdownMenuItem>
-                   <DropdownMenuItem 
+                  <DropdownMenuItem
+                    className="text-[var(--color-text-dark)] hover:bg-gray-200 cursor-pointer"
+                    onClick={() => window.location.href = createPageUrl("ExerciseLibrary")}
+                  >
+                    <Dumbbell className="w-4 h-4 mr-3" />
+                    <span>{currentTexts.exerciseLibrary}</span>
+                  </DropdownMenuItem>
+                   <DropdownMenuItem
                     className="text-[var(--color-text-dark)] hover:bg-gray-200 cursor-pointer"
                     onClick={() => window.location.href = createPageUrl("AboutUs")}
                   >

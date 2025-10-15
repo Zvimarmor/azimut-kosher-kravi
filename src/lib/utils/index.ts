@@ -10,7 +10,9 @@ const pageRoutes: Record<string, string> = {
   'Heritage': '/heritage',
   'MilitaryChat': '/military-chat',
   'AboutUs': '/about-us',
-  'Onboarding': '/onboarding'
+  'Onboarding': '/onboarding',
+  'ExerciseLibrary': '/exercise-library',
+  'ExerciseDetail': '/exercise-detail'
 };
 
 export function createPageUrl(page: string, params?: Record<string, any>): string {
