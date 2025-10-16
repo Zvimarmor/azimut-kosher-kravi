@@ -37,14 +37,6 @@ This document tracks all pending tasks, features, and bugs for the AI Kosher Kra
 
 ## 👥 **FEATURE 3: Group Training Mode (Multi-Device Workout Sessions)**
 
-### Completed Backend:
-- ✅ GroupSession entity created
-- ✅ groupTrainingService created
-- ✅ Session creation with unique codes
-- ✅ Session joining/leaving
-- ✅ Polling-based sync (SessionSyncManager)
-- ✅ LocalStorage persistence
-
 ### Remaining Tasks:
 - [ ] Add "Invite Others to Join (up to 4)" button to CreateWorkout page
 - [ ] Create session code display modal with copy functionality
@@ -92,13 +84,6 @@ Allow users to manually create and edit workouts with custom exercises, sets, re
 
 ## 🐛 **BUG FIXES**
 
-### Priority: HIGH
-- [ ] **Fix Google and Facebook Authentication**
-  - Issue: Authentication with Google/Facebook may not be working correctly
-  - Files to check: `src/lib/firebase/config.ts`, `src/features/auth/AuthContext.tsx`
-  - Steps: Check Firebase console OAuth config, verify authorized domains, test auth flow
-  - Verify redirect URIs in Firebase console
-
 ### Priority: MEDIUM
 - [ ] **Improve Military Chat Agent (MilitaryChat page)**
   - Task: Improve AI responses without using external RAG or vector databases
@@ -112,17 +97,6 @@ Allow users to manually create and edit workouts with custom exercises, sets, re
     - Add conversation memory/context window management
     - Test different prompt templates and measure quality
   - Goal: Better answers without changing OpenAI integration or adding databases
-
----
-
-## 📚 **DOCUMENTATION & CODE REVIEW**
-
-- [ ] Read `docs/BUGS.md`
-- [ ] Read `docs/WORKOUT_ARCHITECTURE.md`
-- [ ] Read any other docs in `/docs` folder
-- [ ] Understand all recent changes applied to the codebase
-- [ ] Review Exercise feature implementation
-- [ ] Test all new functionality
 
 ---
 
@@ -153,18 +127,11 @@ Allow users to manually create and edit workouts with custom exercises, sets, re
 
 ## 🎯 **CURRENT PRIORITY**
 
-**Immediate (This PR):**
-1. ✅ Exercise Explanation feature (backend complete)
-2. ✅ RAG service preparation (complete)
-3. ✅ Group Training backend (complete)
-4. ✅ Documentation updated
-
-**Next Steps (After PR Review):**
+**Next Steps:**
 1. Debug and test all new features
 2. Add Group Training UI to CreateWorkout
 3. Improve Military Chat with better prompts
-4. Fix authentication bugs
-5. Add exercise CSV data and images
+4. Add exercise CSV data and images
 
 **This Week:**
 1. Test and debug new Exercise, RAG, and Group Training code
@@ -179,5 +146,4 @@ Allow users to manually create and edit workouts with custom exercises, sets, re
 
 ---
 
-**Last Updated:** 2025-10-13
-**PR Branch:** feature/exercise-library-rag-group-training
+**Last Updated:** 2025-10-15
