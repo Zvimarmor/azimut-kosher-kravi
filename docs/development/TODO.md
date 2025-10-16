@@ -1,6 +1,6 @@
-# AI Kosher Kravi - TODO List
+# Azimut Kosher Kravi - TODO List
 
-This document tracks all pending tasks, features, and bugs for the AI Kosher Kravi fitness application.
+This document tracks all pending tasks, features, and bugs for the Azimut Kosher Kravi fitness application.
 
 **Instructions:** When a task is completed, DELETE it from this document.
 

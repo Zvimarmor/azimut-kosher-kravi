@@ -1,21 +1,18 @@
+functionsDirectory = "/Users/zvimarmor/MyProjects/azimut-kosher-kravi/netlify/functions"
+functionsDirectoryOrigin = "default"
 redirectsOrigin = "config"
 plugins = []
-headers = []
-
-[functions]
-
-[functions."*"]
 
 [build]
-publish = "/Users/zvimarmor/MyProjects/AI-kosher-kravi/azimut-kosher-kravi/dist"
+publish = "/Users/zvimarmor/MyProjects/azimut-kosher-kravi/dist"
 publishOrigin = "config"
 commandOrigin = "config"
-base = "/Users/zvimarmor/MyProjects/AI-kosher-kravi/azimut-kosher-kravi"
-command = "npm run build"
+base = "/Users/zvimarmor/MyProjects/azimut-kosher-kravi"
+command = "npm install && npm run build"
+functions = "/Users/zvimarmor/MyProjects/azimut-kosher-kravi/netlify/functions"
 
 [build.environment]
-NODE_VERSION = "18"
-NODE_ENV = "production"
+NODE_VERSION = "20"
 
 [build.processing]
 
@@ -28,6 +25,21 @@ NODE_ENV = "production"
 [build.processing.js]
 
 [build.services]
+
+[functions]
+
+[functions."*"]
+
+[[headers]]
+for = "/*"
+
+[headers.values]
+X-Frame-Options = "SAMEORIGIN"
+X-Content-Type-Options = "nosniff"
+X-XSS-Protection = "1; mode=block"
+Referrer-Policy = "strict-origin-when-cross-origin"
+Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://www.google.com https://apis.google.com https://*.firebaseapp.com https://*.facebook.com https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firebaseinstallations.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.cloudfunctions.net https://*.facebook.com wss://*.firebaseio.com; frame-src 'self' https://www.google.com https://accounts.google.com https://*.firebaseapp.com https://www.facebook.com https://web.facebook.com; object-src 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com https://www.facebook.com;"
 
 [[redirects]]
 from = "/*"

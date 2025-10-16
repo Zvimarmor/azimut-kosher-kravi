@@ -1,7 +1,7 @@
 {
   "name": "Azimut Kosher Kravi",
   "short_name": "Azimut",
-  "description": "AI-powered military fitness and training app",
+  "description": "Military fitness and training app inspired by IDF special forces",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F5F5DC",

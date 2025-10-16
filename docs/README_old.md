@@ -1,8 +1,8 @@
-# AI Kosher Kravi - IDF Fitness Training App
+# Azimut Kosher Kravi - IDF Fitness Training App
 
 ## Project Overview
 
-**AI Kosher Kravi** (translated: "AI Combat Ready") is a comprehensive fitness and tactical training application designed for IDF soldiers and military personnel. The app combines modern fitness tracking, AI-powered coaching, GPS-enabled workouts, and cultural heritage education into a single, cohesive platform.
+**Azimut Kosher Kravi** (translated: "AI Combat Ready") is a comprehensive fitness and tactical training application designed for IDF soldiers and military personnel. The app combines modern fitness tracking, AI-powered coaching, GPS-enabled workouts, and cultural heritage education into a single, cohesive platform.
 
 ### Core Mission
 To provide soldiers with personalized, effective training programs that improve physical fitness, preserve military heritage, and offer real-time guidance through AI assistance.
@@ -51,7 +51,7 @@ To provide soldiers with personalized, effective training programs that improve 
 ## Project Structure
 
 ```
-AI-kosher-kravi/
+azimut-kosher-kravi/
 ├── src/
 │   ├── Entities/                    # Data models (7 entities)
 │   │   ├── User.tsx                 # User profile & fitness attributes
@@ -632,7 +632,7 @@ See [BUGS.md](./BUGS.md) for tracked issues.
 1. **Clone Repository**
 ```bash
 git clone [repository-url]
-cd AI-kosher-kravi
+cd azimut-kosher-kravi
 ```
 
 2. **Install Dependencies**

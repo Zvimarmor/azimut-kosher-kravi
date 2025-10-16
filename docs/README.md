@@ -1,6 +1,6 @@
-# AI Kosher Kravi Documentation
+# Azimut Kosher Kravi Documentation
 
-Welcome to the AI Kosher Kravi documentation. This fitness training application is inspired by IDF special forces training methodologies.
+Welcome to the Azimut Kosher Kravi documentation. This fitness training application is inspired by IDF special forces training methodologies.
 
 ## Documentation Structure
 
