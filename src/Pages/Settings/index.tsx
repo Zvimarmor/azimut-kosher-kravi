@@ -236,14 +236,21 @@ export default function SettingsPage() {
                 {language === 'hebrew' ? 'אודות' : 'About'}
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-center text-gray-600">
-              <p> {language === 'hebrew' ? 'אזימוט כושר קרבי גרסא 1.0.0' : 'Azimut Kosher Kravi Version 1.0.0'}</p>
-              
-              <p className="text-sm"> {language === 'hebrew' ?
-                'פלטפורמת אימון בהשראת יחידות מיוחדות' :
-                'A training platform inspired by special forces units'
-              }</p>
-              <p className="text-xs mt-4">{language === 'hebrew' ? 'לזכר אופק בכר ושילה הר-אבן' : 'In memory of Ofek Bechar and Shilo Har-Even'}</p>
+            <CardContent className="space-y-4">
+              <div className="text-center text-gray-600">
+                <p> {language === 'hebrew' ? 'אזימוט כושר קרבי גרסא 1.0.0' : 'Azimut Kosher Kravi Version 1.0.0'}</p>
+
+                <p className="text-sm"> {language === 'hebrew' ?
+                  'פלטפורמת אימון בהשראת יחידות מיוחדות' :
+                  'A training platform inspired by special forces units'
+                }</p>
+                <p className="text-xs mt-4">{language === 'hebrew' ? 'לזכר אופק בכר ושילה הר-אבן' : 'In memory of Ofek Bechar and Shilo Har-Even'}</p>
+              </div>
+              <Link to={createPageUrl("AboutUs")}>
+                <Button variant="outline" className="w-full btn-press border-idf-olive text-idf-olive hover:bg-idf-olive hover:text-light-sand">
+                  {language === 'hebrew' ? 'קצת עלינו' : 'About Us'}
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
