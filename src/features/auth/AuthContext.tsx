@@ -1,11 +1,25 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
+import {
+  User,
+  onAuthStateChanged,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  signOut,
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail
+} from 'firebase/auth';
 import { auth } from '../../lib/firebase/config';
 import { logger } from '../../lib/utils/logger';
 
 interface AuthContextType {
   currentUser: User | null;
-  login: (provider: 'google' | 'facebook') => Promise<void>;
+  login: (provider: 'google') => Promise<void>;
+  loginWithEmail: (email: string, password: string) => Promise<void>;
+  registerWithEmail: (email: string, password: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -29,26 +43,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const login = async (provider: 'google' | 'facebook') => {
+  const login = async (provider: 'google') => {
     try {
       logger.log('AuthContext: Starting login with provider:', provider);
-      let authProvider;
 
-      if (provider === 'google') {
-        authProvider = new GoogleAuthProvider();
-        // Request profile and email scopes
-        authProvider.addScope('profile');
-        authProvider.addScope('email');
-        // Ensure we get a fresh token
-        authProvider.setCustomParameters({
-          prompt: 'select_account'
-        });
-      } else {
-        authProvider = new FacebookAuthProvider();
-        // Request profile and email scopes
-        authProvider.addScope('public_profile');
-        authProvider.addScope('email');
-      }
+      const authProvider = new GoogleAuthProvider();
+      // Request profile and email scopes
+      authProvider.addScope('profile');
+      authProvider.addScope('email');
+      // Ensure we get a fresh token
+      authProvider.setCustomParameters({
+        prompt: 'select_account'
+      });
 
       const mobile = isMobile();
       logger.log('AuthContext: Device is mobile?', mobile);
@@ -71,11 +77,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         // User state will be updated by onAuthStateChanged listener
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
       logger.error('Login error:', {
-        code: error.code,
-        message: error.message,
+        code: err.code,
+        message: err.message,
         fullError: error
+      });
+      throw error;
+    }
+  };
+
+  const loginWithEmail = async (email: string, password: string) => {
+    try {
+      logger.log('AuthContext: Starting email/password login');
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      logger.log('AuthContext: Email login successful', {
+        userEmail: result.user.email,
+        userUid: result.user.uid
+      });
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      logger.error('Email login error:', {
+        code: err.code,
+        message: err.message
+      });
+      throw error;
+    }
+  };
+
+  const registerWithEmail = async (email: string, password: string) => {
+    try {
+      logger.log('AuthContext: Starting email/password registration');
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      logger.log('AuthContext: Registration successful', {
+        userEmail: result.user.email,
+        userUid: result.user.uid
+      });
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      logger.error('Registration error:', {
+        code: err.code,
+        message: err.message
+      });
+      throw error;
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      logger.log('AuthContext: Sending password reset email to:', email);
+      await sendPasswordResetEmail(auth, email);
+      logger.log('AuthContext: Password reset email sent');
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      logger.error('Password reset error:', {
+        code: err.code,
+        message: err.message
       });
       throw error;
     }
@@ -166,6 +224,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = {
     currentUser,
     login,
+    loginWithEmail,
+    registerWithEmail,
+    resetPassword,
     logout,
     loading
   };

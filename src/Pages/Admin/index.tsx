@@ -81,6 +81,14 @@ export default function Admin() {
   const [editingItem, setEditingItem] = useState<WorkoutData | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
 
+  // Password protection
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+
+  // Admin password - In production, this should be in environment variables
+  const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123';
+
   useEffect(() => {
     loadData();
   }, [selectedType]);
@@ -128,12 +136,75 @@ export default function Admin() {
     setShowEditModal(true);
   };
 
-  const handleSave = () => {
-    // Note: This is a UI-only save. To actually save to CSV, you would need
-    // a backend API endpoint that can write to the CSV files
-    alert('Note: Saving to CSV requires a backend endpoint. This is a display-only interface for now.');
-    setShowEditModal(false);
-    setEditingItem(null);
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      setPasswordError(false);
+      setPasswordInput('');
+    } else {
+      setPasswordError(true);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!editingItem) return;
+
+    try {
+      setLoading(true);
+
+      // Get filename based on selected type
+      const filenameMap: Record<WorkoutType, string> = {
+        warmup: 'Warmup.csv',
+        strength: 'StrengthExplosive.csv',
+        running: 'RunningEndurance.csv',
+        special: 'Special.csv',
+        heritage: 'HeritageStory.csv'
+      };
+
+      const filename = filenameMap[selectedType];
+
+      // Update the item in the local data array
+      const updatedData = data.map(item =>
+        (('id' in item && 'id' in editingItem && item.id === editingItem.id) ||
+         ('title' in item && 'title' in editingItem && item.title === editingItem.title))
+          ? editingItem
+          : item
+      );
+
+      // Send to backend API
+      const response = await fetch('/.netlify/functions/update-csv', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filename,
+          data: updatedData,
+          password: ADMIN_PASSWORD
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to save changes');
+      }
+
+      const result = await response.json();
+      console.log('Save successful:', result);
+
+      // Update local state
+      setData(updatedData);
+      setShowEditModal(false);
+      setEditingItem(null);
+
+      alert(`Successfully saved changes to ${filename}!`);
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      alert(`Failed to save changes: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const exportToCSV = () => {
@@ -158,6 +229,55 @@ export default function Admin() {
     a.download = `${selectedType}_export.csv`;
     a.click();
   };
+
+  // Password gate
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-center p-4">
+        <div className="bg-gray-800 rounded-lg shadow-xl p-8 max-w-md w-full">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">🔒</span>
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Admin Access</h1>
+            <p className="text-gray-400">Enter password to continue</p>
+          </div>
+
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <div>
+              <input
+                type="password"
+                value={passwordInput}
+                onChange={(e) => {
+                  setPasswordInput(e.target.value);
+                  setPasswordError(false);
+                }}
+                placeholder="Enter admin password"
+                className={`w-full px-4 py-3 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 ${
+                  passwordError ? 'ring-2 ring-red-500' : 'focus:ring-blue-500'
+                }`}
+                autoFocus
+              />
+              {passwordError && (
+                <p className="text-red-400 text-sm mt-2">Incorrect password</p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition"
+            >
+              Access Admin Panel
+            </button>
+          </form>
+
+          <p className="text-gray-500 text-xs text-center mt-6">
+            Default password: admin123 (set VITE_ADMIN_PASSWORD in .env)
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4">
@@ -325,23 +445,31 @@ export default function Admin() {
                       {typeof value === 'object' ? (
                         <textarea
                           value={JSON.stringify(value, null, 2)}
-                          readOnly
-                          className="w-full px-3 py-2 bg-gray-700 rounded text-sm font-mono"
+                          onChange={(e) => {
+                            try {
+                              const parsed = JSON.parse(e.target.value);
+                              setEditingItem({ ...editingItem, [key]: parsed });
+                            } catch {
+                              // Invalid JSON, update raw value for now
+                              setEditingItem({ ...editingItem, [key]: e.target.value });
+                            }
+                          }}
+                          className="w-full px-3 py-2 bg-gray-700 rounded text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
                           rows={5}
                         />
                       ) : typeof value === 'string' && value.length > 100 ? (
                         <textarea
                           value={value}
-                          readOnly
-                          className="w-full px-3 py-2 bg-gray-700 rounded"
+                          onChange={(e) => setEditingItem({ ...editingItem, [key]: e.target.value })}
+                          className="w-full px-3 py-2 bg-gray-700 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
                           rows={6}
                         />
                       ) : (
                         <input
                           type="text"
                           value={String(value)}
-                          readOnly
-                          className="w-full px-3 py-2 bg-gray-700 rounded"
+                          onChange={(e) => setEditingItem({ ...editingItem, [key]: e.target.value })}
+                          className="w-full px-3 py-2 bg-gray-700 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         />
                       )}
                     </div>
