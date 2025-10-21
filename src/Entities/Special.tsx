@@ -24,12 +24,19 @@ export interface Special {
   rounds?: number;
 }
 
+export interface SpecialFilterCriteria {
+  difficulty?: 'beginner' | 'intermediate' | 'advanced' | 'elite';
+  category?: 'military_skills' | 'tactical' | 'endurance_challenge' | 'team_building' | 'assessment';
+  minParticipants?: number;
+  maxParticipants?: number;
+}
+
 export class Special {
   static async list(): Promise<Special[]> {
     return DataService.getSpecial();
   }
 
-  static async filter(criteria: any, sortBy?: string, limit?: number): Promise<Special[]> {
+  static async filter(criteria: SpecialFilterCriteria, sortBy?: string, limit?: number): Promise<Special[]> {
     const specials = await this.list();
     return specials;
   }

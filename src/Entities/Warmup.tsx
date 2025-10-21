@@ -21,12 +21,19 @@ export interface Warmup {
   rounds?: number;
 }
 
+export interface WarmupFilterCriteria {
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  target_attributes?: AttributeType[];
+  minDuration?: number;
+  maxDuration?: number;
+}
+
 export class Warmup {
   static async list(): Promise<Warmup[]> {
     return DataService.getWarmups();
   }
 
-  static async filter(criteria: any, sortBy?: string, limit?: number): Promise<Warmup[]> {
+  static async filter(criteria: WarmupFilterCriteria, sortBy?: string, limit?: number): Promise<Warmup[]> {
     const warmups = await this.list();
     return warmups;
   }

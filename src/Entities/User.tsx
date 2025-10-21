@@ -26,6 +26,12 @@ export interface User {
 
 import { DataService } from '../lib/services/DataService';
 
+export interface UserFilterCriteria {
+  fitness_level?: 'beginner' | 'intermediate' | 'advanced' | 'elite';
+  unit?: string;
+  rank?: string;
+}
+
 export class User {
   static async me(): Promise<User> {
     return DataService.getCurrentUser();
@@ -35,7 +41,7 @@ export class User {
     return DataService.updateUser(updates);
   }
 
-  static async filter(criteria: any, sortBy?: string, limit?: number): Promise<User[]> {
+  static async filter(criteria: UserFilterCriteria, sortBy?: string, limit?: number): Promise<User[]> {
     const user = await this.me();
     return [user];
   }

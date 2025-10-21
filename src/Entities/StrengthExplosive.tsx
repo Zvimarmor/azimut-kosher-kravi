@@ -23,12 +23,19 @@ export interface StrengthExplosive {
   rounds?: number;
 }
 
+export interface StrengthExplosiveFilterCriteria {
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  target_attributes?: AttributeType[];
+  minSets?: number;
+  maxSets?: number;
+}
+
 export class StrengthExplosive {
   static async list(): Promise<StrengthExplosive[]> {
     return DataService.getStrengthExplosive();
   }
 
-  static async filter(criteria: any, sortBy?: string, limit?: number): Promise<StrengthExplosive[]> {
+  static async filter(criteria: StrengthExplosiveFilterCriteria, sortBy?: string, limit?: number): Promise<StrengthExplosive[]> {
     const exercises = await this.list();
     return exercises;
   }

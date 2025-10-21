@@ -13,8 +13,16 @@ export interface WorkoutHistory {
 
 import { DataService } from '../lib/services/DataService';
 
+export interface WorkoutHistoryFilterCriteria {
+  created_by?: string;
+  difficulty?: 'easy' | 'moderate' | 'hard';
+  feeling?: 'great' | 'good' | 'okay' | 'tired';
+  minRating?: number;
+  maxRating?: number;
+}
+
 export class WorkoutHistory {
-  static async filter(criteria: any, sortBy?: string, limit?: number): Promise<WorkoutHistory[]> {
+  static async filter(criteria: WorkoutHistoryFilterCriteria, sortBy?: string, limit?: number): Promise<WorkoutHistory[]> {
     if (criteria.created_by) {
       return DataService.getWorkoutHistory(criteria.created_by);
     }

@@ -470,13 +470,36 @@ function transformCSVToExercise(row: CSVRow): Exercise {
   };
 }
 
+// Cache storage
+const cache = {
+  warmups: null as Warmup[] | null,
+  strengthExplosive: null as StrengthExplosive[] | null,
+  runningEndurance: null as RunningEndurance[] | null,
+  special: null as Special[] | null,
+  exercises: null as Exercise[] | null,
+};
+
 // Data service class
 export class DataService {
+  // Clear all cached data (useful for refreshing)
+  static clearCache(): void {
+    cache.warmups = null;
+    cache.strengthExplosive = null;
+    cache.runningEndurance = null;
+    cache.special = null;
+    cache.exercises = null;
+  }
+
   // Warmup methods
   static async getWarmups(): Promise<Warmup[]> {
+    if (cache.warmups) {
+      return cache.warmups;
+    }
+
     try {
       const csvData = await fetchCSV('Warmup.csv');
-      return csvData.map(transformCSVToWarmup).filter(warmup => warmup.title);
+      cache.warmups = csvData.map(transformCSVToWarmup).filter(warmup => warmup.title);
+      return cache.warmups;
     } catch (error) {
       console.error('Error fetching warmups from CSV:', error);
       return [...mockWarmups]; // Fallback to mock data
@@ -485,11 +508,16 @@ export class DataService {
 
   // Strength Explosive methods
   static async getStrengthExplosive(): Promise<StrengthExplosive[]> {
+    if (cache.strengthExplosive) {
+      return cache.strengthExplosive;
+    }
+
     try {
       console.log('Attempting to fetch StrengthExplosive CSV...');
       const csvData = await fetchCSV('StrengthExplosive.csv');
       console.log('CSV data fetched successfully, found:', csvData.length, 'entries');
-      return csvData.map(transformCSVToStrengthExplosive).filter(workout => workout.title);
+      cache.strengthExplosive = csvData.map(transformCSVToStrengthExplosive).filter(workout => workout.title);
+      return cache.strengthExplosive;
     } catch (error) {
       console.error('Error fetching strength workouts from CSV:', error);
       console.log('Falling back to mock data. Mock data length:', mockStrengthExplosive.length);
@@ -499,9 +527,14 @@ export class DataService {
 
   // Running Endurance methods
   static async getRunningEndurance(): Promise<RunningEndurance[]> {
+    if (cache.runningEndurance) {
+      return cache.runningEndurance;
+    }
+
     try {
       const csvData = await fetchCSV('RunningEndurance.csv');
-      return csvData.map(transformCSVToRunningEndurance).filter(workout => workout.title);
+      cache.runningEndurance = csvData.map(transformCSVToRunningEndurance).filter(workout => workout.title);
+      return cache.runningEndurance;
     } catch (error) {
       console.error('Error fetching running workouts from CSV:', error);
       return [...mockRunningEndurance]; // Fallback to mock data
@@ -510,11 +543,16 @@ export class DataService {
 
   // Special methods
   static async getSpecial(): Promise<Special[]> {
+    if (cache.special) {
+      return cache.special;
+    }
+
     try {
       console.log('Attempting to fetch Special CSV...');
       const csvData = await fetchCSV('Special.csv');
       console.log('CSV data fetched successfully, found:', csvData.length, 'entries');
-      return csvData.map(transformCSVToSpecial).filter(workout => workout.title);
+      cache.special = csvData.map(transformCSVToSpecial).filter(workout => workout.title);
+      return cache.special;
     } catch (error) {
       console.error('Error fetching special workouts from CSV:', error);
       console.log('Falling back to mock data. Mock data length:', mockSpecial.length);
@@ -639,9 +677,14 @@ export class DataService {
 
   // Exercise methods
   static async getExercises(): Promise<Exercise[]> {
+    if (cache.exercises) {
+      return cache.exercises;
+    }
+
     try {
       const csvData = await fetchCSV('Exercises.csv');
-      return csvData.map(transformCSVToExercise).filter(ex => ex.name);
+      cache.exercises = csvData.map(transformCSVToExercise).filter(ex => ex.name);
+      return cache.exercises;
     } catch (error) {
       console.error('Error fetching exercises from CSV:', error);
       return [...mockExercises]; // Fallback to mock data
