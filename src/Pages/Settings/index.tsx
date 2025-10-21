@@ -12,10 +12,14 @@ import { User as UserEntity } from "../../Entities/User";
 export default function SettingsPage() {
   const context = useContext(LanguageContext);
   const { language, setLanguage } = context || { language: 'hebrew', setLanguage: () => {} };
-  const { currentUser, login, logout } = useAuth();
+  const { currentUser, login, loginWithEmail, registerWithEmail, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [measurementSystem, setMeasurementSystem] = useState<'metric' | 'imperial'>('metric');
+  const [showEmailLogin, setShowEmailLogin] = useState(false);
+  const [isRegister, setIsRegister] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   // Load measurement system preference on mount
   useEffect(() => {
@@ -34,21 +38,46 @@ export default function SettingsPage() {
     setLanguage((prev: 'hebrew' | 'english') => prev === 'hebrew' ? 'english' : 'hebrew');
   };
 
-  const handleLogin = async (provider: 'google' | 'facebook') => {
+  const handleLogin = async (provider: 'google') => {
     try {
       console.log('Settings: Starting login with provider:', provider);
       setIsLoading(true);
       await login(provider);
       console.log('Settings: Login function completed');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
       console.error('Settings: Login failed:', {
-        code: error?.code,
-        message: error?.message,
+        code: err?.code,
+        message: err?.message,
         fullError: error
       });
       alert('Login failed. Please try again.');
     } finally {
       console.log('Settings: Setting isLoading to false');
+      setIsLoading(false);
+    }
+  };
+
+  const handleEmailAuth = async () => {
+    try {
+      setIsLoading(true);
+      if (isRegister) {
+        await registerWithEmail(email, password);
+      } else {
+        await loginWithEmail(email, password);
+      }
+      setShowEmailLogin(false);
+      setEmail('');
+      setPassword('');
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      console.error('Email auth failed:', err);
+      const errorMessage = err?.code === 'auth/user-not-found' ? 'User not found' :
+                          err?.code === 'auth/wrong-password' ? 'Wrong password' :
+                          err?.code === 'auth/email-already-in-use' ? 'Email already in use' :
+                          'Authentication failed. Please try again.';
+      alert(errorMessage);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -126,30 +155,101 @@ export default function SettingsPage() {
                       'Sign in to save your progress and sync across devices'
                     }
                   </p>
-                  <div className="grid grid-cols-1 gap-3">
-                    <Button
-                      onClick={() => handleLogin('google')}
-                      disabled={isLoading}
-                      className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 w-full btn-press"
-                    >
-                      <LogIn className="w-4 h-4 mr-2" />
-                      {isLoading ?
-                        (language === 'hebrew' ? 'מתחבר...' : 'Signing in...') :
-                        (language === 'hebrew' ? 'התחבר עם Google' : 'Sign in with Google')
-                      }
-                    </Button>
-                    <Button
-                      onClick={() => handleLogin('facebook')}
-                      disabled={isLoading}
-                      className="bg-[#1877F2] hover:bg-[#166FE5] text-white w-full btn-press"
-                    >
-                      <LogIn className="w-4 h-4 mr-2" />
-                      {isLoading ?
-                        (language === 'hebrew' ? 'מתחבר...' : 'Signing in...') :
-                        (language === 'hebrew' ? 'התחבר עם Facebook' : 'Sign in with Facebook')
-                      }
-                    </Button>
-                  </div>
+
+                  {!showEmailLogin ? (
+                    <div className="grid grid-cols-1 gap-3">
+                      <Button
+                        onClick={() => handleLogin('google')}
+                        disabled={isLoading}
+                        className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 w-full btn-press"
+                      >
+                        <LogIn className="w-4 h-4 mr-2" />
+                        {isLoading ?
+                          (language === 'hebrew' ? 'מתחבר...' : 'Signing in...') :
+                          (language === 'hebrew' ? 'התחבר עם Google' : 'Sign in with Google')
+                        }
+                      </Button>
+
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                          <span className="px-2 bg-white text-gray-500">
+                            {language === 'hebrew' ? 'או' : 'or'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={() => setShowEmailLogin(true)}
+                        disabled={isLoading}
+                        className="bg-idf-olive hover:bg-idf-olive/90 text-white w-full btn-press"
+                      >
+                        <LogIn className="w-4 h-4 mr-2" />
+                        {language === 'hebrew' ? 'התחבר עם אימייל' : 'Sign in with Email'}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <input
+                        type="email"
+                        placeholder={language === 'hebrew' ? 'אימייל' : 'Email'}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-idf-olive"
+                        dir={language === 'hebrew' ? 'rtl' : 'ltr'}
+                      />
+                      <input
+                        type="password"
+                        placeholder={language === 'hebrew' ? 'סיסמה' : 'Password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-idf-olive"
+                        dir={language === 'hebrew' ? 'rtl' : 'ltr'}
+                      />
+
+                      <Button
+                        onClick={handleEmailAuth}
+                        disabled={isLoading || !email || !password}
+                        className="bg-idf-olive hover:bg-idf-olive/90 text-white w-full btn-press"
+                      >
+                        {isLoading ?
+                          (language === 'hebrew' ? 'מתחבר...' : 'Signing in...') :
+                          (isRegister ?
+                            (language === 'hebrew' ? 'הירשם' : 'Register') :
+                            (language === 'hebrew' ? 'התחבר' : 'Sign in')
+                          )
+                        }
+                      </Button>
+
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => setIsRegister(!isRegister)}
+                          variant="outline"
+                          className="flex-1 btn-press"
+                        >
+                          {isRegister ?
+                            (language === 'hebrew' ? 'כבר רשום? התחבר' : 'Already registered? Sign in') :
+                            (language === 'hebrew' ? 'משתמש חדש? הירשם' : 'New user? Register')
+                          }
+                        </Button>
+
+                        <Button
+                          onClick={() => {
+                            setShowEmailLogin(false);
+                            setEmail('');
+                            setPassword('');
+                            setIsRegister(false);
+                          }}
+                          variant="outline"
+                          className="flex-1 btn-press"
+                        >
+                          {language === 'hebrew' ? 'ביטול' : 'Cancel'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
