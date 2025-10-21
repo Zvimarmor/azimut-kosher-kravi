@@ -175,7 +175,18 @@ export class RAGDocument {
    * @param exercise - Exercise entity
    * @returns RAG document
    */
-  static fromExercise(exercise: any): RAGDocument {
+  static fromExercise(exercise: {
+    id?: string;
+    name: string;
+    category: string;
+    difficulty: string;
+    description: string;
+    formTips?: string[];
+    commonMistakes?: string[];
+    targetMuscles?: string[];
+    equipment?: string[];
+    targetAttributes?: string[];
+  }): RAGDocument {
     const content = `
 תרגיל: ${exercise.name}
 קטגוריה: ${exercise.category}

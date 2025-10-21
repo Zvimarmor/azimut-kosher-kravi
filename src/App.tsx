@@ -16,6 +16,7 @@ import HeritageEntry from './Pages/HeritageEntry';
 import ExerciseLibrary from './Pages/ExerciseLibrary';
 import ExerciseDetail from './Pages/ExerciseDetail';
 import AboutUs from './Pages/AboutUs';
+import Admin from './Pages/Admin';
 
 export default function App() {
   return (
@@ -38,6 +39,7 @@ export default function App() {
               <Route path="/exercise-library" element={<ExerciseLibrary />} />
               <Route path="/exercise-detail/:id" element={<ExerciseDetail />} />
               <Route path="/about-us" element={<AboutUs />} />
+              <Route path="/admin" element={<Admin />} />
             </Routes>
           </Layout>
       </Router>

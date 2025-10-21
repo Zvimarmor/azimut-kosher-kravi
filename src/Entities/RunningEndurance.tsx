@@ -24,12 +24,20 @@ export interface RunningEndurance {
   rounds?: number;
 }
 
+export interface RunningEnduranceFilterCriteria {
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  intensity?: 'low' | 'moderate' | 'high' | 'variable';
+  terrain?: 'road' | 'track' | 'trail' | 'treadmill';
+  minDistance?: number;
+  maxDistance?: number;
+}
+
 export class RunningEndurance {
   static async list(): Promise<RunningEndurance[]> {
     return DataService.getRunningEndurance();
   }
 
-  static async filter(criteria: any, sortBy?: string, limit?: number): Promise<RunningEndurance[]> {
+  static async filter(criteria: RunningEnduranceFilterCriteria, sortBy?: string, limit?: number): Promise<RunningEndurance[]> {
     const runs = await this.list();
     return runs;
   }
