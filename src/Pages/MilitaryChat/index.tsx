@@ -402,6 +402,8 @@ export default function MilitaryChat() {
 
                   <input
                     type="email"
+                    name="email"
+                    autoComplete="email"
                     placeholder={language === 'hebrew' ? 'אימייל' : 'Email'}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -412,6 +414,8 @@ export default function MilitaryChat() {
 
                   <input
                     type="password"
+                    name="password"
+                    autoComplete={isRegister ? 'new-password' : 'current-password'}
                     placeholder={language === 'hebrew' ? 'סיסמה' : 'Password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
