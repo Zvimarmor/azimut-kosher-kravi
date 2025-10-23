@@ -67,14 +67,12 @@ export function GPSWarningModal({
             >
               {language === 'hebrew' ? 'המשך ללא GPS' : 'Continue Without GPS'}
             </Button>
-            {!isUnavailable && (
-              <Button
-                onClick={onWaitForGPS}
-                className="flex-1 bg-[var(--color-accent-primary)] text-white btn-press"
-              >
-                {language === 'hebrew' ? 'נסה שוב' : 'Try Again'}
-              </Button>
-            )}
+            <Button
+              onClick={onWaitForGPS}
+              className="flex-1 bg-[var(--color-accent-primary)] text-white btn-press"
+            >
+              {language === 'hebrew' ? 'נסה שוב' : 'Try Again'}
+            </Button>
           </div>
 
           <div className="text-xs text-gray-500 text-center">
