@@ -151,34 +151,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     logger.log('AuthContext: Component mounted, setting up auth listeners');
     logger.log('AuthContext: Current URL:', window.location.href);
+    logger.log('AuthContext: User agent:', navigator.userAgent);
     logger.log('AuthContext: Auth instance state:', {
       currentUser: auth.currentUser?.email,
       isSignInWithEmailLink: auth.currentUser !== null
     });
 
     let authUnsubscribe: (() => void) | null = null;
-    let redirectCheckComplete = false;
 
-    // Set up auth state listener immediately
-    authUnsubscribe = onAuthStateChanged(auth, (user) => {
-      logger.log('AuthContext: onAuthStateChanged fired', {
-        hasUser: !!user,
-        userEmail: user?.email,
-        userDisplayName: user?.displayName,
-        userUid: user?.uid,
-        providerData: user?.providerData,
-        redirectCheckComplete
-      });
-
-      // Only update state if redirect check is complete OR if we have a user
-      // This prevents clearing the user state prematurely
-      if (redirectCheckComplete || user) {
-        setCurrentUser(user);
-        setLoading(false);
-      }
-    });
-
-    // Handle redirect result in parallel
+    // Handle redirect result FIRST before setting up listener
+    // This is critical for mobile devices
     logger.log('AuthContext: Checking for redirect result...');
     getRedirectResult(auth)
       .then((result) => {
@@ -186,29 +168,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           hasResult: !!result,
           userEmail: result?.user?.email,
           userDisplayName: result?.user?.displayName,
-          providerId: result?.providerId
+          providerId: result?.providerId,
+          credential: result?.providerId
         });
 
-        if (result) {
+        if (result && result.user) {
           // User successfully signed in via redirect
-          logger.log('Redirect login successful:', result.user);
+          logger.log('AuthContext: Redirect login successful', {
+            userEmail: result.user.email,
+            userUid: result.user.uid,
+            displayName: result.user.displayName
+          });
           setCurrentUser(result.user);
-          setLoading(false);
         } else {
-          logger.log('No redirect result (user may have logged in via popup or not redirected)');
+          logger.log('AuthContext: No redirect result (normal page load or popup login)');
         }
       })
       .catch((error) => {
-        logger.error('Redirect result error:', {
+        logger.error('AuthContext: Redirect result error', {
           code: error.code,
           message: error.message,
           fullError: error
         });
-        // Don't treat this as a fatal error - auth state listener will handle the user state
+        // Common errors on mobile:
+        // - auth/popup-closed-by-user
+        // - auth/cancelled-popup-request
+        // - auth/network-request-failed
       })
       .finally(() => {
-        redirectCheckComplete = true;
-        // If we still don't have a user after redirect check, allow the loading to complete
+        logger.log('AuthContext: Redirect check complete, setting up auth listener');
+
+        // NOW set up auth state listener after redirect is processed
+        authUnsubscribe = onAuthStateChanged(auth, (user) => {
+          logger.log('AuthContext: onAuthStateChanged fired', {
+            hasUser: !!user,
+            userEmail: user?.email,
+            userDisplayName: user?.displayName,
+            userUid: user?.uid,
+            providerData: user?.providerData
+          });
+
+          setCurrentUser(user);
+          setLoading(false);
+        });
+
+        // If auth state hasn't changed by now, stop loading
         if (!auth.currentUser) {
           setLoading(false);
         }

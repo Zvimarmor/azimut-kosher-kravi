@@ -218,12 +218,15 @@ class GPSTrackingService {
 
     try {
       // Try to get current position to trigger permission request
+      // Increased timeout for mobile devices, especially indoors
       await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
-          timeout: 10000
+          enableHighAccuracy: true,
+          timeout: 30000, // Increased from 10s to 30s for mobile
+          maximumAge: 0
         });
       });
-      
+
       this.permissionRequested = true;
       this.hasPermission = true;
       return true;
@@ -233,6 +236,14 @@ class GPSTrackingService {
         // Permission denied
         this.hasPermission = false;
         return false;
+      }
+      // For timeout or position unavailable, still set permission as true if not denied
+      // The user may have granted permission but signal is weak
+      if (error.code === 2 || error.code === 3) {
+        console.warn('GPS signal weak or timeout, but permission may be granted:', error.message);
+        this.hasPermission = true;
+        this.permissionRequested = true;
+        return true;
       }
       throw error;
     }
@@ -321,12 +332,13 @@ class GPSTrackingService {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Start watching position with high accuracy
+    // Increased timeout for better mobile support, especially indoors
     this.watchId = navigator.geolocation.watchPosition(
       this.handlePosition,
       this.handleError,
       {
         enableHighAccuracy: true,
-        timeout: 5000,
+        timeout: 15000, // Increased from 5s to 15s for mobile devices
         maximumAge: 0
       }
     );

@@ -194,6 +194,8 @@ export default function SettingsPage() {
                     <div className="space-y-3">
                       <input
                         type="email"
+                        name="email"
+                        autoComplete="email"
                         placeholder={language === 'hebrew' ? 'אימייל' : 'Email'}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -202,6 +204,8 @@ export default function SettingsPage() {
                       />
                       <input
                         type="password"
+                        name="password"
+                        autoComplete={isRegister ? 'new-password' : 'current-password'}
                         placeholder={language === 'hebrew' ? 'סיסמה' : 'Password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
