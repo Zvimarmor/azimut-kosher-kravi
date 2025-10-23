@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
   User,
   onAuthStateChanged,
-  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   signOut,
@@ -60,23 +59,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logger.log('AuthContext: Device is mobile?', mobile);
       logger.log('AuthContext: User agent:', navigator.userAgent);
 
-      // Use redirect on mobile, popup on desktop
-      if (mobile) {
-        logger.log('AuthContext: Using signInWithRedirect');
-        await signInWithRedirect(auth, authProvider);
-        logger.log('AuthContext: signInWithRedirect initiated (will redirect now)');
-        // Note: execution stops here as page redirects
-      } else {
-        logger.log('AuthContext: Using signInWithPopup');
-        const result = await signInWithPopup(auth, authProvider);
-        logger.log('AuthContext: signInWithPopup successful', {
-          userEmail: result.user.email,
-          userDisplayName: result.user.displayName,
-          userUid: result.user.uid,
-          providerId: result.providerId
-        });
-        // User state will be updated by onAuthStateChanged listener
-      }
+      // ALWAYS use redirect flow - it's more reliable on mobile
+      // Popup has issues with modern browser security policies
+      logger.log('AuthContext: Using signInWithRedirect (mobile-first approach)');
+      await signInWithRedirect(auth, authProvider);
+      logger.log('AuthContext: signInWithRedirect initiated (will redirect now)');
+      // Note: execution stops here as page redirects
     } catch (error: unknown) {
       const err = error as { code?: string; message?: string };
       logger.error('Login error:', {
