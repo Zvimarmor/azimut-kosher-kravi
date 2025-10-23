@@ -6,6 +6,12 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=()
 
+  # Cross-Origin Policies for Firebase Auth
+  # COOP: unsafe-none allows OAuth popups and redirects to work
+  # COEP: unsafe-none prevents blocking of cross-origin resources
+  Cross-Origin-Opener-Policy: unsafe-none
+  Cross-Origin-Embedder-Policy: unsafe-none
+
   # Content Security Policy - Relaxed for Firebase Auth compatibility
   # Note: Firebase Auth requires 'unsafe-inline' and 'unsafe-eval' for OAuth redirects
   # TODO: Implement CSP nonces in production for tighter security
