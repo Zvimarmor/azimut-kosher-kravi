@@ -4,6 +4,9 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # Omit Firebase client-side config from secret scanning (these are public by design)
+  # Also omit VITE_ENV which is just "production" or "development"
+  SECRETS_SCAN_OMIT_KEYS = "VITE_ENV,VITE_FIREBASE_API_KEY,VITE_FIREBASE_AUTH_DOMAIN,VITE_FIREBASE_PROJECT_ID,VITE_FIREBASE_STORAGE_BUCKET,VITE_FIREBASE_MESSAGING_SENDER_ID,VITE_FIREBASE_APP_ID,VITE_FIREBASE_MEASUREMENT_ID"
 
 [[redirects]]
   from = "/*"
