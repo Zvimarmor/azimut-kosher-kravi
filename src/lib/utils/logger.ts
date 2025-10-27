@@ -7,6 +7,48 @@
 
 const isDevelopment = import.meta.env.VITE_ENV === 'development' || import.meta.env.DEV;
 
+// Persistent log storage for debugging auth redirects
+const AUTH_LOG_KEY = 'auth_debug_logs';
+const MAX_LOGS = 100;
+
+interface LogEntry {
+  timestamp: string;
+  type: 'log' | 'error' | 'warn' | 'info' | 'debug';
+  message: string;
+}
+
+const persistLog = (type: LogEntry['type'], ...args: any[]) => {
+  try {
+    const logs = JSON.parse(localStorage.getItem(AUTH_LOG_KEY) || '[]') as LogEntry[];
+
+    const message = args.map(arg => {
+      if (typeof arg === 'string') return arg;
+      try {
+        return JSON.stringify(arg);
+      } catch {
+        return String(arg);
+      }
+    }).join(' ');
+
+    const entry: LogEntry = {
+      timestamp: new Date().toISOString(),
+      type,
+      message
+    };
+
+    logs.push(entry);
+
+    // Keep only last MAX_LOGS entries
+    if (logs.length > MAX_LOGS) {
+      logs.shift();
+    }
+
+    localStorage.setItem(AUTH_LOG_KEY, JSON.stringify(logs));
+  } catch (e) {
+    // Silent fail if localStorage is full
+  }
+};
+
 /**
  * Console logger with environment-aware behavior
  */
@@ -18,6 +60,7 @@ export const logger = {
   log: (...args: any[]) => {
     if (isDevelopment) {
       console.log(...args);
+      persistLog('log', ...args);
     }
   },
 
@@ -28,6 +71,7 @@ export const logger = {
   debug: (...args: any[]) => {
     if (isDevelopment) {
       console.debug(...args);
+      persistLog('debug', ...args);
     }
   },
 
@@ -37,6 +81,7 @@ export const logger = {
    */
   warn: (...args: any[]) => {
     console.warn(...args);
+    persistLog('warn', ...args);
   },
 
   /**
@@ -45,6 +90,7 @@ export const logger = {
    */
   error: (...args: any[]) => {
     console.error(...args);
+    persistLog('error', ...args);
   },
 
   /**
@@ -54,8 +100,44 @@ export const logger = {
   info: (...args: any[]) => {
     if (isDevelopment) {
       console.info(...args);
+      persistLog('info', ...args);
     }
   },
+
+  /**
+   * Get all persisted logs
+   */
+  getLogs: (): LogEntry[] => {
+    try {
+      return JSON.parse(localStorage.getItem(AUTH_LOG_KEY) || '[]');
+    } catch {
+      return [];
+    }
+  },
+
+  /**
+   * Clear all persisted logs
+   */
+  clearLogs: () => {
+    localStorage.removeItem(AUTH_LOG_KEY);
+    console.log('Auth debug logs cleared');
+  },
+
+  /**
+   * Print all persisted logs to console
+   */
+  printLogs: () => {
+    const logs = logger.getLogs();
+    console.log('========== PERSISTED AUTH LOGS ==========');
+    console.log(`Total logs: ${logs.length}`);
+    logs.forEach(log => {
+      const timeStr = new Date(log.timestamp).toLocaleTimeString();
+      const emoji = log.type === 'error' ? '❌' : log.type === 'warn' ? '⚠️' : '📝';
+      console.log(`${emoji} [${timeStr}] ${log.message}`);
+    });
+    console.log('=========================================');
+    console.log('Tip: Use logger.clearLogs() to clear these logs');
+  }
 };
 
 /**
