@@ -196,11 +196,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Handle redirect result in parallel
     logger.log('AuthContext: Calling getRedirectResult...');
+    logger.log('AuthContext: Current full URL:', window.location.href);
+    logger.log('AuthContext: URL search params:', window.location.search);
+    logger.log('AuthContext: URL hash:', window.location.hash);
+
     getRedirectResult(auth)
       .then((result) => {
         logger.log('==========================================');
         logger.log('AuthContext: ✅ getRedirectResult RESOLVED');
         logger.log('AuthContext: Has result?', !!result);
+        logger.log('AuthContext: Result value:', result);
 
         if (result) {
           logger.log('AuthContext: 🎉 REDIRECT LOGIN SUCCESS!');
