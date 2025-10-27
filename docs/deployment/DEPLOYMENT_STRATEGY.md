@@ -8,8 +8,8 @@
 
 ### Stack:
 - React web application with Vite
-- Firebase (Authentication with Google/Facebook OAuth)
-- Netlify Functions (OpenAI API integration)
+- Firebase Authentication with OAuth
+- Netlify Functions for API integration
 - Netlify CDN and hosting
 - Custom domain with SSL/HTTPS
 
@@ -77,16 +77,8 @@ git push origin main
 
 ### Phase 3: Mobile App (Future)
 **Technology Options:**
-
-**Option A: React Native**
-- Reuse most React code
-- True native performance
-- Large community
-
-**Option B: Capacitor**
-- Wrap existing web app
-- Faster conversion
-- Access to native APIs
+- React Native: Reuse most React code, native performance
+- Capacitor: Wrap existing web app, faster conversion
 
 **Timeline:** Consider after PWA implementation and user base growth
 
@@ -112,7 +104,7 @@ git push origin main
 ## Monitoring & Maintenance
 
 ### Netlify Dashboard Access:
-**Admin URL:** https://app.netlify.com/projects/azimut-kosher-kravi
+**Admin URL:** https://app.netlify.com/projects/[your-project-name]
 
 Monitor:
 - Build logs

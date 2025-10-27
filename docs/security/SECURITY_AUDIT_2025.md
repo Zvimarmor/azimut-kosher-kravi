@@ -91,13 +91,13 @@ VITE_OPENAI_API_KEY=sk-proj-l60B4VxzBBg...
 **Evidence:**
 ```typescript
 const firebaseConfig = {
-  apiKey: "AIzaSyDmgVkbnvnvdGbSMtT6hPPvFD1gSW08F_Q",
-  authDomain: "azimut-kosher-kravi.firebaseapp.com",
-  projectId: "azimut-kosher-kravi",
-  storageBucket: "azimut-kosher-kravi.firebasestorage.app",
-  messagingSenderId: "867971195310",
-  appId: "1:867971195310:web:997a7273220f7d7efd283f",
-  measurementId: "G-XJ2YXJP2Z7"
+  apiKey: "REDACTED",
+  authDomain: "REDACTED",
+  projectId: "REDACTED",
+  storageBucket: "REDACTED",
+  messagingSenderId: "REDACTED",
+  appId: "REDACTED",
+  measurementId: "REDACTED"
 };
 ```
 
@@ -390,7 +390,7 @@ export const handler: Handler = async (event) => {
 3. **Add CORS policy:**
    ```typescript
    const allowedOrigins = [
-     'https://azimut-kosher-kravi.netlify.app',
+     'https://your-app.netlify.app',
      'http://localhost:5173', // Development
    ];
 
@@ -897,8 +897,8 @@ localStorage.setItem('militaryChat_<userId>_quota', '999999');
 1. **Add HTTPS redirect in `netlify.toml`:**
    ```toml
    [[redirects]]
-     from = "http://azimut-kosher-kravi.netlify.app/*"
-     to = "https://azimut-kosher-kravi.netlify.app/:splat"
+     from = "http://your-app.netlify.app/*"
+     to = "https://your-app.netlify.app/:splat"
      status = 301
      force = true
 

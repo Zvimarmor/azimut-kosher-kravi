@@ -51,7 +51,7 @@ To provide soldiers with personalized, effective training programs that improve 
 ## Project Structure
 
 ```
-azimut-kosher-kravi/
+project-root/
 ├── src/
 │   ├── Entities/                    # Data models (7 entities)
 │   │   ├── User.tsx                 # User profile & fitness attributes
@@ -632,7 +632,7 @@ See [BUGS.md](./BUGS.md) for tracked issues.
 1. **Clone Repository**
 ```bash
 git clone [repository-url]
-cd azimut-kosher-kravi
+cd [project-directory]
 ```
 
 2. **Install Dependencies**

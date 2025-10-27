@@ -4,7 +4,7 @@
 
 Firebase Authentication is fully configured and operational.
 
-**Firebase Project:** azimut-kosher-kravi
+**Firebase Project:** [REDACTED]
 **Enabled Providers:** Google, Facebook
 **Configuration:** Environment variables (secure)
 
@@ -15,9 +15,9 @@ Firebase credentials are stored securely as environment variables:
 
 ```bash
 VITE_FIREBASE_API_KEY=<configured>
-VITE_FIREBASE_AUTH_DOMAIN=azimut-kosher-kravi.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=azimut-kosher-kravi
-VITE_FIREBASE_STORAGE_BUCKET=azimut-kosher-kravi.firebasestorage.app
+VITE_FIREBASE_AUTH_DOMAIN=<configured>
+VITE_FIREBASE_PROJECT_ID=<configured>
+VITE_FIREBASE_STORAGE_BUCKET=<configured>
 VITE_FIREBASE_MESSAGING_SENDER_ID=<configured>
 VITE_FIREBASE_APP_ID=<configured>
 VITE_FIREBASE_MEASUREMENT_ID=<configured>
@@ -73,7 +73,7 @@ src/
 
 ### Authentication Dashboard
 1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Select "azimut-kosher-kravi" project
+2. Select your Firebase project
 3. Navigate to **Authentication** → **Users** to see registered users
 
 ### Monitoring
@@ -115,7 +115,7 @@ OAuth-compatible CSP headers configured in `public/_headers`:
 
 ## Firebase Console Access
 
-**Project Console:** https://console.firebase.google.com/project/azimut-kosher-kravi
+**Project Console:** https://console.firebase.google.com/project/[YOUR-PROJECT-ID]
 
 **Quick Links:**
 - **Authentication Users:** /authentication/users
