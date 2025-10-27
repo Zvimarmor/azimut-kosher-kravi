@@ -13,6 +13,11 @@ declare global {
 
 window.logger = logger;
 
+// Test that logger is working
+logger.log('🚀 App starting - logger is working!');
+logger.log('Current URL:', window.location.href);
+logger.log('Timestamp:', new Date().toISOString());
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
