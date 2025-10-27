@@ -58,30 +58,6 @@ This document tracks all pending tasks, features, and bugs for the Azimut Kosher
 
 ---
 
-## ✏️ **FEATURE 4: Manual Workout Editing**
-
-### Purpose:
-Allow users to manually create and edit workouts with custom exercises, sets, reps, and rest periods.
-
-### Tasks:
-- [ ] Create Manual Workout Editor page (`src/Pages/ManualWorkoutEditor/index.tsx`)
-- [ ] Add "Create Custom Workout" button to home page
-- [ ] Create exercise selector/search component
-- [ ] Add/remove exercise buttons
-- [ ] Drag-and-drop exercise reordering (optional, can use up/down buttons)
-- [ ] Sets/reps/rest time inputs for each exercise
-- [ ] Workout name and description fields
-- [ ] Save custom workouts to storage (localStorage or Firebase)
-- [ ] Load custom workouts in SelectWorkout page
-- [ ] Allow editing existing custom workouts
-- [ ] Allow deleting custom workouts
-- [ ] Add "Custom" category filter in SelectWorkout
-- [ ] Ensure custom workouts work with CreateWorkout page
-- [ ] Ensure custom workouts appear in workout history
-- [ ] Test manual workout creation flow end-to-end
-
----
-
 ## 🐛 **BUG FIXES**
 
 ### Priority: MEDIUM
