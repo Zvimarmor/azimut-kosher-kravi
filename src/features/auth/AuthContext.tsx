@@ -199,6 +199,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logger.log('AuthContext: Current full URL:', window.location.href);
     logger.log('AuthContext: URL search params:', window.location.search);
     logger.log('AuthContext: URL hash:', window.location.hash);
+    logger.log('AuthContext: URL pathname:', window.location.pathname);
+    logger.log('AuthContext: URL origin:', window.location.origin);
+
+    // Log ALL URL parameters for debugging
+    const searchParams = new URLSearchParams(window.location.search);
+    const allParams: Record<string, string> = {};
+    searchParams.forEach((value, key) => {
+      allParams[key] = value;
+    });
+    logger.log('AuthContext: Parsed URL parameters:', allParams);
+    logger.log('AuthContext: Number of URL parameters:', searchParams.size);
 
     getRedirectResult(auth)
       .then((result) => {
