@@ -3,6 +3,7 @@ import {
   User,
   onAuthStateChanged,
   signInWithRedirect,
+  signInWithPopup,
   getRedirectResult,
   signOut,
   GoogleAuthProvider,
@@ -59,12 +60,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logger.log('AuthContext: Device is mobile?', mobile);
       logger.log('AuthContext: User agent:', navigator.userAgent);
 
-      // ALWAYS use redirect flow - it's more reliable on mobile
-      // Popup has issues with modern browser security policies
-      logger.log('AuthContext: Using signInWithRedirect (mobile-first approach)');
-      await signInWithRedirect(auth, authProvider);
-      logger.log('AuthContext: signInWithRedirect initiated (will redirect now)');
-      // Note: execution stops here as page redirects
+      // Try popup for desktop, redirect for mobile
+      if (mobile) {
+        logger.log('AuthContext: Using signInWithRedirect (mobile)');
+        await signInWithRedirect(auth, authProvider);
+        logger.log('AuthContext: signInWithRedirect initiated (will redirect now)');
+      } else {
+        logger.log('AuthContext: Using signInWithPopup (desktop)');
+        logger.log('AuthContext: Attempting popup auth...');
+        const result = await signInWithPopup(auth, authProvider);
+        logger.log('AuthContext: ✅ Popup auth SUCCESS!', {
+          email: result.user.email,
+          uid: result.user.uid
+        });
+      }
+      // Note: execution stops here as page redirects (mobile) or popup opens (desktop)
     } catch (error: unknown) {
       const err = error as { code?: string; message?: string };
       logger.error('Login error:', {
