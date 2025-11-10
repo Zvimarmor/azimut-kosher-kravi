@@ -1,6 +1,5 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { logger } from '../utils/logger';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -12,27 +11,15 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-logger.log('Firebase: Initializing with config:', {
-  authDomain: firebaseConfig.authDomain,
-  projectId: firebaseConfig.projectId
-});
-
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-logger.log('Firebase: App initialized');
 
-// Initialize Firebase Authentication and get a reference to the service
+// Initialize Firebase Authentication
 export const auth = getAuth(app);
 
 // Set auth persistence to local storage (persists even when browser is closed)
-setPersistence(auth, browserLocalPersistence)
-  .then(() => {
-    logger.log('Firebase: Auth persistence set to LOCAL');
-  })
-  .catch((error) => {
-    logger.error('Firebase: Error setting auth persistence:', error);
-  });
-
-logger.log('Firebase: Auth initialized');
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.error('Firebase: Error setting auth persistence:', error);
+});
 
 export default app;
