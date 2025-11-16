@@ -11,7 +11,7 @@
 # Firebase Auth handlers - proxy to Firebase
 [[redirects]]
   from = "/__/auth/*"
-  to = "https://azimut-kosher-kravi.firebaseapp.com/__/auth/:splat"
+  to = "https://azimut-kosher-kravi-5ded7.firebaseapp.com/__/auth/:splat"
   status = 200
   force = true
 
