@@ -12,9 +12,8 @@ import { User as UserEntity } from "../../Entities/User";
 export default function SettingsPage() {
   const context = useContext(LanguageContext);
   const { language, setLanguage } = context || { language: 'hebrew', setLanguage: () => {} };
-  const { currentUser, login, loginWithEmail, registerWithEmail, logout } = useAuth();
+  const { currentUser, login, loginWithEmail, registerWithEmail, logout, isAuthenticating, authError, clearAuthError } = useAuth();
   const { theme, setTheme } = useTheme();
-  const [isLoading, setIsLoading] = useState(false);
   const [measurementSystem, setMeasurementSystem] = useState<'metric' | 'imperial'>('metric');
   const [showEmailLogin, setShowEmailLogin] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
@@ -40,57 +39,40 @@ export default function SettingsPage() {
 
   const handleLogin = async (provider: 'google') => {
     try {
-      console.log('Settings: Starting login with provider:', provider);
-      setIsLoading(true);
+      clearAuthError();
       await login(provider);
-      console.log('Settings: Login function completed');
+      // Note: login() will redirect, so this code won't execute
     } catch (error: unknown) {
-      const err = error as { code?: string; message?: string };
-      console.error('Settings: Login failed:', {
-        code: err?.code,
-        message: err?.message,
-        fullError: error
-      });
-      alert('Login failed. Please try again.');
-    } finally {
-      console.log('Settings: Setting isLoading to false');
-      setIsLoading(false);
+      console.error('Login failed:', error);
+      // Error will be displayed via authError from context
     }
   };
 
   const handleEmailAuth = async () => {
     try {
-      setIsLoading(true);
+      clearAuthError();
       if (isRegister) {
         await registerWithEmail(email, password);
       } else {
         await loginWithEmail(email, password);
       }
+      // Success - reset form
       setShowEmailLogin(false);
       setEmail('');
       setPassword('');
     } catch (error: unknown) {
-      const err = error as { code?: string; message?: string };
-      console.error('Email auth failed:', err);
-      const errorMessage = err?.code === 'auth/user-not-found' ? 'User not found' :
-                          err?.code === 'auth/wrong-password' ? 'Wrong password' :
-                          err?.code === 'auth/email-already-in-use' ? 'Email already in use' :
-                          'Authentication failed. Please try again.';
-      alert(errorMessage);
-    } finally {
-      setIsLoading(false);
+      console.error('Email auth failed:', error);
+      // Error will be displayed via authError from context
     }
   };
 
   const handleLogout = async () => {
     try {
-      setIsLoading(true);
+      clearAuthError();
       await logout();
     } catch (error) {
       console.error('Logout failed:', error);
-      alert('Logout failed. Please try again.');
-    } finally {
-      setIsLoading(false);
+      // Error will be displayed via authError from context
     }
   };
 
@@ -120,6 +102,36 @@ export default function SettingsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Error Display */}
+              {authError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1">
+                      <p className="text-sm text-red-800">{authError}</p>
+                    </div>
+                    <button
+                      onClick={clearAuthError}
+                      className="text-red-800 hover:text-red-900"
+                      aria-label="Close"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Loading State During OAuth Redirect */}
+              {isAuthenticating && !currentUser && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-sm text-blue-800">
+                      {language === 'hebrew' ? 'מתחבר...' : 'Signing in...'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {currentUser ? (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -137,11 +149,11 @@ export default function SettingsPage() {
                   </div>
                   <Button
                     onClick={handleLogout}
-                    disabled={isLoading}
+                    disabled={isAuthenticating}
                     className="bg-red-500 hover:bg-red-600 text-white w-full btn-press"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
-                    {isLoading ?
+                    {isAuthenticating ?
                       (language === 'hebrew' ? 'מתנתק...' : 'Signing out...') :
                       (language === 'hebrew' ? 'התנתק' : 'Sign Out')
                     }
@@ -160,11 +172,11 @@ export default function SettingsPage() {
                     <div className="grid grid-cols-1 gap-3">
                       <Button
                         onClick={() => handleLogin('google')}
-                        disabled={isLoading}
+                        disabled={isAuthenticating}
                         className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 w-full btn-press"
                       >
                         <LogIn className="w-4 h-4 mr-2" />
-                        {isLoading ?
+                        {isAuthenticating ?
                           (language === 'hebrew' ? 'מתחבר...' : 'Signing in...') :
                           (language === 'hebrew' ? 'התחבר עם Google' : 'Sign in with Google')
                         }
@@ -183,7 +195,7 @@ export default function SettingsPage() {
 
                       <Button
                         onClick={() => setShowEmailLogin(true)}
-                        disabled={isLoading}
+                        disabled={isAuthenticating}
                         className="bg-idf-olive hover:bg-idf-olive/90 text-white w-full btn-press"
                       >
                         <LogIn className="w-4 h-4 mr-2" />
@@ -215,10 +227,10 @@ export default function SettingsPage() {
 
                       <Button
                         onClick={handleEmailAuth}
-                        disabled={isLoading || !email || !password}
+                        disabled={isAuthenticating || !email || !password}
                         className="bg-idf-olive hover:bg-idf-olive/90 text-white w-full btn-press"
                       >
-                        {isLoading ?
+                        {isAuthenticating ?
                           (language === 'hebrew' ? 'מתחבר...' : 'Signing in...') :
                           (isRegister ?
                             (language === 'hebrew' ? 'הירשם' : 'Register') :

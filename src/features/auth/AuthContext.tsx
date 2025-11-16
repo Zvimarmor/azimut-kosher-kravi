@@ -3,13 +3,13 @@ import {
   User,
   onAuthStateChanged,
   signInWithRedirect,
-  signInWithPopup,
   getRedirectResult,
   signOut,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  AuthError
 } from 'firebase/auth';
 import { auth } from '../../lib/firebase/config';
 
@@ -21,6 +21,9 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
+  isAuthenticating: boolean;
+  authError: string | null;
+  clearAuthError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,63 +36,166 @@ export const useAuth = () => {
   return context;
 };
 
-// Simple mobile detection
-const isMobile = () => {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-};
+// Storage keys for tracking auth state
+const AUTH_REDIRECT_KEY = 'auth_redirect_pending';
+const AUTH_ERROR_KEY = 'auth_error';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
-  // Google login
+  // Clear auth error
+  const clearAuthError = () => {
+    setAuthError(null);
+    sessionStorage.removeItem(AUTH_ERROR_KEY);
+  };
+
+  // Google login - using redirect for better mobile support
   const login = async (provider: 'google') => {
-    const authProvider = new GoogleAuthProvider();
-    authProvider.addScope('profile');
-    authProvider.addScope('email');
+    try {
+      const authProvider = new GoogleAuthProvider();
+      authProvider.addScope('profile');
+      authProvider.addScope('email');
 
-    // Use redirect on mobile, popup on desktop
-    if (isMobile()) {
+      // Set custom parameters for better UX
+      authProvider.setCustomParameters({
+        prompt: 'select_account'
+      });
+
+      // Mark that we're starting an auth redirect
+      sessionStorage.setItem(AUTH_REDIRECT_KEY, 'true');
+      setIsAuthenticating(true);
+
+      // Use redirect flow for all devices (more reliable on mobile)
       await signInWithRedirect(auth, authProvider);
-    } else {
-      await signInWithPopup(auth, authProvider);
+
+      // Note: This function won't return as the page will redirect
+      // The result will be handled in the useEffect below
+    } catch (error) {
+      sessionStorage.removeItem(AUTH_REDIRECT_KEY);
+      setIsAuthenticating(false);
+      throw error;
     }
   };
 
   // Email/password login
   const loginWithEmail = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    setIsAuthenticating(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      clearAuthError();
+    } catch (error) {
+      const authError = error as AuthError;
+      const errorMessage = getErrorMessage(authError);
+      setAuthError(errorMessage);
+      throw error;
+    } finally {
+      setIsAuthenticating(false);
+    }
   };
 
   // Email/password registration
   const registerWithEmail = async (email: string, password: string) => {
-    await createUserWithEmailAndPassword(auth, email, password);
+    setIsAuthenticating(true);
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      clearAuthError();
+    } catch (error) {
+      const authError = error as AuthError;
+      const errorMessage = getErrorMessage(authError);
+      setAuthError(errorMessage);
+      throw error;
+    } finally {
+      setIsAuthenticating(false);
+    }
   };
 
   // Password reset
   const resetPassword = async (email: string) => {
-    await sendPasswordResetEmail(auth, email);
+    setIsAuthenticating(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      clearAuthError();
+    } catch (error) {
+      const authError = error as AuthError;
+      const errorMessage = getErrorMessage(authError);
+      setAuthError(errorMessage);
+      throw error;
+    } finally {
+      setIsAuthenticating(false);
+    }
   };
 
   // Logout
   const logout = async () => {
-    await signOut(auth);
+    setIsAuthenticating(true);
+    try {
+      await signOut(auth);
+      clearAuthError();
+    } catch (error) {
+      const authError = error as AuthError;
+      const errorMessage = getErrorMessage(authError);
+      setAuthError(errorMessage);
+      throw error;
+    } finally {
+      setIsAuthenticating(false);
+    }
   };
 
   // Handle auth state changes and redirect results
   useEffect(() => {
-    // Check for redirect result (for mobile OAuth)
-    getRedirectResult(auth).catch((error) => {
-      console.error('Redirect result error:', error);
-    });
+    let mounted = true;
+
+    const initAuth = async () => {
+      // Check if we're returning from an OAuth redirect
+      const wasRedirecting = sessionStorage.getItem(AUTH_REDIRECT_KEY) === 'true';
+
+      if (wasRedirecting) {
+        setIsAuthenticating(true);
+      }
+
+      try {
+        // Get the redirect result (if any)
+        const result = await getRedirectResult(auth);
+
+        if (result && result.user) {
+          console.log('OAuth login successful:', result.user.email);
+          clearAuthError();
+        }
+
+        // Clear the redirect flag
+        sessionStorage.removeItem(AUTH_REDIRECT_KEY);
+      } catch (error) {
+        console.error('OAuth redirect error:', error);
+        const authError = error as AuthError;
+        const errorMessage = getErrorMessage(authError);
+        setAuthError(errorMessage);
+        sessionStorage.setItem(AUTH_ERROR_KEY, errorMessage);
+        sessionStorage.removeItem(AUTH_REDIRECT_KEY);
+      } finally {
+        if (mounted) {
+          setIsAuthenticating(false);
+        }
+      }
+    };
+
+    // Initialize auth and check for redirect results
+    initAuth();
 
     // Listen to auth state changes
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      setLoading(false);
+      if (mounted) {
+        setCurrentUser(user);
+        setLoading(false);
+      }
     });
 
-    return unsubscribe;
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const value: AuthContextType = {
@@ -99,8 +205,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     registerWithEmail,
     resetPassword,
     logout,
-    loading
+    loading,
+    isAuthenticating,
+    authError,
+    clearAuthError
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+// Helper function to convert Firebase auth errors to user-friendly messages
+function getErrorMessage(error: AuthError): string {
+  switch (error.code) {
+    case 'auth/user-not-found':
+      return 'No account found with this email address.';
+    case 'auth/wrong-password':
+      return 'Incorrect password. Please try again.';
+    case 'auth/email-already-in-use':
+      return 'An account with this email already exists.';
+    case 'auth/weak-password':
+      return 'Password is too weak. Please use a stronger password.';
+    case 'auth/invalid-email':
+      return 'Invalid email address.';
+    case 'auth/user-disabled':
+      return 'This account has been disabled.';
+    case 'auth/too-many-requests':
+      return 'Too many failed attempts. Please try again later.';
+    case 'auth/network-request-failed':
+      return 'Network error. Please check your connection and try again.';
+    case 'auth/popup-blocked':
+      return 'Popup was blocked. Please allow popups for this site.';
+    case 'auth/popup-closed-by-user':
+      return 'Sign-in was cancelled. Please try again.';
+    case 'auth/cancelled-popup-request':
+      return 'Sign-in was cancelled. Please try again.';
+    case 'auth/account-exists-with-different-credential':
+      return 'An account already exists with the same email but different sign-in method.';
+    default:
+      console.error('Auth error:', error);
+      return 'Authentication failed. Please try again.';
+  }
+}
