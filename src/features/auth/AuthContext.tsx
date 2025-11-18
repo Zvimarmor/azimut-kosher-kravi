@@ -44,10 +44,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Listen to auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('🔐 Auth state changed:', user ? `User: ${user.email}` : 'No user');
       setCurrentUser(user);
 
       if (user) {
         // User is signed in, fetch their profile
+        console.log('📝 Loading user profile for:', user.uid);
         await loadUserProfile(user);
       } else {
         // User is signed out
@@ -58,9 +60,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
 
     // Check for redirect result (for mobile Google auth)
-    authService.handleGoogleRedirect().catch((err) => {
-      console.error('Redirect error:', err);
-    });
+    console.log('🔍 Checking for Google redirect result...');
+    authService.handleGoogleRedirect()
+      .then((result) => {
+        if (result) {
+          console.log('✅ Google redirect successful:', result.user.email);
+        } else {
+          console.log('ℹ️ No pending Google redirect');
+        }
+      })
+      .catch((err) => {
+        console.error('❌ Redirect error:', err);
+      });
 
     return unsubscribe;
   }, []);
