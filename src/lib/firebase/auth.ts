@@ -25,15 +25,10 @@ googleProvider.setCustomParameters({
  */
 export async function loginWithGoogle(): Promise<UserCredential | null> {
   try {
-    console.log('🚀 Starting Google login with popup...');
-    // Always use popup - it works on all modern browsers including Safari iOS
     const result = await signInWithPopup(auth, googleProvider);
-    console.log('✅ Popup login successful:', result.user.email);
     return result;
   } catch (error: any) {
     console.error('Google login error:', error);
-    console.error('Error code:', error.code);
-    console.error('Error message:', error.message);
     throw new Error(getAuthErrorMessage(error.code));
   }
 }
@@ -43,27 +38,10 @@ export async function loginWithGoogle(): Promise<UserCredential | null> {
  */
 export async function handleGoogleRedirect(): Promise<UserCredential | null> {
   try {
-    console.log('🔄 Calling getRedirectResult...');
     const result = await getRedirectResult(auth);
-
-    if (result) {
-      console.log('✅ Redirect result found:', {
-        email: result.user.email,
-        uid: result.user.uid,
-        displayName: result.user.displayName
-      });
-    } else {
-      console.log('⚠️ getRedirectResult returned null - no pending redirect');
-    }
-
     return result;
   } catch (error: any) {
-    console.error('❌ Redirect result error:', error);
-    console.error('Error details:', {
-      code: error.code,
-      message: error.message,
-      name: error.name
-    });
+    console.error('Redirect result error:', error);
     throw new Error(getAuthErrorMessage(error.code));
   }
 }

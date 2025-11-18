@@ -18,6 +18,7 @@ export const generateResponse = async (
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error('Server error response:', { status: response.status, errorData });
 
       if (errorData.error === 'quota_exceeded') {
         return language === 'english'
@@ -25,10 +26,17 @@ export const generateResponse = async (
           : 'שגיאה: המכסה היומית של OpenAI הסתיימה. נסה שוב מחר.';
       }
 
-      if (errorData.error === 'api_key_error') {
+      if (errorData.error === 'api_key_error' || errorData.error === 'OpenAI API key not configured') {
         return language === 'english'
           ? 'Error: OpenAI API key not configured properly. Please contact the system developer.'
           : 'שגיאה: מפתח API של OpenAI לא הוגדר כראוי. אנא פנה למפתח המערכת.';
+      }
+
+      // Return the specific error message if available
+      if (errorData.error) {
+        return language === 'english'
+          ? `Error: ${errorData.error}`
+          : `שגיאה: ${errorData.error}`;
       }
 
       throw new Error('Failed to get response from server');
