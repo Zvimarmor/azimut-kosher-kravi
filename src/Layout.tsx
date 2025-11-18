@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "./lib/utils";
-import { User, Globe, History, Settings, Info, Menu, Dumbbell } from "lucide-react";
-import { useAuth } from "./features/auth/AuthContext";
+import { User, Globe, History, Settings, Info, Menu, Dumbbell, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,13 +9,15 @@ import {
   DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu";
 import { LanguageContext, allTexts } from "./components/shared/LanguageContext";
+import { useAuth } from "./features/auth/useAuth";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<'hebrew' | 'english'>(() => {
     const saved = localStorage.getItem('language');
     return (saved === 'english' || saved === 'hebrew') ? saved : 'hebrew';
   });
-  const { currentUser } = useAuth();
+
+  const { currentUser, userProfile, logout } = useAuth();
 
   // Save language preference to localStorage when it changes
   React.useEffect(() => {
@@ -93,7 +94,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         <img
                           src={currentUser.photoURL}
                           alt="Profile"
-                          className="w-12 h-12 rounded-full"
+                          className="w-12 h-12 rounded-full object-cover"
                         />
                       ) : (
                         <div className="w-12 h-12 rounded-full bg-[var(--color-accent-primary)] flex items-center justify-center">
@@ -102,10 +103,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       )}
                       <div>
                         <p className="font-semibold text-[var(--color-text-dark)]">
-                          {currentUser?.displayName || currentTexts.guestUser}
+                          {userProfile?.displayName || currentUser?.displayName || currentTexts.guestUser}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {currentUser ? currentTexts.proUser : currentTexts.freeUser}
+                          {userProfile?.subscription.tier === 'free'
+                            ? currentTexts.freeUser
+                            : currentTexts.proUser}
                         </p>
                       </div>
                     </div>
@@ -142,13 +145,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <Info className="w-4 h-4 mr-3" />
                     <span>{currentTexts.aboutUs}</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="text-[var(--color-text-dark)] hover:bg-gray-200 cursor-pointer"
                     onClick={() => window.location.href = createPageUrl("Settings")}
                   >
                     <Settings className="w-4 h-4 mr-3" />
                     <span>{currentTexts.settings}</span>
                   </DropdownMenuItem>
+
+                  {currentUser && (
+                    <>
+                      <div className="border-t border-gray-200 my-1"></div>
+                      <DropdownMenuItem
+                        className="text-red-600 hover:bg-red-50 cursor-pointer"
+                        onClick={logout}
+                      >
+                        <LogOut className="w-4 h-4 mr-3" />
+                        <span>{language === 'hebrew' ? 'התנתק' : 'Logout'}</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
 

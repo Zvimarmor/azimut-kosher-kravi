@@ -1,25 +1,22 @@
 import React, { useContext, useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { ArrowLeft, Settings as SettingsIcon, Globe, Bell, Shield, Info, User, LogOut, LogIn, Palette, Ruler } from "lucide-react";
+import { ArrowLeft, Settings as SettingsIcon, Globe, Info, Palette, Ruler, User as UserIcon, LogOut, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "../../lib/utils";
 import { LanguageContext } from "../../components/shared/LanguageContext";
-import { useAuth } from "../../features/auth/AuthContext";
 import { useTheme } from "../../components/shared/ThemeContext";
 import { User as UserEntity } from "../../Entities/User";
+import { useAuth } from "../../features/auth/useAuth";
+import { LoginModal } from "../../features/auth/components/LoginModal";
 
 export default function SettingsPage() {
   const context = useContext(LanguageContext);
   const { language, setLanguage } = context || { language: 'hebrew', setLanguage: () => {} };
-  const { currentUser, login, loginWithEmail, registerWithEmail, logout } = useAuth();
   const { theme, setTheme } = useTheme();
-  const [isLoading, setIsLoading] = useState(false);
+  const { currentUser, userProfile, logout } = useAuth();
   const [measurementSystem, setMeasurementSystem] = useState<'metric' | 'imperial'>('metric');
-  const [showEmailLogin, setShowEmailLogin] = useState(false);
-  const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Load measurement system preference on mount
   useEffect(() => {
@@ -36,62 +33,6 @@ export default function SettingsPage() {
 
   const toggleLanguage = () => {
     setLanguage((prev: 'hebrew' | 'english') => prev === 'hebrew' ? 'english' : 'hebrew');
-  };
-
-  const handleLogin = async (provider: 'google') => {
-    try {
-      console.log('Settings: Starting login with provider:', provider);
-      setIsLoading(true);
-      await login(provider);
-      console.log('Settings: Login function completed');
-    } catch (error: unknown) {
-      const err = error as { code?: string; message?: string };
-      console.error('Settings: Login failed:', {
-        code: err?.code,
-        message: err?.message,
-        fullError: error
-      });
-      alert('Login failed. Please try again.');
-    } finally {
-      console.log('Settings: Setting isLoading to false');
-      setIsLoading(false);
-    }
-  };
-
-  const handleEmailAuth = async () => {
-    try {
-      setIsLoading(true);
-      if (isRegister) {
-        await registerWithEmail(email, password);
-      } else {
-        await loginWithEmail(email, password);
-      }
-      setShowEmailLogin(false);
-      setEmail('');
-      setPassword('');
-    } catch (error: unknown) {
-      const err = error as { code?: string; message?: string };
-      console.error('Email auth failed:', err);
-      const errorMessage = err?.code === 'auth/user-not-found' ? 'User not found' :
-                          err?.code === 'auth/wrong-password' ? 'Wrong password' :
-                          err?.code === 'auth/email-already-in-use' ? 'Email already in use' :
-                          'Authentication failed. Please try again.';
-      alert(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      setIsLoading(true);
-      await logout();
-    } catch (error) {
-      console.error('Logout failed:', error);
-      alert('Logout failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -112,10 +53,11 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-6">
+          {/* User Account Card */}
           <Card className="bg-white card-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
-                <User className="w-5 h-5 text-idf-olive" />
+                <UserIcon className="w-5 h-5 text-idf-olive" />
                 {language === 'hebrew' ? 'חשבון משתמש' : 'User Account'}
               </CardTitle>
             </CardHeader>
@@ -127,138 +69,52 @@ export default function SettingsPage() {
                       <img
                         src={currentUser.photoURL}
                         alt="Profile"
-                        className="w-12 h-12 rounded-full"
+                        className="w-12 h-12 rounded-full object-cover"
                       />
                     )}
-                    <div>
-                      <p className="font-semibold">{currentUser.displayName}</p>
+                    {!currentUser.photoURL && (
+                      <div className="w-12 h-12 rounded-full bg-[var(--color-accent-primary)] flex items-center justify-center">
+                        <UserIcon className="w-6 h-6 text-white" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <p className="font-semibold">{userProfile?.displayName || currentUser.displayName}</p>
                       <p className="text-sm text-gray-600">{currentUser.email}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {userProfile?.subscription.tier === 'free'
+                          ? (language === 'hebrew' ? 'משתמש חינם' : 'Free User')
+                          : (language === 'hebrew' ? 'משתמש פרימיום' : 'Premium User')}
+                      </p>
                     </div>
                   </div>
                   <Button
-                    onClick={handleLogout}
-                    disabled={isLoading}
+                    onClick={logout}
                     className="bg-red-500 hover:bg-red-600 text-white w-full btn-press"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
-                    {isLoading ?
-                      (language === 'hebrew' ? 'מתנתק...' : 'Signing out...') :
-                      (language === 'hebrew' ? 'התנתק' : 'Sign Out')
-                    }
+                    {language === 'hebrew' ? 'התנתק' : 'Sign Out'}
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-600 text-center">
-                    {language === 'hebrew' ?
-                      'התחבר כדי לשמור את ההתקדמות שלך ולסנכרן בין מכשירים' :
-                      'Sign in to save your progress and sync across devices'
-                    }
+                    {language === 'hebrew'
+                      ? 'התחבר כדי לשמור את ההתקדמות שלך ולסנכרן בין מכשירים'
+                      : 'Sign in to save your progress and sync across devices'}
                   </p>
-
-                  {!showEmailLogin ? (
-                    <div className="grid grid-cols-1 gap-3">
-                      <Button
-                        onClick={() => handleLogin('google')}
-                        disabled={isLoading}
-                        className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 w-full btn-press"
-                      >
-                        <LogIn className="w-4 h-4 mr-2" />
-                        {isLoading ?
-                          (language === 'hebrew' ? 'מתחבר...' : 'Signing in...') :
-                          (language === 'hebrew' ? 'התחבר עם Google' : 'Sign in with Google')
-                        }
-                      </Button>
-
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <div className="w-full border-t border-gray-300"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                          <span className="px-2 bg-white text-gray-500">
-                            {language === 'hebrew' ? 'או' : 'or'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <Button
-                        onClick={() => setShowEmailLogin(true)}
-                        disabled={isLoading}
-                        className="bg-idf-olive hover:bg-idf-olive/90 text-white w-full btn-press"
-                      >
-                        <LogIn className="w-4 h-4 mr-2" />
-                        {language === 'hebrew' ? 'התחבר עם אימייל' : 'Sign in with Email'}
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <input
-                        type="email"
-                        name="email"
-                        autoComplete="email"
-                        placeholder={language === 'hebrew' ? 'אימייל' : 'Email'}
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-idf-olive"
-                        dir={language === 'hebrew' ? 'rtl' : 'ltr'}
-                      />
-                      <input
-                        type="password"
-                        name="password"
-                        autoComplete={isRegister ? 'new-password' : 'current-password'}
-                        placeholder={language === 'hebrew' ? 'סיסמה' : 'Password'}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-idf-olive"
-                        dir={language === 'hebrew' ? 'rtl' : 'ltr'}
-                      />
-
-                      <Button
-                        onClick={handleEmailAuth}
-                        disabled={isLoading || !email || !password}
-                        className="bg-idf-olive hover:bg-idf-olive/90 text-white w-full btn-press"
-                      >
-                        {isLoading ?
-                          (language === 'hebrew' ? 'מתחבר...' : 'Signing in...') :
-                          (isRegister ?
-                            (language === 'hebrew' ? 'הירשם' : 'Register') :
-                            (language === 'hebrew' ? 'התחבר' : 'Sign in')
-                          )
-                        }
-                      </Button>
-
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => setIsRegister(!isRegister)}
-                          variant="outline"
-                          className="flex-1 btn-press"
-                        >
-                          {isRegister ?
-                            (language === 'hebrew' ? 'כבר רשום? התחבר' : 'Already registered? Sign in') :
-                            (language === 'hebrew' ? 'משתמש חדש? הירשם' : 'New user? Register')
-                          }
-                        </Button>
-
-                        <Button
-                          onClick={() => {
-                            setShowEmailLogin(false);
-                            setEmail('');
-                            setPassword('');
-                            setIsRegister(false);
-                          }}
-                          variant="outline"
-                          className="flex-1 btn-press"
-                        >
-                          {language === 'hebrew' ? 'ביטול' : 'Cancel'}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  <Button
+                    onClick={() => setShowLoginModal(true)}
+                    className="bg-idf-olive hover:bg-idf-olive/90 text-white w-full btn-press"
+                  >
+                    <LogIn className="w-4 h-4 mr-2" />
+                    {language === 'hebrew' ? 'התחבר / הירשם' : 'Login / Sign Up'}
+                  </Button>
                 </div>
               )}
             </CardContent>
           </Card>
 
+          {/* Language Card */}
           <Card className="bg-white card-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -359,6 +215,14 @@ export default function SettingsPage() {
           </Card>
         </div>
       </div>
+
+      {/* Login Modal */}
+      {showLoginModal && (
+        <LoginModal
+          onClose={() => setShowLoginModal(false)}
+          language={language}
+        />
+      )}
     </div>
   );
 }

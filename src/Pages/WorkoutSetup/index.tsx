@@ -8,7 +8,6 @@ import { Input } from '../../components/ui/input';
 import { ArrowLeft, Zap, Dumbbell, Trees, Thermometer, Clock, Droplets, Check, Square, CheckSquare, Users, Copy, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { User } from '../../Entities/User';
-import { useAuth } from '../../features/auth/AuthContext';
 import * as groupTrainingService from '../../lib/services/groupTrainingService';
 import { GroupSession } from '../../Entities/GroupSession';
 
@@ -101,8 +100,6 @@ export default function WorkoutSetup() {
     { id: 'no_rain', label: t?.rainNo || 'לא גשם' },
   ];
 
-  const { currentUser } = useAuth();
-
   const [selections, setSelections] = useState({
     equipment: [] as string[],
     environment: [] as string[],
@@ -155,8 +152,8 @@ export default function WorkoutSetup() {
   // Group training handlers
   const handleCreateSession = () => {
     try {
-      const userId = currentUser?.uid || crypto.randomUUID();
-      const userName = currentUser?.displayName || 'משתמש';
+      const userId = crypto.randomUUID();
+      const userName = 'משתמש';
 
       const session = groupTrainingService.createSession(
         userId,
@@ -179,8 +176,8 @@ export default function WorkoutSetup() {
 
   const handleJoinSessionSubmit = () => {
     try {
-      const userId = currentUser?.uid || crypto.randomUUID();
-      const userName = currentUser?.displayName || 'משתמש';
+      const userId = crypto.randomUUID();
+      const userName = 'משתמש';
 
       const session = groupTrainingService.joinSession(joinCode.toUpperCase(), userId, userName);
       setGroupSession(session);

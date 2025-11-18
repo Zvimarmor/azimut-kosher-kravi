@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './Layout';
-import { AuthProvider } from './features/auth/AuthContext';
 import { ThemeProvider } from './components/shared/ThemeContext';
+import { AuthProvider } from './features/auth/AuthContext';
 import Home from './Pages/Home';
 import CreateWorkout from './Pages/CreateWorkout';
 import SelectWorkout from './Pages/SelectWorkout';
@@ -42,8 +42,8 @@ export default function App() {
               <Route path="/admin" element={<Admin />} />
             </Routes>
           </Layout>
-      </Router>
-    </AuthProvider>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

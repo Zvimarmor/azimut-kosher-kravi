@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ChatSession, ChatMessage } from '../types';
 import { generateUUID, simulateAIResponse } from '../utils';
 import { INSTRUCTIONS_MESSAGE, DAILY_QUOTA } from '../constants';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../auth/useAuth';
 
 export const useChat = (language: 'hebrew' | 'english' = 'hebrew') => {
   const { currentUser } = useAuth();

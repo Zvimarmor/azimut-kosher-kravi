@@ -1,18 +1,19 @@
 import React, { useContext, useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { LanguageContext } from '../../components/shared/LanguageContext';
-import { Send, Plus, AlertTriangle, History, X, MoreVertical, Edit2, Trash2 } from 'lucide-react';
+import { Send, Plus, AlertTriangle, History, X, MoreVertical, Edit2, Trash2, LogIn } from 'lucide-react';
 import { useChat } from '../../features/chat/hooks/useChat';
 import { CHAT_TEXTS } from '../../features/chat/constants';
 import { renderMarkdown } from '../../features/chat/utils/markdownRenderer';
-import { useAuth } from '../../features/auth/AuthContext';
+import { useAuth } from '../../features/auth/useAuth';
+import { LoginModal } from '../../features/auth/components/LoginModal';
 
 export default function MilitaryChat() {
   const context = useContext(LanguageContext);
   const language = context?.language || 'hebrew';
   const t = CHAT_TEXTS[language];
   const allTexts = context?.allTexts[language];
-  const { login, loginWithEmail, registerWithEmail } = useAuth();
+  const { currentUser, chatQuotaRemaining } = useAuth();
 
   const {
     sessions,
@@ -35,16 +36,9 @@ export default function MilitaryChat() {
   const [editingTitle, setEditingTitle] = useState('');
   const [deletingSession, setDeletingSession] = useState<string | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState<{ x: number; y: number } | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Email login state
-  const [showEmailLogin, setShowEmailLogin] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isRegister, setIsRegister] = useState(false);
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authError, setAuthError] = useState('');
 
   // Scroll to bottom of messages
   useEffect(() => {
@@ -101,45 +95,6 @@ export default function MilitaryChat() {
   const cancelEditingTitle = () => {
     setEditingSession(null);
     setEditingTitle('');
-  };
-
-  const handleEmailAuth = async () => {
-    if (!email || !password) return;
-
-    setAuthLoading(true);
-    setAuthError('');
-
-    try {
-      if (isRegister) {
-        await registerWithEmail(email, password);
-      } else {
-        await loginWithEmail(email, password);
-      }
-      // Reset form on success
-      setShowEmailLogin(false);
-      setEmail('');
-      setPassword('');
-      setIsRegister(false);
-    } catch (error: any) {
-      console.error('Auth error:', error);
-
-      // Handle specific Firebase errors
-      if (error.code === 'auth/user-not-found') {
-        setAuthError(language === 'hebrew' ? 'משתמש לא קיים' : 'User not found');
-      } else if (error.code === 'auth/wrong-password') {
-        setAuthError(language === 'hebrew' ? 'סיסמה שגויה' : 'Wrong password');
-      } else if (error.code === 'auth/email-already-in-use') {
-        setAuthError(language === 'hebrew' ? 'האימייל כבר בשימוש' : 'Email already in use');
-      } else if (error.code === 'auth/weak-password') {
-        setAuthError(language === 'hebrew' ? 'הסיסמה חלשה מדי' : 'Password is too weak');
-      } else if (error.code === 'auth/invalid-email') {
-        setAuthError(language === 'hebrew' ? 'אימייל לא תקין' : 'Invalid email');
-      } else {
-        setAuthError(error.message || (language === 'hebrew' ? 'שגיאה בהתחברות' : 'Authentication error'));
-      }
-    } finally {
-      setAuthLoading(false);
-    }
   };
 
   const sendMessage = async () => {
@@ -369,108 +324,20 @@ export default function MilitaryChat() {
             <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 text-center">
               <AlertTriangle className="w-8 h-8 text-yellow-500 mx-auto mb-3" />
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                {allTexts?.loginRequired || 'נדרש חשבון משתמש'}
+                {language === 'hebrew' ? 'נדרש חשבון משתמש' : 'Login Required'}
               </h3>
               <p className="text-gray-600 mb-4">
-                {allTexts?.loginRequiredMessage || 'על מנת לשאול שאלות בצ\'אט הצבאי, יש להתחבר תחילה לחשבון המשתמש שלך.'}
+                {language === 'hebrew'
+                  ? 'על מנת לשאול שאלות בצ\'אט הצבאי, יש להתחבר תחילה לחשבון המשתמש שלך.'
+                  : 'Please log in to use the Military Chat feature.'}
               </p>
-
-              {!showEmailLogin ? (
-                <div className="space-y-3">
-                  <button
-                    onClick={() => login('google')}
-                    disabled={authLoading}
-                    className="w-full bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
-                  >
-                    {allTexts?.loginWithGoogle || 'התחבר עם Google'}
-                  </button>
-                  <button
-                    onClick={() => setShowEmailLogin(true)}
-                    disabled={authLoading}
-                    className="w-full bg-[var(--color-accent-primary)] text-white px-4 py-2 rounded-lg hover:bg-[var(--color-accent-secondary)] transition-colors"
-                  >
-                    {language === 'hebrew' ? 'התחבר עם אימייל' : 'Sign in with Email'}
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {authError && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
-                      {authError}
-                    </div>
-                  )}
-
-                  <input
-                    type="email"
-                    name="email"
-                    autoComplete="email"
-                    placeholder={language === 'hebrew' ? 'אימייל' : 'Email'}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)] text-right"
-                    dir={language === 'hebrew' ? 'rtl' : 'ltr'}
-                    disabled={authLoading}
-                  />
-
-                  <input
-                    type="password"
-                    name="password"
-                    autoComplete={isRegister ? 'new-password' : 'current-password'}
-                    placeholder={language === 'hebrew' ? 'סיסמה' : 'Password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleEmailAuth();
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)] text-right"
-                    dir={language === 'hebrew' ? 'rtl' : 'ltr'}
-                    disabled={authLoading}
-                  />
-
-                  <button
-                    onClick={handleEmailAuth}
-                    disabled={authLoading || !email || !password}
-                    className="w-full bg-[var(--color-accent-primary)] text-white px-4 py-2 rounded-lg hover:bg-[var(--color-accent-secondary)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {authLoading
-                      ? (language === 'hebrew' ? 'מתחבר...' : 'Signing in...')
-                      : (isRegister
-                          ? (language === 'hebrew' ? 'הירשם' : 'Register')
-                          : (language === 'hebrew' ? 'התחבר' : 'Sign in')
-                        )
-                    }
-                  </button>
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setIsRegister(!isRegister)}
-                      disabled={authLoading}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors text-sm disabled:opacity-50"
-                    >
-                      {isRegister
-                        ? (language === 'hebrew' ? 'כבר רשום? התחבר' : 'Already registered? Sign in')
-                        : (language === 'hebrew' ? 'משתמש חדש? הירשם' : 'New user? Register')
-                      }
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setShowEmailLogin(false);
-                        setEmail('');
-                        setPassword('');
-                        setIsRegister(false);
-                        setAuthError('');
-                      }}
-                      disabled={authLoading}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors text-sm disabled:opacity-50"
-                    >
-                      {language === 'hebrew' ? 'ביטול' : 'Cancel'}
-                    </button>
-                  </div>
-                </div>
-              )}
+              <button
+                onClick={() => setShowLoginModal(true)}
+                className="w-full bg-[var(--color-accent-primary)] text-white px-4 py-3 rounded-lg hover:bg-[var(--color-accent-secondary)] transition-colors flex items-center justify-center gap-2"
+              >
+                <LogIn className="w-5 h-5" />
+                <span>{language === 'hebrew' ? 'התחבר / הירשם' : 'Login / Sign Up'}</span>
+              </button>
             </div>
           )}
         </div>
@@ -669,6 +536,14 @@ export default function MilitaryChat() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Login Modal */}
+      {showLoginModal && (
+        <LoginModal
+          onClose={() => setShowLoginModal(false)}
+          language={language}
+        />
       )}
     </div>
   );
