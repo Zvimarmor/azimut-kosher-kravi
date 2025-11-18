@@ -81,9 +81,19 @@ export default function SettingsPage() {
                       <p className="font-semibold">{userProfile?.displayName || currentUser.displayName}</p>
                       <p className="text-sm text-gray-600">{currentUser.email}</p>
                       <p className="text-xs text-gray-500 mt-1">
-                        {userProfile?.subscription.tier === 'free'
-                          ? (language === 'hebrew' ? 'משתמש חינם' : 'Free User')
-                          : (language === 'hebrew' ? 'משתמש פרימיום' : 'Premium User')}
+                        {(() => {
+                          console.log('👤 User tier:', userProfile?.subscription.tier);
+                          const tier = userProfile?.subscription.tier;
+                          if (tier === 'free') {
+                            return language === 'hebrew' ? 'משתמש חינם' : 'Free User';
+                          } else if (tier === 'premium') {
+                            return language === 'hebrew' ? 'משתמש פרימיום' : 'Premium User';
+                          } else if (tier === 'pro') {
+                            return language === 'hebrew' ? 'משתמש Pro' : 'Pro User';
+                          } else {
+                            return language === 'hebrew' ? 'משתמש חינמי' : 'Free User';
+                          }
+                        })()}
                       </p>
                     </div>
                   </div>

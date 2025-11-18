@@ -36,18 +36,35 @@ export function LoginModal({ onClose, language = 'hebrew' }: LoginModalProps) {
     try {
       setLoading(true);
       setError('');
+      console.log('🚀 Starting Google login...');
       const result = await loginWithGoogle();
+
+      console.log('📱 Google login result:', result ? 'Got result (popup)' : 'Null result (redirect)');
 
       // Only close modal if we got a result (popup flow)
       // For redirect flow, result is null and page will redirect
       if (result) {
+        console.log('✅ Login successful, closing modal');
         onClose();
+      } else {
+        console.log('⏳ Redirecting to Google...');
       }
       // If result is null, user will be redirected to Google
       // Don't close modal or set loading to false
     } catch (err: any) {
-      console.error('Login error:', err);
-      setError(err.message || 'Failed to login with Google');
+      console.error('❌ Login error:', err);
+      console.error('Error details:', {
+        code: err.code,
+        message: err.message,
+        stack: err.stack
+      });
+
+      const errorMessage = err.message || 'Failed to login with Google';
+      const userFriendlyMessage = isHebrew
+        ? `שגיאת התחברות: ${errorMessage}`
+        : `Login error: ${errorMessage}`;
+
+      setError(userFriendlyMessage);
       setLoading(false);
     }
   };
