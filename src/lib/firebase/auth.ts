@@ -1,6 +1,5 @@
 import {
   signInWithPopup,
-  signInWithRedirect,
   getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -20,35 +19,17 @@ googleProvider.setCustomParameters({
 });
 
 /**
- * Detect if device is mobile
- * Returns false for DevTools mobile emulation to ensure popup works correctly
- */
-function isMobileDevice(): boolean {
-  // Check if running in actual mobile device, not DevTools emulation
-  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  );
-
-  // Only return true if both touch is available AND mobile user agent
-  // This prevents DevTools mobile emulation from triggering redirect
-  return isTouchDevice && isMobileUA;
-}
-
-/**
- * Login with Google using popup (desktop) or redirect (mobile)
+ * Login with Google using popup for all devices
+ * Note: We use popup instead of redirect to avoid issues with custom domains
+ * Safari on iOS/iPad supports popups, so this works on all devices
  */
 export async function loginWithGoogle(): Promise<UserCredential | null> {
   try {
-    if (isMobileDevice()) {
-      // Use redirect for mobile devices
-      await signInWithRedirect(auth, googleProvider);
-      return null; // Result will be available via getRedirectResult
-    } else {
-      // Use popup for desktop and DevTools emulation
-      const result = await signInWithPopup(auth, googleProvider);
-      return result;
-    }
+    console.log('🚀 Starting Google login with popup...');
+    // Always use popup - it works on all modern browsers including Safari iOS
+    const result = await signInWithPopup(auth, googleProvider);
+    console.log('✅ Popup login successful:', result.user.email);
+    return result;
   } catch (error: any) {
     console.error('Google login error:', error);
     console.error('Error code:', error.code);
