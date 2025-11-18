@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, ReactNode } from 'react';
-import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
+import { User as FirebaseUser, UserCredential, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../lib/firebase/config';
 import * as authService from '../../lib/firebase/auth';
 import * as firestoreService from '../../lib/firebase/firestore';
@@ -13,7 +13,7 @@ interface AuthContextType {
   error: string | null;
 
   // Auth methods
-  loginWithGoogle: () => Promise<void>;
+  loginWithGoogle: () => Promise<UserCredential | null>;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signupWithEmail: (email: string, password: string, displayName?: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -121,8 +121,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const loginWithGoogle = async () => {
     try {
       setError(null);
-      await authService.loginWithGoogle();
+      const result = await authService.loginWithGoogle();
       // User state will be updated by onAuthStateChanged
+      return result;
     } catch (err: any) {
       setError(err.message || 'Failed to login with Google');
       throw err;

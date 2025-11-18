@@ -36,11 +36,18 @@ export function LoginModal({ onClose, language = 'hebrew' }: LoginModalProps) {
     try {
       setLoading(true);
       setError('');
-      await loginWithGoogle();
-      onClose();
+      const result = await loginWithGoogle();
+
+      // Only close modal if we got a result (popup flow)
+      // For redirect flow, result is null and page will redirect
+      if (result) {
+        onClose();
+      }
+      // If result is null, user will be redirected to Google
+      // Don't close modal or set loading to false
     } catch (err: any) {
+      console.error('Login error:', err);
       setError(err.message || 'Failed to login with Google');
-    } finally {
       setLoading(false);
     }
   };
