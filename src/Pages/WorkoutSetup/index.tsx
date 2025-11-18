@@ -422,8 +422,8 @@ export default function WorkoutSetup() {
                 type="text"
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                placeholder="ABC123"
-                maxLength={6}
+                placeholder="ABC12345"
+                maxLength={8}
                 className="w-full text-center text-2xl tracking-widest uppercase"
               />
               {joinError && (
@@ -433,7 +433,7 @@ export default function WorkoutSetup() {
 
             <Button
               onClick={handleJoinSessionSubmit}
-              disabled={joinCode.length !== 6}
+              disabled={joinCode.length !== 8}
               className="w-full bg-idf-olive text-light-sand font-bold py-3 disabled:opacity-50"
             >
               {t?.joinWorkout || 'הצטרף'}
