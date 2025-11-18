@@ -104,7 +104,49 @@ class GPSTrackingService {
   }
 
   /**
-   * Calculate average pace in minutes per km/mile
+   * Calculate pace from recent GPS data (interval-based)
+   * Uses positions from the last 30 seconds for more accurate, real-time pace
+   */
+  private getIntervalPace(intervalSeconds: number = 30): number {
+    if (this.positions.length < 2) return 0;
+
+    const now = Date.now();
+    const intervalMs = intervalSeconds * 1000;
+
+    // Filter positions within the time interval
+    const recentPositions = this.positions.filter(
+      pos => (now - pos.timestamp) <= intervalMs
+    );
+
+    if (recentPositions.length < 2) {
+      // Fall back to last 2 positions if not enough data in interval
+      return this.getAveragePace();
+    }
+
+    // Calculate distance covered in the interval
+    let intervalDistance = 0;
+    for (let i = 1; i < recentPositions.length; i++) {
+      intervalDistance += this.calculateDistance(
+        recentPositions[i - 1],
+        recentPositions[i]
+      );
+    }
+
+    // Calculate time span of the interval
+    const intervalDuration =
+      (recentPositions[recentPositions.length - 1].timestamp - recentPositions[0].timestamp) / 1000;
+
+    if (intervalDistance === 0 || intervalDuration === 0) return 0;
+
+    // Convert to display units and calculate pace
+    const distance = this.convertDistance(intervalDistance);
+    const durationMinutes = intervalDuration / 60;
+
+    return durationMinutes / distance; // min/km or min/mile
+  }
+
+  /**
+   * Calculate average pace in minutes per km/mile (total average - fallback)
    */
   private getAveragePace(): number {
     const distanceMeters = this.getTotalDistanceMeters();
@@ -148,7 +190,7 @@ class GPSTrackingService {
   private getStats(): GPSStats {
     return {
       totalDistance: this.getTotalDistanceMeters(),
-      averagePace: this.getAveragePace(),
+      averagePace: this.getIntervalPace(30), // Use 30-second interval for real-time pace
       currentSpeed: this.getCurrentSpeed(),
       duration: this.getDuration()
     };
@@ -370,6 +412,10 @@ class GPSTrackingService {
 
     console.log('GPS tracking stopped. Final stats:', finalStats);
     console.log('Total positions recorded:', this.positions.length);
+
+    // Reset positions and startTime to prevent accumulation across workouts
+    this.positions = [];
+    this.startTime = null;
 
     return finalStats;
   }
