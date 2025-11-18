@@ -51,6 +51,8 @@ export async function loginWithGoogle(): Promise<UserCredential | null> {
     }
   } catch (error: any) {
     console.error('Google login error:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
     throw new Error(getAuthErrorMessage(error.code));
   }
 }
