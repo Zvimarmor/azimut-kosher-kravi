@@ -10,23 +10,6 @@ import { format } from "date-fns";
 import { LanguageContext } from "../../components/shared/LanguageContext";
 import { User } from "../../Entities/User";
 
-const handleWorkoutHistory = async (workoutData: Partial<WorkoutHistory>) => {
-  try {
-    const user = await User.me();
-    // Use userId consistently for identifying user's workouts
-    const history = await WorkoutHistory.filter({ userId: user.email || user.id });
-
-    // No need to manually manage the history limit as DataService handles it
-    await WorkoutHistory.create({
-      ...workoutData,
-      userId: user.email || user.id // Ensure userId is set correctly
-    });
-    console.log("Created new workout history entry.");
-  } catch (error) {
-    console.error("Error managing workout history:", error);
-  }
-};
-
 export default function WorkoutHistoryPage() {
   const [history, setHistory] = useState<WorkoutHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,8 +21,8 @@ export default function WorkoutHistoryPage() {
       setIsLoading(true);
       try {
         const user = await User.me();
-        // Load user's workouts, using either email or id as userId
-        const data = await WorkoutHistory.filter({ userId: user.email || user.id });
+        // Load user's workouts directly using DataService
+        const data = await WorkoutHistory.filter({ created_by: user.email || user.id });
         setHistory(data);
       } catch (error) {
         console.error("Error loading workout history:", error);

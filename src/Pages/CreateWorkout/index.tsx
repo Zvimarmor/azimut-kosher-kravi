@@ -255,6 +255,9 @@ export default function CreateWorkout() {
     await advanceToNextComponent();
   };
 
+  // State to store workout duration for summary
+  const [workoutDuration, setWorkoutDuration] = useState<number>(0);
+
   // Save workout history
   const saveWorkoutHistory = useCallback(async () => {
     if (!composedWorkout || !workoutTimer.isRunning) return;
@@ -262,6 +265,9 @@ export default function CreateWorkout() {
     try {
       const user = await User.me();
       const totalDuration = Math.round(workoutTimer.stop() / 60000); // Convert to minutes
+
+      // Store duration for summary display
+      setWorkoutDuration(totalDuration * 60); // Convert back to seconds for summary
 
       const exerciseNames = completedTasks
         .filter((task: CompletedTask) => task.type !== 'rest')
@@ -273,10 +279,10 @@ export default function CreateWorkout() {
         duration_completed: totalDuration,
         exercises_completed: exerciseNames,
         completion_date: new Date().toISOString(),
-        difficulty: composedWorkout.difficulty === 'elite' ? 'hard' : 
+        difficulty: composedWorkout.difficulty === 'elite' ? 'hard' :
           (composedWorkout.difficulty as 'easy' | 'moderate' | 'hard') || 'moderate',
         feeling: 'okay' as const,
-        gps_stats: isGPSActive && gpsStats && gpsStats.totalDistance > 0 
+        gps_stats: isGPSActive && gpsStats && gpsStats.totalDistance > 0
           ? {
               distance: gpsStats.totalDistance,
               pace: gpsStats.averagePace,
@@ -405,13 +411,11 @@ export default function CreateWorkout() {
   }
 
   // Summary phase
-  if (phase === 'summary' && workoutTimer.isRunning) {
-    const totalDuration = Math.round(workoutTimer.stop() / 1000);
-
+  if (phase === 'summary') {
     return (
       <WorkoutSummary
         workoutTitle={composedWorkout.title}
-        totalDuration={totalDuration}
+        totalDuration={workoutDuration}
         completedTasks={completedTasks}
         onConfirm={handleSummaryConfirm}
         language={language}
