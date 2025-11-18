@@ -43,6 +43,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Listen to auth state changes
   useEffect(() => {
+    // Check for redirect result FIRST, before setting up listeners
+    // This must happen synchronously before React Router processes URL params
+    console.log('🔍 Checking for Google redirect result...');
+    authService.handleGoogleRedirect()
+      .then((result) => {
+        if (result) {
+          console.log('✅ Google redirect successful:', result.user.email);
+          // The onAuthStateChanged listener will handle profile loading
+        } else {
+          console.log('ℹ️ No pending Google redirect');
+        }
+      })
+      .catch((err) => {
+        console.error('❌ Redirect error:', err);
+        setError('Failed to complete Google sign-in. Please try again.');
+        setLoading(false);
+      });
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log('🔐 Auth state changed:', user ? `User: ${user.email}` : 'No user');
       setCurrentUser(user);
@@ -58,20 +76,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       setLoading(false);
     });
-
-    // Check for redirect result (for mobile Google auth)
-    console.log('🔍 Checking for Google redirect result...');
-    authService.handleGoogleRedirect()
-      .then((result) => {
-        if (result) {
-          console.log('✅ Google redirect successful:', result.user.email);
-        } else {
-          console.log('ℹ️ No pending Google redirect');
-        }
-      })
-      .catch((err) => {
-        console.error('❌ Redirect error:', err);
-      });
 
     return unsubscribe;
   }, []);
