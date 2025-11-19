@@ -7,7 +7,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { ArrowLeft, Zap, Dumbbell, Trees, Thermometer, Clock, Droplets, Check, Square, CheckSquare, Users, Copy, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { User } from '../../Entities/User';
+import { useAuth } from '../../features/auth/useAuth';
 import * as groupTrainingService from '../../lib/services/groupTrainingService';
 import { GroupSession } from '../../Entities/GroupSession';
 
@@ -70,6 +70,7 @@ export default function WorkoutSetup() {
   const context = useContext(LanguageContext);
   const language = context?.language || 'hebrew';
   const t = context?.allTexts[language];
+  const { currentUser } = useAuth();
 
   const equipmentOptions = [
     { id: 'weight', label: t?.weight || 'משקל' },
@@ -152,8 +153,14 @@ export default function WorkoutSetup() {
   // Group training handlers
   const handleCreateSession = async () => {
     try {
-      const userId = crypto.randomUUID();
-      const userName = language === 'hebrew' ? 'משתמש' : 'User';
+      if (!currentUser) {
+        const errorMsg = language === 'hebrew' ? 'יש להתחבר כדי ליצור אימון משותף' : 'Please login to create a group session';
+        alert(errorMsg);
+        return;
+      }
+
+      const userId = currentUser.uid;
+      const userName = currentUser.displayName || (language === 'hebrew' ? 'משתמש' : 'User');
       const workoutTitle = language === 'hebrew' ? 'אימון משותף' : 'Group Workout';
 
       const session = await groupTrainingService.createSession(
@@ -178,8 +185,14 @@ export default function WorkoutSetup() {
 
   const handleJoinSessionSubmit = async () => {
     try {
-      const userId = crypto.randomUUID();
-      const userName = language === 'hebrew' ? 'משתמש' : 'User';
+      if (!currentUser) {
+        const errorMsg = language === 'hebrew' ? 'יש להתחבר כדי להצטרף לאימון' : 'Please login to join a session';
+        setJoinError(errorMsg);
+        return;
+      }
+
+      const userId = currentUser.uid;
+      const userName = currentUser.displayName || (language === 'hebrew' ? 'משתמש' : 'User');
 
       const session = await groupTrainingService.joinSession(
         joinCode.toUpperCase(),
