@@ -134,6 +134,7 @@ export async function createSession(
 
 /**
  * Find a session by its code
+ * Automatically deletes expired sessions
  */
 export async function findSessionByCode(code: string, language: 'hebrew' | 'english' = 'hebrew'): Promise<GroupSession | null> {
   const sanitizedCode = GroupSession.sanitizeCode(code);
@@ -156,6 +157,7 @@ export async function findSessionByCode(code: string, language: 'hebrew' | 'engl
   if (GroupSession.isExpired(session)) {
     // Clean up expired session
     await deleteDoc(snapshot.docs[0].ref);
+    console.log(`Session ${session.id} deleted: expired`);
     return null;
   }
 
@@ -251,11 +253,21 @@ export async function leaveSession(sessionId: string, participantId: string, lan
     session = GroupSession.cancelSession(session);
   }
 
-  await updateDoc(sessionRef, {
-    participants: session.participants,
-    status: session.status,
-    endedAt: session.endedAt ? Timestamp.fromDate(new Date(session.endedAt)) : undefined
-  });
+  // Check if all participants have left
+  const allLeft = session.participants.every(p => p.leftSession);
+
+  if (allLeft) {
+    // Delete session if everyone left
+    await deleteDoc(sessionRef);
+    console.log(`Session ${sessionId} deleted: all participants left`);
+  } else {
+    // Update session
+    await updateDoc(sessionRef, {
+      participants: session.participants,
+      status: session.status,
+      endedAt: session.endedAt ? Timestamp.fromDate(new Date(session.endedAt)) : undefined
+    });
+  }
 
   return session;
 }
@@ -349,6 +361,7 @@ export async function moveToNext(
 
 /**
  * Complete the workout
+ * Deletes the session immediately after completion
  */
 export async function completeWorkout(sessionId: string, language: 'hebrew' | 'english' = 'hebrew'): Promise<GroupSession> {
   const sessionRef = doc(db, SESSIONS_COLLECTION, sessionId);
@@ -363,10 +376,9 @@ export async function completeWorkout(sessionId: string, language: 'hebrew' | 'e
 
   session = GroupSession.completeWorkout(session);
 
-  await updateDoc(sessionRef, {
-    status: session.status,
-    endedAt: session.endedAt ? Timestamp.fromDate(new Date(session.endedAt)) : undefined
-  });
+  // Delete completed session immediately
+  await deleteDoc(sessionRef);
+  console.log(`Session ${sessionId} deleted: workout completed`);
 
   return session;
 }
