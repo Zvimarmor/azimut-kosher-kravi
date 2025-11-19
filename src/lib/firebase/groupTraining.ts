@@ -77,14 +77,30 @@ function getErrorMessage(key: keyof typeof ErrorMessages, language: 'hebrew' | '
 
 /**
  * Convert GroupSession to Firestore format
+ * Removes undefined fields to comply with Firestore requirements
  */
-function toFirestore(session: GroupSession): FirestoreGroupSession {
-  return {
+function toFirestore(session: GroupSession): any {
+  const data: any = {
     ...session,
-    createdAt: Timestamp.fromDate(new Date(session.createdAt)),
-    startedAt: session.startedAt ? Timestamp.fromDate(new Date(session.startedAt)) : undefined,
-    endedAt: session.endedAt ? Timestamp.fromDate(new Date(session.endedAt)) : undefined
+    createdAt: Timestamp.fromDate(new Date(session.createdAt))
   };
+
+  // Only add optional timestamp fields if they exist
+  if (session.startedAt) {
+    data.startedAt = Timestamp.fromDate(new Date(session.startedAt));
+  }
+  if (session.endedAt) {
+    data.endedAt = Timestamp.fromDate(new Date(session.endedAt));
+  }
+
+  // Remove any undefined fields (Firestore doesn't accept undefined)
+  Object.keys(data).forEach(key => {
+    if (data[key] === undefined) {
+      delete data[key];
+    }
+  });
+
+  return data;
 }
 
 /**
