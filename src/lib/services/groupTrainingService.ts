@@ -1,47 +1,12 @@
 /**
  * Group Training Service
  *
- * Manages group workout sessions stored in localStorage.
- * Supports up to 4 participants training together synchronously.
- *
- * FUTURE ENHANCEMENTS:
- * - Replace localStorage with Firebase Realtime Database for true multi-device sync
- * - Implement WebSocket for real-time updates
- * - Add push notifications when all participants complete
- * - Add session chat functionality
+ * Manages group workout sessions using Firebase Firestore for real-time multi-device sync.
+ * Supports up to 4 participants training together synchronously across different devices.
  */
 
 import { GroupSession } from '../../Entities/GroupSession';
-
-const SESSIONS_STORAGE_KEY = 'group_training_sessions';
-const SYNC_INTERVAL_MS = 2000; // Poll every 2 seconds
-
-/**
- * Get all sessions from localStorage
- */
-function getAllSessions(): GroupSession[] {
-  try {
-    const stored = localStorage.getItem(SESSIONS_STORAGE_KEY);
-    if (!stored) return [];
-    const sessions = JSON.parse(stored);
-    // Filter out expired sessions
-    return sessions.filter((s: GroupSession) => !GroupSession.isExpired(s));
-  } catch (error) {
-    console.error('Error reading sessions from storage:', error);
-    return [];
-  }
-}
-
-/**
- * Save all sessions to localStorage
- */
-function saveSessions(sessions: GroupSession[]): void {
-  try {
-    localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
-  } catch (error) {
-    console.error('Error saving sessions to storage:', error);
-  }
-}
+import * as firebaseGroupTraining from '../firebase/groupTraining';
 
 /**
  * Create a new group training session
@@ -52,41 +17,27 @@ function saveSessions(sessions: GroupSession[]): void {
  * @param workoutId - Optional workout ID
  * @returns The created session
  */
-export function createSession(
+export async function createSession(
   creatorId: string,
   creatorName: string,
   workoutTitle: string,
   workoutId?: string
-): GroupSession {
-  const newSession = GroupSession.create(creatorId, creatorName, workoutTitle, workoutId);
-
-  const sessions = getAllSessions();
-  sessions.push(newSession);
-  saveSessions(sessions);
-
-  return newSession;
+): Promise<GroupSession> {
+  return firebaseGroupTraining.createSession(creatorId, creatorName, workoutTitle, workoutId);
 }
 
 /**
  * Find a session by its code
  *
  * @param code - The 8-character session code
+ * @param language - User's language preference
  * @returns The session if found, null otherwise
  */
-export function findSessionByCode(code: string): GroupSession | null {
-  // Validate and sanitize the code
-  const sanitizedCode = GroupSession.sanitizeCode(code);
-  if (!GroupSession.isValidCodeFormat(sanitizedCode)) {
-    return null;
-  }
-
-  const sessions = getAllSessions();
-  const session = sessions.find(s => s.code.toUpperCase() === sanitizedCode.toUpperCase());
-
-  if (!session) return null;
-  if (GroupSession.isExpired(session)) return null;
-
-  return session;
+export async function findSessionByCode(
+  code: string,
+  language: 'hebrew' | 'english' = 'hebrew'
+): Promise<GroupSession | null> {
+  return firebaseGroupTraining.findSessionByCode(code, language);
 }
 
 /**
@@ -95,9 +46,8 @@ export function findSessionByCode(code: string): GroupSession | null {
  * @param sessionId - The session ID
  * @returns The session if found, null otherwise
  */
-export function getSessionById(sessionId: string): GroupSession | null {
-  const sessions = getAllSessions();
-  return sessions.find(s => s.id === sessionId) || null;
+export async function getSessionById(sessionId: string): Promise<GroupSession | null> {
+  return firebaseGroupTraining.getSessionById(sessionId);
 }
 
 /**
@@ -106,49 +56,17 @@ export function getSessionById(sessionId: string): GroupSession | null {
  * @param code - The session code
  * @param participantId - ID of the participant
  * @param participantName - Display name of participant
+ * @param language - User's language preference
  * @returns The updated session
  * @throws Error if session not found, full, or started
  */
-export function joinSession(
+export async function joinSession(
   code: string,
   participantId: string,
-  participantName: string
-): GroupSession {
-  // Validate and sanitize the code
-  const sanitizedCode = GroupSession.sanitizeCode(code);
-  if (!GroupSession.isValidCodeFormat(sanitizedCode)) {
-    throw new Error('קוד לא תקין - חייב להיות 8 תווים');
-  }
-
-  const sessions = getAllSessions();
-  const sessionIndex = sessions.findIndex(s => s.code.toUpperCase() === sanitizedCode.toUpperCase());
-
-  if (sessionIndex === -1) {
-    throw new Error('קוד לא נמצא');
-  }
-
-  let session = sessions[sessionIndex];
-
-  if (GroupSession.isExpired(session)) {
-    throw new Error('הסשן פג תוקף');
-  }
-
-  if (GroupSession.isFull(session)) {
-    throw new Error('הסשן מלא (4 משתתפים)');
-  }
-
-  // Check if already in session
-  const existingParticipant = session.participants.find(p => p.id === participantId);
-  if (existingParticipant && !existingParticipant.leftSession) {
-    throw new Error('כבר הצטרפת לסשן זה');
-  }
-
-  // Add participant
-  session = GroupSession.addParticipant(session, participantId, participantName);
-  sessions[sessionIndex] = session;
-  saveSessions(sessions);
-
-  return session;
+  participantName: string,
+  language: 'hebrew' | 'english' = 'hebrew'
+): Promise<GroupSession> {
+  return firebaseGroupTraining.joinSession(code, participantId, participantName, language);
 }
 
 /**
@@ -156,51 +74,29 @@ export function joinSession(
  *
  * @param sessionId - The session ID
  * @param participantId - ID of the participant leaving
+ * @param language - User's language preference
  * @returns The updated session
  */
-export function leaveSession(sessionId: string, participantId: string): GroupSession {
-  const sessions = getAllSessions();
-  const sessionIndex = sessions.findIndex(s => s.id === sessionId);
-
-  if (sessionIndex === -1) {
-    throw new Error('Session not found');
-  }
-
-  let session = sessions[sessionIndex];
-  session = GroupSession.removeParticipant(session, participantId);
-
-  // If creator left, cancel the session
-  if (participantId === session.creatorId) {
-    session = GroupSession.cancelSession(session);
-  }
-
-  sessions[sessionIndex] = session;
-  saveSessions(sessions);
-
-  return session;
+export async function leaveSession(
+  sessionId: string,
+  participantId: string,
+  language: 'hebrew' | 'english' = 'hebrew'
+): Promise<GroupSession> {
+  return firebaseGroupTraining.leaveSession(sessionId, participantId, language);
 }
 
 /**
  * Start the workout
  *
  * @param sessionId - The session ID
+ * @param language - User's language preference
  * @returns The updated session
  */
-export function startWorkout(sessionId: string): GroupSession {
-  const sessions = getAllSessions();
-  const sessionIndex = sessions.findIndex(s => s.id === sessionId);
-
-  if (sessionIndex === -1) {
-    throw new Error('Session not found');
-  }
-
-  let session = sessions[sessionIndex];
-  session = GroupSession.startWorkout(session);
-
-  sessions[sessionIndex] = session;
-  saveSessions(sessions);
-
-  return session;
+export async function startWorkout(
+  sessionId: string,
+  language: 'hebrew' | 'english' = 'hebrew'
+): Promise<GroupSession> {
+  return firebaseGroupTraining.startWorkout(sessionId, language);
 }
 
 /**
@@ -209,27 +105,16 @@ export function startWorkout(sessionId: string): GroupSession {
  * @param sessionId - The session ID
  * @param participantId - ID of the participant
  * @param completed - Completion status
+ * @param language - User's language preference
  * @returns The updated session
  */
-export function setParticipantCompleted(
+export async function setParticipantCompleted(
   sessionId: string,
   participantId: string,
-  completed: boolean
-): GroupSession {
-  const sessions = getAllSessions();
-  const sessionIndex = sessions.findIndex(s => s.id === sessionId);
-
-  if (sessionIndex === -1) {
-    throw new Error('Session not found');
-  }
-
-  let session = sessions[sessionIndex];
-  session = GroupSession.setParticipantCompleted(session, participantId, completed);
-
-  sessions[sessionIndex] = session;
-  saveSessions(sessions);
-
-  return session;
+  completed: boolean,
+  language: 'hebrew' | 'english' = 'hebrew'
+): Promise<GroupSession> {
+  return firebaseGroupTraining.setParticipantCompleted(sessionId, participantId, completed, language);
 }
 
 /**
@@ -240,56 +125,30 @@ export function setParticipantCompleted(
  * @param sessionId - The session ID
  * @param nextPartIndex - Next part index
  * @param nextComponentIndex - Next component index
+ * @param language - User's language preference
  * @returns The updated session
  */
-export function moveToNext(
+export async function moveToNext(
   sessionId: string,
   nextPartIndex: number,
-  nextComponentIndex: number
-): GroupSession {
-  const sessions = getAllSessions();
-  const sessionIndex = sessions.findIndex(s => s.id === sessionId);
-
-  if (sessionIndex === -1) {
-    throw new Error('Session not found');
-  }
-
-  let session = sessions[sessionIndex];
-
-  // Verify all participants completed
-  if (session.requireAllToComplete && !GroupSession.allParticipantsCompleted(session)) {
-    throw new Error('Not all participants have completed');
-  }
-
-  session = GroupSession.moveToNext(session, nextPartIndex, nextComponentIndex);
-
-  sessions[sessionIndex] = session;
-  saveSessions(sessions);
-
-  return session;
+  nextComponentIndex: number,
+  language: 'hebrew' | 'english' = 'hebrew'
+): Promise<GroupSession> {
+  return firebaseGroupTraining.moveToNext(sessionId, nextPartIndex, nextComponentIndex, language);
 }
 
 /**
  * Complete the workout
  *
  * @param sessionId - The session ID
+ * @param language - User's language preference
  * @returns The updated session
  */
-export function completeWorkout(sessionId: string): GroupSession {
-  const sessions = getAllSessions();
-  const sessionIndex = sessions.findIndex(s => s.id === sessionId);
-
-  if (sessionIndex === -1) {
-    throw new Error('Session not found');
-  }
-
-  let session = sessions[sessionIndex];
-  session = GroupSession.completeWorkout(session);
-
-  sessions[sessionIndex] = session;
-  saveSessions(sessions);
-
-  return session;
+export async function completeWorkout(
+  sessionId: string,
+  language: 'hebrew' | 'english' = 'hebrew'
+): Promise<GroupSession> {
+  return firebaseGroupTraining.completeWorkout(sessionId, language);
 }
 
 /**
@@ -297,10 +156,8 @@ export function completeWorkout(sessionId: string): GroupSession {
  *
  * @param sessionId - The session ID
  */
-export function deleteSession(sessionId: string): void {
-  const sessions = getAllSessions();
-  const filteredSessions = sessions.filter(s => s.id !== sessionId);
-  saveSessions(filteredSessions);
+export async function deleteSession(sessionId: string): Promise<void> {
+  return firebaseGroupTraining.deleteSession(sessionId);
 }
 
 /**
@@ -308,87 +165,68 @@ export function deleteSession(sessionId: string): void {
  *
  * Removes sessions that are expired or completed more than 24 hours ago
  */
-export function cleanupOldSessions(): void {
-  const sessions = getAllSessions();
-  const now = new Date();
-  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-  const activeSessions = sessions.filter(session => {
-    // Remove expired sessions
-    if (GroupSession.isExpired(session)) return false;
-
-    // Remove old completed/cancelled sessions
-    if ((session.status === 'completed' || session.status === 'cancelled') && session.endedAt) {
-      const endDate = new Date(session.endedAt);
-      if (endDate < oneDayAgo) return false;
-    }
-
-    return true;
-  });
-
-  saveSessions(activeSessions);
+export async function cleanupOldSessions(): Promise<void> {
+  return firebaseGroupTraining.cleanupOldSessions();
 }
 
 /**
  * Session Sync Manager
  *
- * Polls for session updates. Use this to keep session state in sync across devices.
- * In a real implementation, this would be replaced with WebSocket or Firebase listeners.
+ * Uses Firebase real-time listeners for instant updates across devices.
+ * No polling needed - updates happen automatically when session data changes.
  */
 export class SessionSyncManager {
-  private intervalId: number | null = null;
+  private unsubscribe: (() => void) | null = null;
   private sessionId: string;
-  private onUpdate: (session: GroupSession) => void;
+  private onUpdate: (session: GroupSession | null) => void;
+  private onError?: (error: Error) => void;
 
-  constructor(sessionId: string, onUpdate: (session: GroupSession) => void) {
+  constructor(
+    sessionId: string,
+    onUpdate: (session: GroupSession | null) => void,
+    onError?: (error: Error) => void
+  ) {
     this.sessionId = sessionId;
     this.onUpdate = onUpdate;
+    this.onError = onError;
   }
 
   /**
-   * Start polling for updates
+   * Start listening for real-time updates
    */
   start(): void {
-    if (this.intervalId !== null) return;
+    if (this.unsubscribe !== null) return;
 
-    // Initial update
-    this.checkForUpdates();
-
-    // Poll for updates
-    this.intervalId = window.setInterval(() => {
-      this.checkForUpdates();
-    }, SYNC_INTERVAL_MS);
+    this.unsubscribe = firebaseGroupTraining.subscribeToSession(
+      this.sessionId,
+      this.onUpdate,
+      this.onError
+    );
   }
 
   /**
-   * Stop polling for updates
+   * Stop listening for updates
    */
   stop(): void {
-    if (this.intervalId !== null) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
+    if (this.unsubscribe !== null) {
+      this.unsubscribe();
+      this.unsubscribe = null;
     }
   }
 
   /**
-   * Check for session updates
+   * Manually trigger an update check (kept for backward compatibility)
    */
-  private checkForUpdates(): void {
+  async refresh(): Promise<void> {
     try {
-      const session = getSessionById(this.sessionId);
-      if (session) {
-        this.onUpdate(session);
-      }
+      const session = await getSessionById(this.sessionId);
+      this.onUpdate(session);
     } catch (error) {
-      console.error('Error checking for session updates:', error);
+      console.error('Error refreshing session:', error);
+      if (this.onError) {
+        this.onError(error as Error);
+      }
     }
-  }
-
-  /**
-   * Manually trigger an update check
-   */
-  refresh(): void {
-    this.checkForUpdates();
   }
 }
 
@@ -400,14 +238,11 @@ export class SessionSyncManager {
  * @param userId - The user's ID
  * @returns Array of active sessions
  */
-export function getUserActiveSessions(userId: string): GroupSession[] {
-  const sessions = getAllSessions();
-  return sessions.filter(
-    session =>
-      (session.status === 'waiting' || session.status === 'ready' || session.status === 'in_progress') &&
-      session.participants.some(p => p.id === userId && !p.leftSession)
-  );
+export async function getUserActiveSessions(userId: string): Promise<GroupSession[]> {
+  return firebaseGroupTraining.getUserActiveSessions(userId);
 }
 
 // Run cleanup on initialization
-cleanupOldSessions();
+cleanupOldSessions().catch(err => {
+  console.error('Failed to cleanup old sessions:', err);
+});

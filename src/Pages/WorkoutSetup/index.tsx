@@ -150,22 +150,24 @@ export default function WorkoutSetup() {
   };
 
   // Group training handlers
-  const handleCreateSession = () => {
+  const handleCreateSession = async () => {
     try {
       const userId = crypto.randomUUID();
-      const userName = 'משתמש';
+      const userName = language === 'hebrew' ? 'משתמש' : 'User';
+      const workoutTitle = language === 'hebrew' ? 'אימון משותף' : 'Group Workout';
 
-      const session = groupTrainingService.createSession(
+      const session = await groupTrainingService.createSession(
         userId,
         userName,
-        'אימון משותף'
+        workoutTitle
       );
 
       setGroupSession(session);
       setShowCreateSessionModal(true);
     } catch (error) {
       console.error('Error creating session:', error);
-      alert('שגיאה ביצירת אימון משותף');
+      const errorMsg = language === 'hebrew' ? 'שגיאה ביצירת אימון משותף' : 'Error creating group workout';
+      alert(errorMsg);
     }
   };
 
@@ -174,12 +176,17 @@ export default function WorkoutSetup() {
     setJoinError('');
   };
 
-  const handleJoinSessionSubmit = () => {
+  const handleJoinSessionSubmit = async () => {
     try {
       const userId = crypto.randomUUID();
-      const userName = 'משתמש';
+      const userName = language === 'hebrew' ? 'משתמש' : 'User';
 
-      const session = groupTrainingService.joinSession(joinCode.toUpperCase(), userId, userName);
+      const session = await groupTrainingService.joinSession(
+        joinCode.toUpperCase(),
+        userId,
+        userName,
+        language
+      );
       setGroupSession(session);
       setShowJoinSessionModal(false);
       setJoinCode('');
@@ -187,7 +194,8 @@ export default function WorkoutSetup() {
       // Navigate to workout with session
       navigate(createPageUrl('CreateWorkout', { sessionId: session.id }));
     } catch (error: any) {
-      setJoinError(error.message || 'שגיאה בהצטרפות לאימון');
+      const defaultError = language === 'hebrew' ? 'שגיאה בהצטרפות לאימון' : 'Error joining workout';
+      setJoinError(error.message || defaultError);
     }
   };
 
