@@ -10,23 +10,23 @@ const pageTexts = {
     title: "קצת עלינו",
     subtitle: "נבנה באהבה ובתשוקה לכושר קרבי.",
     ourStory: "הסיפור שלנו",
-    storyContent: "[כאן יבוא הטקסט שלך על הסיפור של הפרויקט - תוכל להוסיף אותו מאוחר יותר]",
+    storyContent: "אנחנו צ׳ ומ׳. שירתנו בשירות סדיר וקבע ביחידת אגוז, והשתתפנו בעשרות פעילויות ומשימות בשטחי אויב שיפה להן השתיקה.\n\nכושר וכושר קרבי הוא חלק גדול מהחיים שלנו, ועיסוקנו ביום יום הוא הדרכת נוער לשירות קרבי משמעותי בצה״ל וביחידות המובחרות של צה״ל.",
     ourMission: "המשימה שלנו",
-    missionContent: "[כאן יבוא הטקסט על המשימה והחזון של הפרויקט]",
+    missionContent: "היום קבוצות כושר קרבי הפכו לסטנדרט. בין אם בגיבושים ובין אם ביחידות המובחרות וביחידות המיוחדות, כמעט כולם היו חלק מקבוצת כושר קרבי כזו או אחרת.\n\nאנחנו, שיודעים כמה זה יכול להיות יקר, וכמה לפעמים יש קושי טכני בלהצטרף לקבוצה - בין אם מרחק, זמן, או מחיר - רצינו לאפשר אפשרות זולה יותר, נוחה יותר, ומותאמת יותר אישית לכל מתאמן.\n\nכחלק מזה פיתחנו את אפליקציית אזימוט כושר קרבי, שאחראית ומאפשרת לקחת אתכם מהנקודה בה אתם נמצאים אל הנקודה בה אתם רוצים להיות מבחינת הכושר שלכם, בצורה הכי נוחה, הכי זולה, והכי מותאמת אישית שיש.\n\nאנחנו מאמינים שעם הכלים הנכונים, כל אחד יכול להגיע לכל מטרה שהוא מציב לעצמו, ואנחנו כאן כדי לעזור לכם לעשות את זה.",
     theTeam: "הצוות",
-    teamContent: "[כאן יבוא מידע על הצוות]",
+    teamContent: "צ׳ - לוחם ומפקד ביחידת אגוז. מילואימניק בחטיבת המילואים של יחידת אגוז (מעל 200 ימי מילואים מאז השביעי לאוקטובר). בנוסף, בעל עבר בריצות תחרותיות ותחרויות שונות.\n\nמ׳ - לוחם וצלף ביחידת אגוז. משרת במילואים יחד עם צ׳ בחטיבת המילואים של אגוז. בעל תעודת מדריך ריצות וחדר כושר מוסמך.",
     memorial: "פרויקט זה מוקדש לזכרם של אופק בכר ושילה הר-אבן ז\"ל. יהי זכרם ברוך.",
     backHome: "חזרה למסך הבית"
   },
   english: {
     title: "About Us",
-    subtitle: "Built with a passion for combat fitness.",
+    subtitle: "Built with love and passion for combat fitness.",
     ourStory: "Our Story",
-    storyContent: "[Your text about the project's story will go here - you can add it later]",
+    storyContent: "We are T and M. We served in regular and career service in the Egoz Unit, and participated in dozens of operations and missions in enemy territory that deserve silence.\n\nFitness and combat fitness is a huge part of our lives, and our daily occupation is training youth for meaningful combat service in the IDF and in the IDF's elite units.",
     ourMission: "Our Mission",
-    missionContent: "[Your text about the mission and vision of the project]",
+    missionContent: "Today, combat fitness groups have become the standard. Whether in selection processes or in elite and special units, almost everyone has been part of one combat fitness group or another.\n\nWe, who know how expensive it can be, and how sometimes there are technical difficulties in joining a group - whether distance, time, or price - wanted to provide a cheaper, more convenient, and more personally tailored option for every trainee.\n\nAs part of this, we developed the Azimut Combat Fitness app, which is responsible for and enables taking you from where you are to where you want to be in terms of your fitness, in the most convenient, cheapest, and most personally tailored way possible.\n\nWe believe that with the right tools, anyone can reach any goal they set for themselves, and we're here to help you do it.",
     theTeam: "The Team",
-    teamContent: "[Information about the team will go here]",
+    teamContent: "T - Fighter and commander in the Egoz Unit. Reservist in the Egoz Unit's reserve brigade (over 200 days of reserve duty since October 7th). Additionally, has a background in competitive running and various competitions.\n\nM - Fighter and sniper in the Egoz Unit. Serves in reserves together with T in the Egoz reserve brigade. Holds a certified running and gym instructor certificate.",
     memorial: "This project is lovingly dedicated to the memory of Ofek Becher and Shilo Har-Even. May their memory be a blessing.",
     backHome: "Back to Home"
   }
@@ -64,10 +64,6 @@ export default function AboutUs() {
             <div className="text-[var(--color-4)] leading-relaxed whitespace-pre-line">
               {currentTexts.storyContent}
             </div>
-            {/* Placeholder for images - you can add them later */}
-            {/* <div className="mt-4 flex justify-center">
-              <img src="/path/to/image.jpg" alt="Story" className="rounded-lg max-w-full" />
-            </div> */}
           </div>
 
           {/* Our Mission Section */}
@@ -88,11 +84,6 @@ export default function AboutUs() {
             <div className="text-[var(--color-4)] leading-relaxed whitespace-pre-line">
               {currentTexts.teamContent}
             </div>
-            {/* Placeholder for team images */}
-            {/* <div className="mt-4 grid grid-cols-2 gap-4">
-              <img src="/path/to/team1.jpg" alt="Team member" className="rounded-lg" />
-              <img src="/path/to/team2.jpg" alt="Team member" className="rounded-lg" />
-            </div> */}
           </div>
 
           {/* Memorial Section */}
