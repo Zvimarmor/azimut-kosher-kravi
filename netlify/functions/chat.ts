@@ -1,9 +1,33 @@
 import { Handler } from '@netlify/functions';
 import OpenAI from 'openai';
+import fs from 'fs';
+import path from 'path';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+// Load RAG Corpus
+// In a real production environment with large data, use a Vector DB (Pinecone/Weaviate).
+// For this scale (~25 docs), in-memory JSON is perfectly fine and fast.
+let ragCorpus: any[] = [];
+try {
+  // Try to load from the build output location or local source
+  // Netlify functions run in a specific environment, so we need to be careful with paths
+  // Using direct require/import for small JSONs is often safest for bundling
+  const corpusPath = path.resolve(__dirname, 'data/rag_corpus.json');
+  if (fs.existsSync(corpusPath)) {
+    ragCorpus = JSON.parse(fs.readFileSync(corpusPath, 'utf-8'));
+  } else {
+    // Fallback: try finding it relative to the function file if __dirname is weird
+    const localPath = path.join(process.cwd(), 'netlify/functions/data/rag_corpus.json');
+    if (fs.existsSync(localPath)) {
+      ragCorpus = JSON.parse(fs.readFileSync(localPath, 'utf-8'));
+    }
+  }
+} catch (error) {
+  console.warn('Failed to load RAG corpus:', error);
+}
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -15,10 +39,50 @@ interface RequestBody {
   language?: 'hebrew' | 'english';
 }
 
-const getSystemPrompt = (language: 'hebrew' | 'english'): string => {
+function cosineSimilarity(A: number[], B: number[]): number {
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+  for (let i = 0; i < A.length; i++) {
+    dotProduct += A[i] * B[i];
+    normA += A[i] * A[i];
+    normB += B[i] * B[i];
+  }
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+async function retrieveContext(query: string): Promise<string> {
+  if (ragCorpus.length === 0) return '';
+
+  try {
+    const embeddingResponse = await openai.embeddings.create({
+      model: 'text-embedding-3-small',
+      input: query,
+    });
+    const queryEmbedding = embeddingResponse.data[0].embedding;
+
+    const scoredDocs = ragCorpus.map(doc => ({
+      ...doc,
+      score: cosineSimilarity(queryEmbedding, doc.embedding),
+    }));
+
+    // Filter by minimal relevance and take top 3
+    scoredDocs.sort((a, b) => b.score - a.score);
+    const topDocs = scoredDocs.slice(0, 3).filter(d => d.score > 0.3);
+
+    if (topDocs.length === 0) return '';
+
+    return topDocs.map(d => `Source (${d.metadata.title}): ${d.content}`).join('\n\n');
+  } catch (error) {
+    console.error('RAG Retrieval Error:', error);
+    return '';
+  }
+}
+
+const getSystemPrompt = (language: 'hebrew' | 'english', context: string): string => {
   const responseLanguage = language === 'english' ? 'English' : 'Hebrew';
 
-  return `You are an experienced IDF special forces preparation trainer who works with teenagers preparing for elite units.
+  let basePrompt = `You are an experienced IDF special forces preparation trainer who works with teenagers preparing for elite units.
 Your role is to provide detailed, accurate, and validated information ONLY in the following areas:
 - IDF recruitment processes, especially for special forces units
 - Military training programs and preparation
@@ -46,9 +110,9 @@ Response style:
 - Structure answers clearly but keep the tone direct and motivating
 - After detailed explanations, add the appropriate warning:
   ${language === 'english'
-    ? '⚠️ This information is based on public sources and doesn\'t replace official verification. It\'s recommended to confirm with MEITAV / recruitment portal / IDF spokesperson.'
-    : '⚠️ המידע מבוסס על מקורות גלויים ואינו מחליף בדיקה רשמית. מומלץ לוודא מול מיטב / אתר מתגייסים / דובר צה״ל.'
-  }
+      ? '⚠️ This information is based on public sources and doesn\'t replace official verification. It\'s recommended to confirm with MEITAV / recruitment portal / IDF spokesperson.'
+      : '⚠️ המידע מבוסס על מקורות גלויים ואינו מחליף בדיקה רשמית. מומלץ לוודא מול מיטב / אתר מתגייסים / דובר צה״ל.'
+    }
 - If information cannot be fully verified, note: ${language === 'english' ? '"Some of this information may not be fully verified."' : '"חלק מהמידע אינו מאומת במלואו."'}
 
 Coaching philosophy:
@@ -66,9 +130,15 @@ Strict limitations:
 
 If asked about topics outside your domain, answer:
 ${language === 'english'
-  ? '"That\'s not my area. I prepare soldiers for elite IDF units - recruitment, training, nutrition, and units. For other questions, consult professional sources."'
-  : '"זה לא התחום שלי. אני מכין חיילים ליחידות עילית בצה״ל - גיוס, אימונים, תזונה ויחידות. לשאלות אחרות פנה לגורמים מקצועיים."'
-}`;
+      ? '"That\'s not my area. I prepare soldiers for elite IDF units - recruitment, training, nutrition, and units. For other questions, consult professional sources."'
+      : '"זה לא התחום שלי. אני מכין חיילים ליחידות עילית בצה״ל - גיוס, אימונים, תזונה ויחידות. לשאלות אחרות פנה לגורמים מקצועיים."'
+    }`;
+
+  if (context) {
+    basePrompt += `\n\n=== RELEVANT KNOWLEDGE BASE ===\nUse the following internal training materials to answer the user's question if relevant. Quote specific protocols or advice from here if it fits the question.\n\n${context}\n\n=== END KNOWLEDGE BASE ===`;
+  }
+
+  return basePrompt;
 };
 
 export const handler: Handler = async (event) => {
@@ -97,10 +167,24 @@ export const handler: Handler = async (event) => {
       };
     }
 
+    // Perform RAG retrieval for the last user message
+    let context = '';
+    const lastUserMessage = messages.slice().reverse().find(m => m.role === 'user');
+    if (lastUserMessage) {
+      try {
+        context = await retrieveContext(lastUserMessage.content);
+        if (context) {
+          console.log('RAG Context Retrieved:', context.substring(0, 100) + '...');
+        }
+      } catch (err) {
+        console.warn('RAG Context Retrieval Failed (Non-fatal):', err);
+      }
+    }
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: getSystemPrompt(language) },
+        { role: 'system', content: getSystemPrompt(language, context) },
         ...messages
       ],
       max_tokens: 2000,
