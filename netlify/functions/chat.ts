@@ -68,7 +68,12 @@ async function retrieveContext(query: string): Promise<string> {
 
     // Filter by minimal relevance and take top 3
     scoredDocs.sort((a, b) => b.score - a.score);
-    const topDocs = scoredDocs.slice(0, 3).filter(d => d.score > 0.3);
+
+    // DEBUG: Log top 3 scores
+    console.log(`Top scores for "${query}":`);
+    scoredDocs.slice(0, 3).forEach(d => console.log(`- ${d.metadata.title}: ${d.score.toFixed(4)}`));
+
+    const topDocs = scoredDocs.slice(0, 3).filter(d => d.score > 0.25);
 
     if (topDocs.length === 0) return '';
 
@@ -135,7 +140,7 @@ ${language === 'english'
     }`;
 
   if (context) {
-    basePrompt += `\n\n=== RELEVANT KNOWLEDGE BASE ===\nUse the following internal training materials to answer the user's question if relevant. Quote specific protocols or advice from here if it fits the question.\n\n${context}\n\n=== END KNOWLEDGE BASE ===`;
+    basePrompt += `\n\n=== RELEVANT KNOWLEDGE BASE ===\nThe following information comes from the "Azimut" website and internal workout database. Use it to answer questions about the app features, training programs, and philosophy.\n\n${context}\n\n=== END KNOWLEDGE BASE ===`;
   }
 
   return basePrompt;

@@ -32,6 +32,9 @@ async function runTest() {
         // Hebrew tests
         { query: "איך אני מתחיל להתאמן?", lang: 'hebrew' },
         { query: "האם האפליקציה בודקת מרחק?", lang: 'hebrew' },
+        { query: "מה זה אימון מיוחד?", lang: 'hebrew' }, // What is special training?
+        { query: "איך עובד ה-GPS?", lang: 'hebrew' }, // How does the GPS work?
+        { query: "למי האפליקציה מיועדת?", lang: 'hebrew' }, // Who is the app for?
     ];
 
     for (const test of testCases) {
