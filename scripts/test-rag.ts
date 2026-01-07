@@ -22,7 +22,7 @@ const createEvent = (message: string, language: 'hebrew' | 'english' = 'english'
 });
 
 async function runTest() {
-    const { handler } = await import('../netlify/functions/chat');
+    const { handler } = await import('../netlify/functions/chat.ts');
 
     const testCases = [
         { query: "How can I start to train?", lang: 'english' },
