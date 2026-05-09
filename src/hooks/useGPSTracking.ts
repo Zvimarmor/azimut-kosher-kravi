@@ -16,22 +16,13 @@ export function useGPSTracking(measurementSystem: 'metric' | 'imperial' = 'metri
   const [hasPermission, setHasPermission] = useState(false);
 
   const { addToBuffer } = useBackgroundSync((syncData) => {
-    // When app becomes visible, merge all buffered GPS data
-    const gpsUpdates = syncData.map(item => item.data as GPSStats);
-    
-    if (gpsUpdates.length > 0) {
-      const mergedStats = gpsUpdates.reduce((acc, curr) => ({
-        ...curr,
-        totalDistance: (acc.totalDistance || 0) + (curr.totalDistance || 0),
-        // Average the pace
-        averagePace: gpsUpdates.reduce((sum, stat) => sum + (stat.averagePace || 0), 0) / gpsUpdates.length
-      }), {} as GPSStats);
-
-      setGPSStats(prev => prev ? {
-        ...prev,
-        totalDistance: (prev.totalDistance || 0) + (mergedStats.totalDistance || 0),
-        averagePace: Math.round(((prev.averagePace || 0) + (mergedStats.averagePace || 0)) / 2)
-      } : mergedStats);
+    // When app becomes visible, take the latest GPS stats from the buffer.
+    // gpsService maintains correct cumulative totals internally, so we
+    // simply use the most recent reading rather than summing (which would
+    // inflate distance by adding cumulative values together).
+    if (syncData.length > 0) {
+      const latestStats = syncData[syncData.length - 1].data as GPSStats;
+      setGPSStats(latestStats);
     }
   });
 

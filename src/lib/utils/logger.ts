@@ -5,9 +5,7 @@
  * Prevents sensitive information leakage in production.
  */
 
-// Force development mode for debugging auth issues
-// TODO: Revert this after auth is fixed
-const isDevelopment = true; // import.meta.env.VITE_ENV === 'development' || import.meta.env.DEV;
+const isDevelopment = import.meta.env.VITE_ENV === 'development' || import.meta.env.DEV;
 
 // Persistent log storage for debugging auth redirects
 const AUTH_LOG_KEY = 'auth_debug_logs';

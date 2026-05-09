@@ -3,6 +3,7 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  runTransaction,
   serverTimestamp,
   Timestamp
 } from 'firebase/firestore';
@@ -159,27 +160,29 @@ export async function updateLastActive(uid: string): Promise<void> {
 export async function checkAndResetChatQuota(uid: string): Promise<number> {
   try {
     const userRef = doc(db, 'users', uid);
-    const userDoc = await getDoc(userRef);
 
-    if (!userDoc.exists()) {
-      return 0;
-    }
+    return await runTransaction(db, async (transaction) => {
+      const userDoc = await transaction.get(userRef);
 
-    const userData = userDoc.data() as UserProfile;
-    const today = new Date().toDateString();
-    const lastResetDate = userData.features.militaryChatQuotaResetDate;
+      if (!userDoc.exists()) {
+        return 0;
+      }
 
-    // Reset quota if it's a new day
-    if (lastResetDate !== today) {
-      const newQuota = userData.features.hasUnlimitedChat ? 999 : 10;
-      await updateDoc(userRef, {
-        'features.militaryChatQuota': newQuota,
-        'features.militaryChatQuotaResetDate': today
-      });
-      return newQuota;
-    }
+      const userData = userDoc.data() as UserProfile;
+      const today = new Date().toDateString();
+      const lastResetDate = userData.features.militaryChatQuotaResetDate;
 
-    return userData.features.militaryChatQuota;
+      if (lastResetDate !== today) {
+        const newQuota = userData.features.hasUnlimitedChat ? 999 : 10;
+        transaction.update(userRef, {
+          'features.militaryChatQuota': newQuota,
+          'features.militaryChatQuotaResetDate': today
+        });
+        return newQuota;
+      }
+
+      return userData.features.militaryChatQuota;
+    });
   } catch (error) {
     console.error('Error checking chat quota:', error);
     return 0;
@@ -192,28 +195,31 @@ export async function checkAndResetChatQuota(uid: string): Promise<number> {
 export async function decrementChatQuota(uid: string): Promise<number> {
   try {
     const userRef = doc(db, 'users', uid);
-    const userDoc = await getDoc(userRef);
 
-    if (!userDoc.exists()) {
-      throw new Error('User not found');
-    }
+    return await runTransaction(db, async (transaction) => {
+      const userDoc = await transaction.get(userRef);
 
-    const userData = userDoc.data() as UserProfile;
-    const currentQuota = userData.features.militaryChatQuota;
+      if (!userDoc.exists()) {
+        throw new Error('User not found');
+      }
 
-    if (currentQuota <= 0 && !userData.features.hasUnlimitedChat) {
-      throw new Error('Chat quota exceeded');
-    }
+      const userData = userDoc.data() as UserProfile;
+      const currentQuota = userData.features.militaryChatQuota;
 
-    const newQuota = Math.max(0, currentQuota - 1);
+      if (currentQuota <= 0 && !userData.features.hasUnlimitedChat) {
+        throw new Error('Chat quota exceeded');
+      }
 
-    await updateDoc(userRef, {
-      'features.militaryChatQuota': newQuota,
-      'usage.totalChatMessages': (userData.usage.totalChatMessages || 0) + 1,
-      lastActive: serverTimestamp()
+      const newQuota = Math.max(0, currentQuota - 1);
+
+      transaction.update(userRef, {
+        'features.militaryChatQuota': newQuota,
+        'usage.totalChatMessages': (userData.usage.totalChatMessages ?? 0) + 1,
+        lastActive: serverTimestamp()
+      });
+
+      return newQuota;
     });
-
-    return newQuota;
   } catch (error) {
     console.error('Error decrementing chat quota:', error);
     throw error;
@@ -226,18 +232,21 @@ export async function decrementChatQuota(uid: string): Promise<number> {
 export async function incrementWorkoutCount(uid: string): Promise<void> {
   try {
     const userRef = doc(db, 'users', uid);
-    const userDoc = await getDoc(userRef);
 
-    if (!userDoc.exists()) {
-      return;
-    }
+    await runTransaction(db, async (transaction) => {
+      const userDoc = await transaction.get(userRef);
 
-    const userData = userDoc.data() as UserProfile;
+      if (!userDoc.exists()) {
+        return;
+      }
 
-    await updateDoc(userRef, {
-      'usage.totalWorkouts': (userData.usage.totalWorkouts || 0) + 1,
-      'usage.lastWorkoutDate': serverTimestamp(),
-      lastActive: serverTimestamp()
+      const userData = userDoc.data() as UserProfile;
+
+      transaction.update(userRef, {
+        'usage.totalWorkouts': (userData.usage.totalWorkouts ?? 0) + 1,
+        'usage.lastWorkoutDate': serverTimestamp(),
+        lastActive: serverTimestamp()
+      });
     });
   } catch (error) {
     console.error('Error incrementing workout count:', error);

@@ -13,12 +13,12 @@ export const allTexts = {
 
     // Home page
     createWorkout: "צור אימון",
-    createWorkoutDesc: "אימון ארוך/מותאם אישית",
+    createWorkoutDesc: "תוכנית אימון מלאה ומותאמת אישית",
     selectWorkout: "בחר אימון",
     selectWorkoutDesc: "בחר אימון קיים",
     heritage: "תרבות ומורשת",
-    militaryChat: "צ׳אט ייעוץ",
-    militaryChatDesc: "צ׳אט מבוסס AI להתייעצות",
+    militaryChat: "יועץ הכנה צבאית",
+    militaryChatDesc: "ייעוץ מקצועי מבוסס AI",
 
     // Common UI elements
     back: "חזור",
@@ -63,7 +63,7 @@ export const allTexts = {
     login: "התחברות",
     logout: "התנתקות",
     loginRequired: "נדרש חשבון משתמש",
-    loginRequiredMessage: "על מנת לשאול שאלות בצ'אט הצבאי, יש להתחבר תחילה לחשבון המשתמש שלך.",
+    loginRequiredMessage: "נדרשת התחברות לחשבון על מנת לגשת ליועץ ההכנה הצבאית.",
     loginWithGoogle: "התחבר עם Google",
     loginWithFacebook: "התחבר עם Facebook",
 
@@ -117,7 +117,7 @@ export const allTexts = {
     philosophyJudaism: "פילוסופיה ויהדות בנושאי צבא",
 
     // Exercise Library
-    exerciseLibrary: "הסבר תרגילים",
+    exerciseLibrary: "ספריית תרגילים",
     exerciseDetails: "פרטי תרגיל",
     formTips: "טיפים לביצוע נכון",
     commonMistakes: "טעויות נפוצות",
@@ -156,12 +156,12 @@ export const allTexts = {
 
     // Home page
     createWorkout: "Create Workout",
-    createWorkoutDesc: "Long/personalized workout",
+    createWorkoutDesc: "Full personalized training program",
     selectWorkout: "Select Workout",
     selectWorkoutDesc: "Choose existing workout",
     heritage: "Heritage & Culture",
-    militaryChat: "Military Consultation",
-    militaryChatDesc: "AI-powered consultation chat",
+    militaryChat: "Military Preparation Advisor",
+    militaryChatDesc: "AI-powered professional guidance",
 
     // Common UI elements
     back: "Back",
@@ -206,7 +206,7 @@ export const allTexts = {
     login: "Login",
     logout: "Logout",
     loginRequired: "Login Required",
-    loginRequiredMessage: "To ask questions in the military chat, please log in to your account first.",
+    loginRequiredMessage: "Authentication is required to access the Military Preparation Advisor.",
     loginWithGoogle: "Login with Google",
     loginWithFacebook: "Login with Facebook",
 
@@ -260,7 +260,7 @@ export const allTexts = {
     philosophyJudaism: "Philosophy and Judaism in Military Matters",
 
     // Exercise Library
-    exerciseLibrary: "Exercise Explanation",
+    exerciseLibrary: "Exercise Library",
     exerciseDetails: "Exercise Details",
     formTips: "Form Tips",
     commonMistakes: "Common Mistakes",

@@ -391,14 +391,18 @@ export class WorkoutCompositionService {
 
   /**
    * Helper: Get value for user level from values array/object
+   *
+   * Values arrays contain 10 elements (indices 0–9) representing levels 1–10.
+   * The level is clamped to [1, 10] and converted to a zero-based index.
    */
   private static getValueForLevel(values: number[] | { [key: string]: number | null }, level: number): number {
-    const clampedLevel = Math.max(0, Math.min(10, Math.round(level)));
+    const clampedLevel = Math.max(1, Math.min(10, Math.round(level)));
+    const arrayIndex = clampedLevel - 1; // Convert to zero-based index
 
     if (Array.isArray(values)) {
-      return values[clampedLevel] || values[0] || 1;
+      return values[arrayIndex] ?? values[values.length - 1] ?? 1;
     } else {
-      const value = values[clampedLevel.toString()] || values['0'] || values[Object.keys(values)[0]];
+      const value = values[clampedLevel.toString()] ?? values['1'] ?? values[Object.keys(values)[0]];
       return value !== null && value !== undefined ? value : 1;
     }
   }

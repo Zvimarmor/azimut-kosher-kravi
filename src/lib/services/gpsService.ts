@@ -197,6 +197,12 @@ class GPSTrackingService {
   }
 
   /**
+   * Maximum plausible human speed in m/s (~45 km/h sprint).
+   * GPS readings producing speeds above this threshold are rejected as position spikes.
+   */
+  private static readonly MAX_PLAUSIBLE_SPEED_MS = 12.5;
+
+  /**
    * Handle position update from GPS
    */
   private handlePosition = (position: GeolocationPosition) => {
@@ -207,16 +213,32 @@ class GPSTrackingService {
       timestamp: position.timestamp
     };
 
-    // Only add position if accuracy is reasonable (within 50 meters)
-    if (gpsPosition.accuracy <= 50) {
-      this.positions.push(gpsPosition);
-
-      // Notify callback with updated stats
-      if (this.onUpdateCallback) {
-        this.onUpdateCallback(this.getStats());
-      }
-    } else {
+    // Filter 1: Reject readings with poor accuracy (> 50 meters)
+    if (gpsPosition.accuracy > 50) {
       console.warn('GPS accuracy too low, skipping position:', gpsPosition.accuracy);
+      return;
+    }
+
+    // Filter 2: Reject impossible speed spikes (GPS jumps from cellular triangulation)
+    if (this.positions.length > 0) {
+      const lastPos = this.positions[this.positions.length - 1];
+      const distance = this.calculateDistance(lastPos, gpsPosition);
+      const timeDelta = (gpsPosition.timestamp - lastPos.timestamp) / 1000;
+
+      if (timeDelta > 0) {
+        const speed = distance / timeDelta; // m/s
+        if (speed > GPSTrackingService.MAX_PLAUSIBLE_SPEED_MS) {
+          console.warn('GPS spike detected, skipping position. Computed speed:', (speed * 3.6).toFixed(1), 'km/h');
+          return;
+        }
+      }
+    }
+
+    this.positions.push(gpsPosition);
+
+    // Notify callback with updated stats
+    if (this.onUpdateCallback) {
+      this.onUpdateCallback(this.getStats());
     }
   };
 
@@ -358,20 +380,8 @@ class GPSTrackingService {
     }
     this.onUpdateCallback = onUpdate;
 
-    // Set up visibility change handler
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        this.saveCurrentData();
-      } else {
-        this.loadSavedData();
-        // Update callback with restored data
-        if (this.onUpdateCallback) {
-          this.onUpdateCallback(this.getStats());
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Set up visibility change handler using the class property for consistent cleanup
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
 
     // Start watching position with high accuracy
     // Increased timeout for better mobile support, especially indoors
