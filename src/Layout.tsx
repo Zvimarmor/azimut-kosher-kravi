@@ -35,8 +35,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center justify-between">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="w-10 h-10 rounded-xl glass-card flex items-center justify-center press-scale hover:glow-border transition-all duration-200">
-                    <Menu className="w-5 h-5 text-tactical-muted" />
+                  <button className="w-10 h-10 rounded-xl bg-tactical-surface border border-tactical-accent/25 flex items-center justify-center press-scale hover:border-tactical-accent/50 hover:glow-border transition-all duration-200">
+                    <Menu className="w-5 h-5 text-tactical-text" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
@@ -73,7 +73,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     className="text-tactical-text hover:bg-tactical-accent/10 cursor-pointer"
                     onClick={() => setLanguage(language === 'hebrew' ? 'english' : 'hebrew')}
                   >
-                    <Globe className="w-4 h-4 mr-3 text-tactical-muted" />
+                    <Globe className="w-4 h-4 mr-3 text-tactical-accent" />
                     <div className="flex items-center gap-2">
                       <span>{language === 'hebrew' ? '🇺🇸' : '🇮🇱'}</span>
                       <span>{currentTexts.language}</span>
@@ -83,28 +83,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     className="text-tactical-text hover:bg-tactical-accent/10 cursor-pointer"
                     onClick={() => window.location.href = createPageUrl("WorkoutHistory")}
                   >
-                    <History className="w-4 h-4 mr-3 text-tactical-muted" />
+                    <History className="w-4 h-4 mr-3 text-tactical-accent" />
                     <span>{currentTexts.workoutHistory}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-tactical-text hover:bg-tactical-accent/10 cursor-pointer"
                     onClick={() => window.location.href = createPageUrl("ExerciseLibrary")}
                   >
-                    <Dumbbell className="w-4 h-4 mr-3 text-tactical-muted" />
+                    <Dumbbell className="w-4 h-4 mr-3 text-tactical-accent" />
                     <span>{currentTexts.exerciseLibrary}</span>
                   </DropdownMenuItem>
                    <DropdownMenuItem
                     className="text-tactical-text hover:bg-tactical-accent/10 cursor-pointer"
                     onClick={() => window.location.href = createPageUrl("AboutUs")}
                   >
-                    <Info className="w-4 h-4 mr-3 text-tactical-muted" />
+                    <Info className="w-4 h-4 mr-3 text-tactical-accent" />
                     <span>{currentTexts.aboutUs}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-tactical-text hover:bg-tactical-accent/10 cursor-pointer"
                     onClick={() => window.location.href = createPageUrl("Settings")}
                   >
-                    <Settings className="w-4 h-4 mr-3 text-tactical-muted" />
+                    <Settings className="w-4 h-4 mr-3 text-tactical-accent" />
                     <span>{currentTexts.settings}</span>
                   </DropdownMenuItem>
 
