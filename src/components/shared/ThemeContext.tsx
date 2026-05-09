@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 
-export type Theme = 'default' | 'ranger-green';
+export type Theme = 'tactical';
 
 interface ThemeContextType {
   theme: Theme;
@@ -14,40 +14,22 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    const stored = localStorage.getItem('app-theme');
-    return (stored as Theme) || 'default';
-  });
+  const [theme, setTheme] = useState<Theme>('tactical');
 
   useEffect(() => {
     localStorage.setItem('app-theme', theme);
 
-    // Update CSS variables based on theme
+    // Apply tactical dark palette via CSS custom properties
     const root = document.documentElement;
+    root.style.setProperty('--color-bg-primary', '#0a0f0a');
+    root.style.setProperty('--color-bg-neutral', '#0a0f0a');
+    root.style.setProperty('--color-accent-primary', '#7fb069');
+    root.style.setProperty('--color-accent-secondary', '#6a9a56');
+    root.style.setProperty('--color-highlight', '#a6c36f');
+    root.style.setProperty('--color-text-light', '#e8ede4');
+    root.style.setProperty('--color-text-dark', '#e8ede4');
 
-    if (theme === 'ranger-green') {
-      // Ranger Green (Dark) Theme
-      root.style.setProperty('--color-bg-primary', '#1a1f16');
-      root.style.setProperty('--color-bg-neutral', '#242b20');
-      root.style.setProperty('--color-accent-primary', '#4b5d3f');
-      root.style.setProperty('--color-accent-secondary', '#5a6b4e');
-      root.style.setProperty('--color-highlight', '#7fb069');
-      root.style.setProperty('--color-text-light', '#f1f5f9');
-      root.style.setProperty('--color-text-dark', '#1a1f16');
-    } else {
-      // Default (Original) Theme
-      root.style.setProperty('--color-bg-primary', '#000000');
-      root.style.setProperty('--color-bg-neutral', '#F5F5DC');
-      root.style.setProperty('--color-accent-primary', '#4B5320');
-      root.style.setProperty('--color-accent-secondary', '#6B8E23');
-      root.style.setProperty('--color-highlight', '#A6C36F');
-      root.style.setProperty('--color-text-light', '#F8F8F8');
-      root.style.setProperty('--color-text-dark', '#4B5320');
-    }
-
-    // Update body class for theme-specific styles
-    document.body.className = document.body.className.replace(/theme-\w+/, '');
-    document.body.classList.add(`theme-${theme}`);
+    document.body.className = 'theme-tactical';
   }, [theme]);
 
   return (

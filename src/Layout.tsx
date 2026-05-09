@@ -24,88 +24,43 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     localStorage.setItem('language', language);
   }, [language]);
 
-  // Use the imported shared allTexts
-
   const currentTexts = allTexts[language];
-
-  // Define CSS color variables based on the new palette
-  const militaryPalette = `
-    :root {
-      --color-bg-primary: #000000;
-      --color-bg-neutral: #F5F5DC;
-      --color-accent-primary: #4B5320;
-      --color-accent-secondary: #6B8E23;
-      --color-highlight: #A6C36F;
-      --color-text-light: #F8F8F8;
-      --color-text-dark: #4B5320;
-    }
-  `;
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, allTexts }}>
-      <div className={`min-h-screen bg-[var(--color-bg-neutral)] ${language === 'hebrew' ? 'rtl' : 'ltr'} flex flex-col`}>
-        <style>
-          {`
-            @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&display=swap');
-            
-            ${militaryPalette}
-
-            * {
-              font-family: 'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            }
-            
-            .card-shadow {
-              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            }
-            
-            .btn-press {
-              transition: transform 0.1s ease;
-            }
-            
-            .btn-press:active {
-              transform: scale(0.95);
-            }
-
-            /* Mobile viewport fix */
-            html, body, #root {
-              height: 100vh;
-              height: 100dvh;
-              overflow-x: hidden;
-            }
-          `}
-        </style>
+      <div className={`min-h-screen tactical-bg ${language === 'hebrew' ? 'rtl' : 'ltr'} flex flex-col`}>
         
-        <header className="bg-[var(--color-accent-primary)] relative z-50 flex-shrink-0">
-          <div className="max-w-7xl mx-auto px-4 py-4">
+        <header className="glass-header relative z-50 flex-shrink-0">
+          <div className="max-w-7xl mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="w-10 h-10 rounded bg-[var(--color-bg-neutral)] flex items-center justify-center btn-press card-shadow">
-                    <Menu className="w-6 h-6 text-[var(--color-text-dark)] menu-icon" />
+                  <button className="w-10 h-10 rounded-xl glass-card flex items-center justify-center press-scale hover:glow-border transition-all duration-200">
+                    <Menu className="w-5 h-5 text-tactical-muted" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
                   align="end" 
-                  className="w-72 bg-[var(--color-bg-neutral)] border border-gray-200 card-shadow"
+                  className="w-72 glass-card-elevated border-tactical-accent/10"
                 >
-                  <div className="px-4 py-3 border-b border-gray-200">
+                  <div className="px-4 py-3 border-b border-tactical-accent/10">
                     <div className="flex items-center gap-3">
                       {currentUser?.photoURL ? (
                         <img
                           src={currentUser.photoURL}
                           alt="Profile"
-                          className="w-12 h-12 rounded-full object-cover"
+                          className="w-12 h-12 rounded-full object-cover ring-2 ring-tactical-accent/20"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-[var(--color-accent-primary)] flex items-center justify-center">
-                          <User className="w-6 h-6 text-[var(--color-text-light)]" />
+                        <div className="w-12 h-12 rounded-full gradient-accent flex items-center justify-center">
+                          <User className="w-6 h-6 text-tactical-bg" />
                         </div>
                       )}
                       <div>
-                        <p className="font-semibold text-[var(--color-text-dark)]">
+                        <p className="font-semibold text-tactical-text">
                           {userProfile?.displayName || currentUser?.displayName || currentTexts.guestUser}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-tactical-muted">
                           {userProfile?.subscription.tier === 'free'
                             ? currentTexts.freeUser
                             : currentTexts.proUser}
@@ -115,49 +70,49 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </div>
                   
                   <DropdownMenuItem 
-                    className="text-[var(--color-text-dark)] hover:bg-gray-200 cursor-pointer"
+                    className="text-tactical-text hover:bg-tactical-accent/10 cursor-pointer"
                     onClick={() => setLanguage(language === 'hebrew' ? 'english' : 'hebrew')}
                   >
-                    <Globe className="w-4 h-4 mr-3" />
+                    <Globe className="w-4 h-4 mr-3 text-tactical-muted" />
                     <div className="flex items-center gap-2">
                       <span>{language === 'hebrew' ? '🇺🇸' : '🇮🇱'}</span>
                       <span>{currentTexts.language}</span>
                     </div>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="text-[var(--color-text-dark)] hover:bg-gray-200 cursor-pointer"
+                    className="text-tactical-text hover:bg-tactical-accent/10 cursor-pointer"
                     onClick={() => window.location.href = createPageUrl("WorkoutHistory")}
                   >
-                    <History className="w-4 h-4 mr-3" />
+                    <History className="w-4 h-4 mr-3 text-tactical-muted" />
                     <span>{currentTexts.workoutHistory}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="text-[var(--color-text-dark)] hover:bg-gray-200 cursor-pointer"
+                    className="text-tactical-text hover:bg-tactical-accent/10 cursor-pointer"
                     onClick={() => window.location.href = createPageUrl("ExerciseLibrary")}
                   >
-                    <Dumbbell className="w-4 h-4 mr-3" />
+                    <Dumbbell className="w-4 h-4 mr-3 text-tactical-muted" />
                     <span>{currentTexts.exerciseLibrary}</span>
                   </DropdownMenuItem>
                    <DropdownMenuItem
-                    className="text-[var(--color-text-dark)] hover:bg-gray-200 cursor-pointer"
+                    className="text-tactical-text hover:bg-tactical-accent/10 cursor-pointer"
                     onClick={() => window.location.href = createPageUrl("AboutUs")}
                   >
-                    <Info className="w-4 h-4 mr-3" />
+                    <Info className="w-4 h-4 mr-3 text-tactical-muted" />
                     <span>{currentTexts.aboutUs}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="text-[var(--color-text-dark)] hover:bg-gray-200 cursor-pointer"
+                    className="text-tactical-text hover:bg-tactical-accent/10 cursor-pointer"
                     onClick={() => window.location.href = createPageUrl("Settings")}
                   >
-                    <Settings className="w-4 h-4 mr-3" />
+                    <Settings className="w-4 h-4 mr-3 text-tactical-muted" />
                     <span>{currentTexts.settings}</span>
                   </DropdownMenuItem>
 
                   {currentUser && (
                     <>
-                      <div className="border-t border-gray-200 my-1"></div>
+                      <div className="border-t border-tactical-accent/10 my-1"></div>
                       <DropdownMenuItem
-                        className="text-red-600 hover:bg-red-50 cursor-pointer"
+                        className="text-red-400 hover:bg-red-500/10 cursor-pointer"
                         onClick={logout}
                       >
                         <LogOut className="w-4 h-4 mr-3" />
@@ -170,12 +125,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
               <Link
                 to={createPageUrl("Home")}
-                className="btn-press"
+                className="press-scale"
               >
                 <img
                   src="/logo.png"
                   alt="Azimut Kosher Kravi Logo"
-                  className="w-14 h-14 rounded-lg"
+                  className="w-12 h-12 rounded-xl ring-2 ring-tactical-accent/20 hover:ring-tactical-accent/40 transition-all duration-300"
                 />
               </Link>
             </div>
