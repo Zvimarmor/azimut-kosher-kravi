@@ -40,7 +40,6 @@ export default function MilitaryChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [sessions, activeSessionId]);
@@ -122,7 +121,6 @@ export default function MilitaryChat() {
     adjustTextareaHeight();
   }, [inputMessage]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
       setActiveDropdown(null);
@@ -137,110 +135,115 @@ export default function MilitaryChat() {
 
   const currentSession = getCurrentSession();
 
+  // Session list renderer (shared between desktop sidebar and mobile drawer)
+  const renderSessionList = (onSessionClick?: () => void) => (
+    <>
+      {sessions.map((session) => (
+        <div key={session.id} className="relative mb-1.5">
+          {editingSession === session.id ? (
+            <div className="p-3 glass-card rounded-xl">
+              <input
+                type="text"
+                value={editingTitle}
+                onChange={(e) => setEditingTitle(e.target.value)}
+                className="w-full p-2 text-sm glass-input rounded-lg text-right text-tactical-text"
+                placeholder={t.editName}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') saveEditedTitle();
+                  if (e.key === 'Escape') cancelEditingTitle();
+                }}
+                autoFocus
+              />
+              <div className="flex gap-2 mt-2">
+                <button onClick={saveEditedTitle} className="px-3 py-1 bg-tactical-accent text-tactical-bg text-xs rounded-lg font-semibold">
+                  שמור
+                </button>
+                <button onClick={cancelEditingTitle} className="px-3 py-1 bg-tactical-surface text-tactical-muted text-xs rounded-lg">
+                  ביטול
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={() => {
+                setActiveSessionId(session.id);
+                onSessionClick?.();
+              }}
+              className={`p-3 rounded-xl cursor-pointer transition-all duration-200 relative ${
+                session.id === activeSessionId
+                  ? 'glass-card-elevated border-tactical-accent/20 glow-border'
+                  : 'hover:bg-tactical-accent/5 text-tactical-text'
+              }`}
+            >
+              <div className="font-medium text-sm truncate pr-8 text-tactical-text">{session.title}</div>
+              <div className="text-xs text-tactical-muted mt-1">
+                {new Date(session.createdAt).toLocaleDateString('he-IL')}
+              </div>
+
+              <div className="absolute left-2 top-1/2 transform -translate-y-1/2">
+                <button
+                  onClick={(e) => handleDropdownToggle(session.id, e)}
+                  className="p-1 rounded-lg hover:bg-tactical-accent/10 transition-colors"
+                >
+                  <MoreVertical className="w-4 h-4 text-tactical-muted" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+
+      {sessions.length === 0 && (
+        <div className="p-4 text-center text-tactical-muted">
+          <div className="text-sm">{t.noChats}</div>
+        </div>
+      )}
+    </>
+  );
+
   return (
-    <div className="flex bg-[var(--color-bg-neutral)]" style={{ height: 'calc(100vh - 73px)' }} dir="rtl">
-      {/* Chat History Sidebar */}
-      <div className="w-80 bg-white border-l border-gray-200 flex flex-col hidden md:flex relative z-0">
-        <div className="p-4 border-b border-gray-200">
+    <div className="flex" style={{ height: 'calc(100vh - 57px)' }} dir="rtl">
+      {/* Desktop Sidebar */}
+      <div className="w-80 glass-sidebar flex flex-col hidden md:flex relative z-0">
+        <div className="p-4 border-b border-tactical-accent/10">
           <button
             onClick={createNewSession}
-            className="w-full flex items-center justify-center gap-2 bg-[var(--color-accent-primary)] text-[var(--color-text-light)] px-4 py-3 rounded-lg hover:bg-[var(--color-accent-secondary)] transition-colors"
+            className="w-full flex items-center justify-center gap-2 gradient-accent text-tactical-bg px-4 py-3 rounded-xl hover:shadow-[0_0_20px_rgba(127,176,105,0.3)] transition-all duration-200 font-semibold"
           >
             <Plus className="w-5 h-5" />
             <span>{t.newChat}</span>
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-visible">
-          <div className="p-2 relative">
-            {sessions.map((session) => (
-              <div key={session.id} className="relative mb-2">
-                {editingSession === session.id ? (
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <input
-                      type="text"
-                      value={editingTitle}
-                      onChange={(e) => setEditingTitle(e.target.value)}
-                      className="w-full p-2 text-sm border border-gray-300 rounded-lg text-right"
-                      placeholder={t.editName}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') saveEditedTitle();
-                        if (e.key === 'Escape') cancelEditingTitle();
-                      }}
-                      autoFocus
-                    />
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        onClick={saveEditedTitle}
-                        className="px-3 py-1 bg-green-500 text-white text-xs rounded-lg"
-                      >
-                        שמור
-                      </button>
-                      <button
-                        onClick={cancelEditingTitle}
-                        className="px-3 py-1 bg-gray-500 text-white text-xs rounded-lg"
-                      >
-                        ביטול
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    onClick={() => setActiveSessionId(session.id)}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors relative ${
-                      session.id === activeSessionId
-                        ? 'bg-[var(--color-accent-primary)] text-[var(--color-text-light)]'
-                        : 'bg-gray-50 hover:bg-gray-100 text-[var(--color-text-dark)]'
-                    }`}
-                  >
-                    <div className="font-medium text-sm truncate pr-8">{session.title}</div>
-                    <div className="text-xs opacity-75 mt-1">
-                      {new Date(session.createdAt).toLocaleDateString('he-IL')}
-                    </div>
-
-                    {/* Three dots menu */}
-                    <div className="absolute left-2 top-1/2 transform -translate-y-1/2">
-                      <button
-                        onClick={(e) => handleDropdownToggle(session.id, e)}
-                        className={`p-1 rounded-lg hover:bg-gray-200 transition-colors ${
-                          session.id === activeSessionId ? 'hover:bg-white/20' : ''
-                        }`}
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+        <div className="flex-1 overflow-y-auto overflow-x-visible p-2 relative">
+          {renderSessionList()}
         </div>
       </div>
 
-      {/* Main Chat Interface */}
+      {/* Main Chat */}
       <div className="flex-1 flex flex-col">
-        {/* Header with Quota */}
-        <div className="bg-white border-b border-gray-200 p-4">
+        {/* Header */}
+        <div className="glass-header border-b border-tactical-accent/10 p-4">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setShowHistorySidebar(true)}
-              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors md:hidden"
+              className="p-2 rounded-xl glass-card hover:glow-border transition-all duration-200 md:hidden"
             >
-              <History className="w-5 h-5 text-[var(--color-text-dark)]" />
+              <History className="w-5 h-5 text-tactical-muted" />
             </button>
 
             <div className="text-center flex-1">
-              <div className="text-lg font-bold text-[var(--color-text-dark)]">{t.militaryChat}</div>
-              <div className="text-sm text-gray-600 mt-1">
-                {t.questionsLeft} {dailyQuota} {t.questionsToday}
+              <div className="text-lg font-bold text-tactical-text">{t.militaryChat}</div>
+              <div className="text-sm text-tactical-muted mt-0.5 font-mono-data">
+                {t.questionsLeft} <span className="text-tactical-accent font-semibold">{dailyQuota}</span> {t.questionsToday}
               </div>
             </div>
 
-            <div className="w-9"></div> {/* Spacer for centering */}
+            <div className="w-9"></div>
           </div>
         </div>
 
-        {/* Messages Area */}
+        {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {currentSession?.messages.map((message) => (
             <div
@@ -248,28 +251,28 @@ export default function MilitaryChat() {
               className={`flex ${message.type === 'user' ? 'justify-start' : 'justify-end'}`}
             >
               <div
-                className={`max-w-[70%] rounded-2xl px-4 py-3 ${
+                className={`max-w-[75%] rounded-2xl px-4 py-3 ${
                   message.type === 'user'
-                    ? 'bg-[var(--color-accent-primary)] text-[var(--color-text-light)]'
+                    ? 'gradient-accent-subtle text-tactical-text'
                     : message.type === 'ai'
-                    ? 'bg-white border border-gray-200 text-[var(--color-text-dark)]'
+                    ? 'glass-card-elevated text-tactical-text'
                     : message.type === 'system'
-                    ? 'bg-yellow-50 text-yellow-800 border border-yellow-200 text-center italic'
-                    : 'bg-red-100 text-red-700'
+                    ? 'glass-card border-tactical-accent/20 text-tactical-muted text-center italic'
+                    : 'bg-red-500/20 text-red-300 border border-red-500/20'
                 }`}
               >
                 {message.type === 'system' && (
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <AlertTriangle className="w-4 h-4" />
-                    <span className="font-semibold">הוראות שימוש</span>
+                    <AlertTriangle className="w-4 h-4 text-tactical-accent" />
+                    <span className="font-semibold text-tactical-accent text-sm">הוראות שימוש</span>
                   </div>
                 )}
                 {message.type === 'ai' ? (
-                  renderMarkdown(message.content)
+                  <div className="prose-tactical">{renderMarkdown(message.content)}</div>
                 ) : (
                   <div className="whitespace-pre-wrap text-right">{message.content}</div>
                 )}
-                <div className="text-xs opacity-75 mt-2">
+                <div className="text-xs text-tactical-muted/50 mt-2 font-mono-data">
                   {new Date(message.timestamp).toLocaleTimeString('he-IL', {
                     hour: '2-digit',
                     minute: '2-digit'
@@ -281,10 +284,10 @@ export default function MilitaryChat() {
 
           {isLoading && (
             <div className="flex justify-end">
-              <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3 max-w-[70%]">
-                <div className="flex items-center gap-2 text-[var(--color-text-dark)]">
-                  <div className="animate-spin w-4 h-4 border-2 border-[var(--color-accent-primary)] border-t-transparent rounded-full"></div>
-                  <span>{t.preparing}</span>
+              <div className="glass-card rounded-2xl px-4 py-3 max-w-[75%]">
+                <div className="flex items-center gap-2 text-tactical-muted">
+                  <div className="animate-spin w-4 h-4 border-2 border-tactical-accent border-t-transparent rounded-full"></div>
+                  <span className="text-sm">{t.preparing}</span>
                 </div>
               </div>
             </div>
@@ -293,19 +296,19 @@ export default function MilitaryChat() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
-        <div className="bg-white border-t border-gray-200 p-4">
+        {/* Input */}
+        <div className="glass-header border-t border-tactical-accent/10 p-4">
           {dailyQuota <= 0 ? (
             <div className="text-center py-4">
-              <div className="text-red-600 font-medium">{t.quotaFinished}</div>
-              <div className="text-sm text-gray-600 mt-1">{t.comeBackTomorrow}</div>
+              <div className="text-red-400 font-medium">{t.quotaFinished}</div>
+              <div className="text-sm text-tactical-muted mt-1">{t.comeBackTomorrow}</div>
             </div>
           ) : isLoggedIn ? (
             <div className="flex gap-3 items-end">
               <button
                 onClick={sendMessage}
                 disabled={!inputMessage.trim() || isLoading}
-                className="flex-shrink-0 bg-[var(--color-accent-primary)] text-[var(--color-text-light)] p-3 rounded-full hover:bg-[var(--color-accent-secondary)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-shrink-0 gradient-accent text-tactical-bg p-3 rounded-full hover:shadow-[0_0_20px_rgba(127,176,105,0.3)] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Send className="w-5 h-5" />
               </button>
@@ -316,24 +319,24 @@ export default function MilitaryChat() {
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder={t.typeQuestion}
-                className="flex-1 border border-gray-300 rounded-2xl px-4 py-3 text-right resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:border-transparent min-h-[44px] max-h-[120px]"
+                className="flex-1 glass-input rounded-2xl px-4 py-3 text-right resize-none min-h-[44px] max-h-[120px] text-tactical-text placeholder:text-tactical-muted/50"
                 style={{ height: '44px' }}
               />
             </div>
           ) : (
-            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 text-center">
-              <AlertTriangle className="w-8 h-8 text-yellow-500 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+            <div className="glass-card-elevated rounded-2xl p-6 text-center">
+              <AlertTriangle className="w-8 h-8 text-amber-400 mx-auto mb-3" />
+              <h3 className="text-lg font-semibold text-tactical-text mb-2">
                 {language === 'hebrew' ? 'נדרש חשבון משתמש' : 'Login Required'}
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-tactical-muted mb-4 text-sm">
                 {language === 'hebrew'
-                  ? 'על מנת לשאול שאלות בצ\'אט הצבאי, יש להתחבר תחילה לחשבון המשתמש שלך.'
-                  : 'Please log in to use the Military Chat feature.'}
+                  ? 'נדרשת התחברות לחשבון על מנת לגשת ליועץ ההכנה הצבאית.'
+                  : 'Authentication is required to access the Military Preparation Advisor.'}
               </p>
               <button
                 onClick={() => setShowLoginModal(true)}
-                className="w-full bg-[var(--color-accent-primary)] text-white px-4 py-3 rounded-lg hover:bg-[var(--color-accent-secondary)] transition-colors flex items-center justify-center gap-2"
+                className="w-full gradient-accent text-tactical-bg px-4 py-3 rounded-xl hover:shadow-[0_0_20px_rgba(127,176,105,0.3)] transition-all duration-200 flex items-center justify-center gap-2 font-semibold"
               >
                 <LogIn className="w-5 h-5" />
                 <span>{language === 'hebrew' ? 'התחבר / הירשם' : 'Login / Sign Up'}</span>
@@ -343,124 +346,51 @@ export default function MilitaryChat() {
         </div>
       </div>
 
-      {/* Mobile History Sidebar */}
+      {/* Mobile History Drawer */}
       {showHistorySidebar && (
         <div className="fixed inset-0 z-50 md:hidden">
-          {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black bg-opacity-50"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setShowHistorySidebar(false)}
           ></div>
 
-          {/* Sidebar */}
-          <div className="absolute right-0 top-0 h-full w-80 bg-white shadow-lg">
+          <div className="absolute right-0 top-0 h-full w-80 glass-sidebar shadow-2xl">
             <div className="flex flex-col h-full">
-              {/* Header */}
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-[var(--color-text-dark)]">{t.chatHistory}</h3>
+              <div className="p-4 border-b border-tactical-accent/10 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-tactical-text">{t.chatHistory}</h3>
                 <button
                   onClick={() => setShowHistorySidebar(false)}
-                  className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="p-1 rounded-lg hover:bg-tactical-accent/10 transition-colors"
                 >
-                  <X className="w-5 h-5 text-[var(--color-text-dark)]" />
+                  <X className="w-5 h-5 text-tactical-muted" />
                 </button>
               </div>
 
-              {/* New Chat Button */}
-              <div className="p-4 border-b border-gray-200">
+              <div className="p-4 border-b border-tactical-accent/10">
                 <button
                   onClick={() => {
                     createNewSession();
                     setShowHistorySidebar(false);
                   }}
-                  className="w-full flex items-center justify-center gap-2 bg-[var(--color-accent-primary)] text-[var(--color-text-light)] px-4 py-3 rounded-lg hover:bg-[var(--color-accent-secondary)] transition-colors"
+                  className="w-full flex items-center justify-center gap-2 gradient-accent text-tactical-bg px-4 py-3 rounded-xl font-semibold"
                 >
                   <Plus className="w-5 h-5" />
                   <span>{t.newChat}</span>
                 </button>
               </div>
 
-              {/* Chat Sessions List */}
               <div className="flex-1 overflow-y-auto p-2 relative">
-                {sessions.map((session) => (
-                  <div key={session.id} className="relative mb-2">
-                    {editingSession === session.id ? (
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <input
-                          type="text"
-                          value={editingTitle}
-                          onChange={(e) => setEditingTitle(e.target.value)}
-                          className="w-full p-2 text-sm border border-gray-300 rounded-lg text-right"
-                          placeholder={t.editName}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') saveEditedTitle();
-                            if (e.key === 'Escape') cancelEditingTitle();
-                          }}
-                          autoFocus
-                        />
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            onClick={saveEditedTitle}
-                            className="px-3 py-1 bg-green-500 text-white text-xs rounded-lg"
-                          >
-                            שמור
-                          </button>
-                          <button
-                            onClick={cancelEditingTitle}
-                            className="px-3 py-1 bg-gray-500 text-white text-xs rounded-lg"
-                          >
-                            ביטול
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div
-                        onClick={() => {
-                          setActiveSessionId(session.id);
-                          setShowHistorySidebar(false);
-                        }}
-                        className={`p-3 rounded-lg cursor-pointer transition-colors relative ${
-                          session.id === activeSessionId
-                            ? 'bg-[var(--color-accent-primary)] text-[var(--color-text-light)]'
-                            : 'bg-gray-50 hover:bg-gray-100 text-[var(--color-text-dark)]'
-                        }`}
-                      >
-                        <div className="font-medium text-sm truncate pr-8">{session.title}</div>
-                        <div className="text-xs opacity-75 mt-1">
-                          {new Date(session.createdAt).toLocaleDateString('he-IL')}
-                        </div>
-
-                        {/* Three dots menu */}
-                        <div className="absolute left-2 top-1/2 transform -translate-y-1/2">
-                          <button
-                            onClick={(e) => handleDropdownToggle(session.id, e)}
-                            className={`p-1 rounded-lg hover:bg-gray-200 transition-colors ${
-                              session.id === activeSessionId ? 'hover:bg-white/20' : ''
-                            }`}
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                {sessions.length === 0 && (
-                  <div className="p-4 text-center text-gray-500">
-                    <div className="text-sm">{t.noChats}</div>
-                  </div>
-                )}
+                {renderSessionList(() => setShowHistorySidebar(false))}
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Portal-based Dropdown Menu */}
+      {/* Portal Dropdown */}
       {activeDropdown && dropdownPosition && createPortal(
         <div
-          className="fixed bg-white border border-gray-200 rounded-lg shadow-xl min-w-32 z-[9999]"
+          className="fixed glass-card-elevated rounded-xl shadow-2xl min-w-32 z-[9999]"
           style={{
             left: `${dropdownPosition.x}px`,
             top: `${dropdownPosition.y}px`,
@@ -474,7 +404,7 @@ export default function MilitaryChat() {
               setActiveDropdown(null);
               setDropdownPosition(null);
             }}
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[var(--color-text-dark)] hover:bg-gray-100 rounded-t-lg"
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-tactical-text hover:bg-tactical-accent/10 rounded-t-xl"
           >
             <Edit2 className="w-4 h-4" />
             {t.editName}
@@ -486,7 +416,7 @@ export default function MilitaryChat() {
               setActiveDropdown(null);
               setDropdownPosition(null);
             }}
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-gray-100 rounded-b-lg"
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-b-xl"
           >
             <Trash2 className="w-4 h-4" />
             {t.deleteChat}
@@ -495,41 +425,33 @@ export default function MilitaryChat() {
         document.body
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation */}
       {deletingSession && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black bg-opacity-50"
-            onClick={cancelDeleteSession}
-          ></div>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={cancelDeleteSession}></div>
 
-          {/* Modal */}
-          <div className="relative bg-white rounded-xl p-6 mx-4 max-w-sm w-full shadow-xl" dir={language === 'hebrew' ? 'rtl' : 'ltr'}>
-            <h3 className="text-lg font-bold text-[var(--color-text-dark)] mb-4">
+          <div className="relative glass-card-elevated rounded-2xl p-6 mx-4 max-w-sm w-full" dir={language === 'hebrew' ? 'rtl' : 'ltr'}>
+            <h3 className="text-lg font-bold text-tactical-text mb-4">
               {t.deleteChatConfirmTitle}
             </h3>
-
-            <p className="text-[var(--color-text-dark)] mb-2">
-              {t.deleteChatConfirmMessage} <span className="font-medium">
+            <p className="text-tactical-text mb-2">
+              {t.deleteChatConfirmMessage} <span className="font-medium text-tactical-accent">
                 {sessions.find(s => s.id === deletingSession)?.title}
               </span>.
             </p>
-
-            <p className="text-sm text-gray-600 mb-6">
+            <p className="text-sm text-tactical-muted mb-6">
               {t.deleteChatConfirmSettings}
             </p>
-
             <div className="flex gap-3 justify-end">
               <button
                 onClick={cancelDeleteSession}
-                className="px-4 py-2 text-[var(--color-text-dark)] bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 text-tactical-text glass-card rounded-xl hover:bg-tactical-accent/10 transition-colors"
               >
                 {t.cancel}
               </button>
               <button
                 onClick={confirmDeleteSession}
-                className="px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
+                className="px-4 py-2 text-white bg-red-600/80 rounded-xl hover:bg-red-600 transition-colors"
               >
                 {t.delete}
               </button>

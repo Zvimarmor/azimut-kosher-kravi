@@ -70,45 +70,53 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="p-6 text-dark-olive"
+      className="p-6 text-tactical-text"
       dir={language === 'hebrew' ? 'rtl' : 'ltr'}
     >
       <div className="max-w-md mx-auto">
         <div className="flex items-center gap-4 mb-6">
-          <Clock className="w-8 h-8 text-idf-olive" />
-          <h1 className="text-2xl font-bold">{t.workoutSummary}</h1>
+          <div className="w-10 h-10 rounded-full glass-card flex items-center justify-center glow-border">
+            <Clock className="w-5 h-5 text-tactical-accent" />
+          </div>
+          <h1 className="text-2xl font-bold text-tactical-text">{t.workoutSummary}</h1>
         </div>
 
-        <div className="bg-white rounded-xl p-6 card-shadow border border-gray-100 mb-6">
+        <div className="glass-card-elevated rounded-2xl p-6 mb-6">
           {/* Title and Total Duration */}
           <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-dark-olive mb-2">{workoutTitle}</h2>
-            <div className="flex items-center justify-center gap-2 text-lg font-semibold text-idf-olive">
-              <Timer className="w-5 h-5" />
-              <span>
+            <h2 className="text-xl font-bold text-tactical-text mb-3">{workoutTitle}</h2>
+            <div className="flex items-center justify-center gap-2">
+              <Timer className="w-5 h-5 text-tactical-accent" />
+              <span className="text-lg font-mono-data text-tactical-data font-semibold">
                 {t.totalDuration}: {totalMinutes} {t.minutes} {remainingSeconds} {t.seconds}
               </span>
             </div>
           </div>
 
-          {/* Completed Tasks List */}
-          <div className="space-y-3 max-h-60 overflow-y-auto">
+          {/* Completed Tasks */}
+          <div className="space-y-2 max-h-60 overflow-y-auto">
             {completedTasks.map((task, index) => (
-              <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+              <motion.div 
+                key={index} 
+                className="flex justify-between items-center p-3 glass-card rounded-xl"
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
                 <div className="flex-1 text-right">
-                  <h4 className="font-semibold text-dark-olive">{task.name}</h4>
-                  {task.partName && <p className="text-sm text-gray-600">({task.partName})</p>}
-                  {task.type === 'rest' && <p className="text-sm text-gray-600">{t.rest}</p>}
+                  <h4 className="font-semibold text-tactical-text text-sm">{task.name}</h4>
+                  {task.partName && <p className="text-xs text-tactical-muted">({task.partName})</p>}
+                  {task.type === 'rest' && <p className="text-xs text-tactical-muted">{t.rest}</p>}
                 </div>
-                <div className="text-sm font-mono text-idf-olive">{formatTime(task.duration)}</div>
-              </div>
+                <div className="text-sm font-mono text-tactical-data">{formatTime(task.duration)}</div>
+              </motion.div>
             ))}
           </div>
         </div>
 
         <Button
           onClick={onConfirm}
-          className="w-full bg-idf-olive text-light-sand font-bold py-4 rounded-xl btn-press card-shadow text-lg"
+          className="w-full py-4 text-lg"
         >
           <Check className="w-5 h-5 ml-2" />
           {t.confirm}
@@ -174,19 +182,21 @@ export const WorkoutFeedback: React.FC<WorkoutFeedbackProps> = ({
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="p-6 text-dark-olive"
+      className="p-6 text-tactical-text"
       dir={language === 'hebrew' ? 'rtl' : 'ltr'}
     >
       <div className="max-w-md mx-auto">
         <div className="flex items-center gap-4 mb-6">
-          <Star className="w-8 h-8 text-idf-olive" />
-          <h1 className="text-2xl font-bold">{t.workoutFeedback}</h1>
+          <div className="w-10 h-10 rounded-full glass-card flex items-center justify-center glow-border">
+            <Star className="w-5 h-5 text-tactical-accent" />
+          </div>
+          <h1 className="text-2xl font-bold text-tactical-text">{t.workoutFeedback}</h1>
         </div>
 
-        <div className="space-y-8">
-          {/* How was the workout */}
-          <div className="bg-white rounded-xl p-6 card-shadow border border-gray-100">
-            <h3 className="text-lg font-bold text-center mb-4 text-dark-olive">{t.howWasWorkout}</h3>
+        <div className="space-y-6">
+          {/* Difficulty */}
+          <div className="glass-card-elevated rounded-2xl p-6">
+            <h3 className="text-base font-bold text-center mb-4 text-tactical-text">{t.howWasWorkout}</h3>
             <div className="grid grid-cols-3 gap-3">
               {[
                 { key: 'easy', label: t.easy, icon: Coffee },
@@ -196,8 +206,10 @@ export const WorkoutFeedback: React.FC<WorkoutFeedbackProps> = ({
                 <button
                   key={key}
                   onClick={() => setFeedback(prev => ({ ...prev, difficulty: key as 'easy' | 'moderate' | 'hard' }))}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-lg border transition-all btn-press card-shadow
-                    ${feedback.difficulty === key ? 'bg-idf-olive text-light-sand border-idf-olive' : 'bg-white text-dark-olive border-gray-200'}`}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 press-scale
+                    ${feedback.difficulty === key 
+                      ? 'gradient-accent text-tactical-bg border-transparent glow-border' 
+                      : 'glass-card text-tactical-text hover:border-tactical-accent/30'}`}
                 >
                   <Icon className="w-6 h-6" />
                   <span className="text-sm font-semibold">{label}</span>
@@ -206,9 +218,9 @@ export const WorkoutFeedback: React.FC<WorkoutFeedbackProps> = ({
             </div>
           </div>
 
-          {/* How do you feel */}
-          <div className="bg-white rounded-xl p-6 card-shadow border border-gray-100">
-            <h3 className="text-lg font-bold text-center mb-4 text-dark-olive">{t.howDoYouFeel}</h3>
+          {/* Feeling */}
+          <div className="glass-card-elevated rounded-2xl p-6">
+            <h3 className="text-base font-bold text-center mb-4 text-tactical-text">{t.howDoYouFeel}</h3>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-2">
               {[
                 { key: 'great', label: t.great, icon: Star },
@@ -219,8 +231,10 @@ export const WorkoutFeedback: React.FC<WorkoutFeedbackProps> = ({
                 <button
                   key={key}
                   onClick={() => setFeedback(prev => ({ ...prev, feeling: key as 'great' | 'okay' | 'tired' | 'exhausted' }))}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all btn-press card-shadow
-                    ${feedback.feeling === key ? 'bg-idf-olive text-light-sand border-idf-olive' : 'bg-white text-dark-olive border-gray-200'}`}
+                  className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 press-scale
+                    ${feedback.feeling === key 
+                      ? 'gradient-accent text-tactical-bg border-transparent glow-border' 
+                      : 'glass-card text-tactical-text hover:border-tactical-accent/30'}`}
                 >
                   <Icon className="w-5 h-5" />
                   <span className="text-xs font-semibold">{label}</span>
@@ -233,7 +247,7 @@ export const WorkoutFeedback: React.FC<WorkoutFeedbackProps> = ({
         <Button
           onClick={handleSubmit}
           disabled={!feedback.difficulty || !feedback.feeling}
-          className="w-full bg-idf-olive text-light-sand font-bold py-4 rounded-xl btn-press card-shadow mt-8 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full mt-8 py-4 text-lg"
         >
           <Check className="w-5 h-5 ml-2" />
           {t.submit}

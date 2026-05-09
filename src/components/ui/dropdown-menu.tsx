@@ -51,7 +51,7 @@ export function DropdownMenuContent({ children, align = 'start', className = '',
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className={`absolute top-full mt-2 ${alignmentClasses[align]} z-50 min-w-[200px] bg-white rounded-lg shadow-lg border border-gray-200 py-1 ${className}`}>
+      <div className={`absolute top-full mt-2 ${alignmentClasses[align]} z-50 min-w-[200px] glass-card-elevated py-1 ${className}`}>
         {React.Children.map(children, child => {
           if (React.isValidElement(child) && child.type === DropdownMenuItem) {
             return React.cloneElement(child, { onMenuClose: onClose });
@@ -78,7 +78,7 @@ export function DropdownMenuItem({ children, className = '', onClick, onMenuClos
 
   return (
     <div
-      className={`px-4 py-3 hover:bg-gray-100 cursor-pointer flex items-center text-right ${className}`}
+      className={`px-4 py-3 hover:bg-tactical-accent/10 cursor-pointer flex items-center text-right transition-colors duration-150 ${className}`}
       onClick={handleClick}
     >
       {children}

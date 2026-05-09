@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Target, Clock, Zap, Play, ArrowLeft } from "lucide-react";
+import { Target, Clock, Zap, Play, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ComposedWorkout, WorkoutPart } from "../../lib/services/workoutComposition";
 import { Button } from "../ui/button";
@@ -12,6 +12,18 @@ interface WorkoutBriefingProps {
   onStart: () => void;
   language?: 'hebrew' | 'english';
 }
+
+const containerVariants = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.08, delayChildren: 0.2 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.33, 1, 0.68, 1] } }
+};
 
 export const WorkoutBriefing: React.FC<WorkoutBriefingProps> = ({
   workout,
@@ -44,17 +56,17 @@ export const WorkoutBriefing: React.FC<WorkoutBriefingProps> = ({
   const t = texts[language];
 
   const difficultyColors = {
-    beginner: 'bg-green-100 text-green-800',
-    intermediate: 'bg-yellow-100 text-yellow-800',
-    advanced: 'bg-orange-100 text-orange-800',
-    elite: 'bg-red-100 text-red-800'
+    beginner: 'bg-green-500/20 text-green-400 border-green-500/20',
+    intermediate: 'bg-amber-500/20 text-amber-400 border-amber-500/20',
+    advanced: 'bg-orange-500/20 text-orange-400 border-orange-500/20',
+    elite: 'bg-red-500/20 text-red-400 border-red-500/20'
   };
 
   const partTypeColors = {
-    warmup: 'bg-blue-100 text-blue-800',
-    cardio: 'bg-red-100 text-red-800',
-    strength: 'bg-purple-100 text-purple-800',
-    special: 'bg-amber-100 text-amber-800'
+    warmup: 'bg-sky-500/20 text-sky-400 border-sky-500/20',
+    cardio: 'bg-rose-500/20 text-rose-400 border-rose-500/20',
+    strength: 'bg-purple-500/20 text-purple-400 border-purple-500/20',
+    special: 'bg-amber-500/20 text-amber-400 border-amber-500/20'
   };
 
   const partTypeLabels = {
@@ -78,87 +90,120 @@ export const WorkoutBriefing: React.FC<WorkoutBriefingProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-6 text-dark-olive"
+      className="p-6 text-tactical-text"
       dir={language === 'hebrew' ? 'rtl' : 'ltr'}
     >
       <div className="max-w-md mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <motion.div 
+          className="flex items-center gap-4 mb-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
           <Link to={createPageUrl("Home")}>
-            <button className="p-2 rounded-lg bg-white border border-gray-200 card-shadow btn-press">
-              <ArrowLeft className="w-6 h-6 text-dark-olive" />
+            <button className="p-2 rounded-xl glass-card press-scale hover:glow-border transition-all duration-200">
+              <ArrowRight className="w-5 h-5 text-tactical-muted" />
             </button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">{t.missionBrief}</h1>
+            <h1 className="text-2xl font-bold text-tactical-text">{t.missionBrief}</h1>
           </div>
-        </div>
+        </motion.div>
 
         {/* Main Brief Card */}
-        <div className="bg-white rounded-xl p-6 card-shadow border border-gray-100 mb-6">
-          <Target className="w-10 h-10 text-idf-olive mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-dark-olive text-center mb-3">{workout.title}</h2>
+        <motion.div 
+          className="glass-card-elevated rounded-2xl p-6 mb-6 relative overflow-hidden"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-tactical-accent/5 to-transparent pointer-events-none rounded-2xl" />
+          
+          <div className="relative z-10">
+            <div className="w-14 h-14 rounded-full glass-card flex items-center justify-center mx-auto mb-4 glow-border">
+              <Target className="w-7 h-7 text-tactical-accent" />
+            </div>
+            <h2 className="text-xl font-bold text-tactical-text text-center mb-3">{workout.title}</h2>
 
-          {workout.description && (
-            <p className="text-gray-600 whitespace-pre-wrap text-center mb-4">{workout.description}</p>
-          )}
+            {workout.description && (
+              <p className="text-tactical-muted whitespace-pre-wrap text-center mb-4 text-sm">{workout.description}</p>
+            )}
 
-          {/* Stats Row */}
-          <div className="flex justify-center gap-4 mb-4">
-            <Badge className={difficultyColors[workout.difficulty]}>
-              {workout.difficulty}
-            </Badge>
-            <div className="flex items-center gap-1 px-3 py-1 rounded-lg bg-gray-100 text-gray-700">
-              <Clock className="w-4 h-4" />
-              <span className="text-sm font-medium">{workout.estimatedDuration} {t.minutes}</span>
+            {/* Stats Row */}
+            <div className="flex justify-center gap-3 mb-2">
+              <Badge className={difficultyColors[workout.difficulty]}>
+                {workout.difficulty}
+              </Badge>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg glass-card text-tactical-muted">
+                <Clock className="w-3.5 h-3.5" />
+                <span className="text-sm font-mono-data font-medium">{workout.estimatedDuration} {t.minutes}</span>
+              </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Parts Overview */}
-        <div className="bg-white rounded-xl p-6 card-shadow border border-gray-100 mb-6">
-          <h3 className="text-lg font-bold text-dark-olive mb-4 text-center">{t.overview}</h3>
+        <motion.div 
+          className="glass-card-elevated rounded-2xl p-6 mb-6"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <h3 className="text-base font-bold text-tactical-text mb-4 text-center">{t.overview}</h3>
 
-          <div className="space-y-3">
+          <motion.div 
+            className="space-y-2.5"
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+          >
             {workout.parts.map((part, index) => (
-              <div key={part.id} className="bg-gray-50 rounded-lg p-4">
+              <motion.div key={part.id} variants={itemVariants} className="glass-card rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-idf-olive">{index + 1}.</span>
-                    <span className="font-semibold text-dark-olive">{part.name}</span>
+                    <span className="text-sm font-bold text-tactical-accent font-mono-data">{String(index + 1).padStart(2, '0')}</span>
+                    <span className="font-semibold text-tactical-text text-sm">{part.name}</span>
                   </div>
                   <Badge className={partTypeColors[part.type]}>
                     {partTypeLabels[language][part.type]}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <span>{part.components.length} {t.components}</span>
+                <div className="flex items-center gap-4 text-xs text-tactical-muted">
+                  <span className="font-mono-data">{part.components.length} {t.components}</span>
                   {part.requiresGPS && (
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 text-tactical-accent/70">
                       <Zap className="w-3 h-3" />
                       GPS
                     </span>
                   )}
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
-          {/* Total Summary */}
-          <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between text-sm font-semibold">
-            <span className="text-gray-600">סה"כ:</span>
-            <span className="text-dark-olive">{totalComponents} {t.components}</span>
+          {/* Total */}
+          <div className="mt-4 pt-4 border-t border-tactical-accent/10 flex justify-between text-sm font-semibold">
+            <span className="text-tactical-muted">סה"כ:</span>
+            <span className="text-tactical-text font-mono-data">{totalComponents} {t.components}</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Start Button */}
-        <Button
-          onClick={onStart}
-          className="w-full bg-idf-olive text-light-sand font-bold py-4 rounded-xl btn-press card-shadow text-lg"
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
         >
-          <Play className="w-5 h-5 ml-2" />
-          {t.startMission}
-        </Button>
+          <Button
+            onClick={onStart}
+            className="w-full py-4 text-lg glow-border-strong"
+          >
+            <Play className="w-5 h-5 ml-2" />
+            {t.startMission}
+          </Button>
+        </motion.div>
       </div>
     </motion.div>
   );

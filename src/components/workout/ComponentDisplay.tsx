@@ -30,7 +30,7 @@ const TimerDisplay: React.FC<{ startTime: number }> = ({ startTime }) => {
   const seconds = String(totalSeconds % 60).padStart(2, '0');
 
   return (
-    <div className="text-6xl font-bold font-mono text-dark-olive">
+    <div className="text-7xl font-bold font-mono text-tactical-data text-glow-strong">
       {minutes}:{seconds}
     </div>
   );
@@ -53,9 +53,22 @@ const CountdownTimer: React.FC<{ duration: number; onComplete: () => void }> = (
   const minutes = String(Math.floor(remaining / 60)).padStart(2, '0');
   const seconds = String(remaining % 60).padStart(2, '0');
 
+  const progress = 1 - (remaining / duration);
+
   return (
-    <div className="text-6xl font-bold font-mono text-dark-olive">
-      {minutes}:{seconds}
+    <div className="relative">
+      <div className="text-7xl font-bold font-mono text-tactical-data text-glow-strong">
+        {minutes}:{seconds}
+      </div>
+      {/* Progress bar */}
+      <div className="w-full h-1 bg-tactical-surface rounded-full mt-4 overflow-hidden">
+        <motion.div
+          className="h-full gradient-accent rounded-full"
+          initial={{ width: '0%' }}
+          animate={{ width: `${progress * 100}%` }}
+          transition={{ duration: 0.5, ease: 'linear' }}
+        />
+      </div>
     </div>
   );
 };
@@ -73,21 +86,21 @@ const GPSStatsDisplay: React.FC<{ stats: GPSStats; language: 'hebrew' | 'english
 
   return (
     <div className="mt-8 grid grid-cols-2 gap-4">
-      <div className="bg-white rounded-lg p-4 card-shadow">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Navigation className="w-4 h-4 text-idf-olive" />
-          <span className="text-xs text-gray-500">{language === 'hebrew' ? 'מרחק' : 'Distance'}</span>
+      <div className="glass-card-elevated rounded-xl p-5 text-center">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <Navigation className="w-4 h-4 text-tactical-accent" />
+          <span className="text-xs text-tactical-muted font-semibold uppercase tracking-wider">{language === 'hebrew' ? 'מרחק' : 'Distance'}</span>
         </div>
-        <div className="text-2xl font-bold text-dark-olive">
+        <div className="text-3xl font-bold font-mono text-tactical-data text-glow">
           {formatDistance(stats.totalDistance)}
         </div>
       </div>
-      <div className="bg-white rounded-lg p-4 card-shadow">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Timer className="w-4 h-4 text-idf-olive" />
-          <span className="text-xs text-gray-500">{language === 'hebrew' ? 'קצב ממוצע' : 'Avg Pace'}</span>
+      <div className="glass-card-elevated rounded-xl p-5 text-center">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <Timer className="w-4 h-4 text-tactical-accent" />
+          <span className="text-xs text-tactical-muted font-semibold uppercase tracking-wider">{language === 'hebrew' ? 'קצב ממוצע' : 'Avg Pace'}</span>
         </div>
-        <div className="text-2xl font-bold text-dark-olive">
+        <div className="text-3xl font-bold font-mono text-tactical-data text-glow">
           {formatPace(stats.averagePace)}
         </div>
       </div>
@@ -149,22 +162,25 @@ export const ComponentDisplay: React.FC<ComponentDisplayProps> = ({
     return (
       <motion.div
         key={component.id}
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
+        exit={{ opacity: 0, scale: 0.95 }}
         className="w-full max-w-md text-center"
       >
         <div className="mb-8">
-          <Clock className="w-16 h-16 text-idf-olive mx-auto mb-4" />
-          <h2 className="text-3xl font-bold text-idf-olive mb-2">{t.rest}</h2>
-          <p className="text-gray-600">{component.name}</p>
+          <div className="w-20 h-20 rounded-full glass-card-elevated flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
+            <Clock className="w-10 h-10 text-tactical-accent" />
+          </div>
+          <h2 className="text-3xl font-bold text-tactical-text mb-2">{t.rest}</h2>
+          <p className="text-tactical-muted">{component.name}</p>
         </div>
 
         <CountdownTimer duration={component.duration || 60} onComplete={onFinish} />
 
         <Button
           onClick={onFinish}
-          className="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-4 rounded-xl btn-press card-shadow mt-12 text-lg"
+          className="w-full mt-12 py-4 text-lg"
+          variant="outline"
         >
           {t.finished}
         </Button>
@@ -182,16 +198,16 @@ export const ComponentDisplay: React.FC<ComponentDisplayProps> = ({
         className="w-full max-w-md text-center"
       >
         {partName && (
-          <h3 className="text-lg font-semibold text-gray-500 mb-2">
-            {partName} ({currentIndex + 1}/{totalComponents})
+          <h3 className="text-sm font-semibold text-tactical-muted mb-3 uppercase tracking-wider font-mono-data">
+            {partName} <span className="text-tactical-accent">{currentIndex + 1}/{totalComponents}</span>
           </h3>
         )}
 
-        <div className="mb-6">
-          <Icon className="w-12 h-12 text-idf-olive mx-auto mb-3" />
-          <h2 className="text-3xl font-bold text-idf-olive mb-2">{component.name}</h2>
+        <div className="mb-8">
+          <Icon className="w-12 h-12 text-tactical-accent mx-auto mb-4" />
+          <h2 className="text-3xl font-bold text-tactical-text mb-2">{component.name}</h2>
           {component.description && (
-            <p className="text-gray-600 text-lg">{component.description}</p>
+            <p className="text-tactical-muted text-lg">{component.description}</p>
           )}
         </div>
 
@@ -200,14 +216,14 @@ export const ComponentDisplay: React.FC<ComponentDisplayProps> = ({
         </div>
 
         {component.instructions && (
-          <div className="bg-gray-50 rounded-lg p-4 mb-8 text-right">
-            <p className="text-sm text-gray-700 whitespace-pre-wrap">{component.instructions}</p>
+          <div className="glass-card rounded-xl p-4 mb-8 text-right">
+            <p className="text-sm text-tactical-muted whitespace-pre-wrap">{component.instructions}</p>
           </div>
         )}
 
         <Button
           onClick={onFinish}
-          className="w-full bg-idf-olive text-light-sand font-bold py-4 rounded-xl btn-press card-shadow text-lg"
+          className="w-full py-4 text-lg"
         >
           {t.finished}
         </Button>
@@ -224,16 +240,16 @@ export const ComponentDisplay: React.FC<ComponentDisplayProps> = ({
       className="w-full max-w-md text-center"
     >
       {partName && (
-        <h3 className="text-lg font-semibold text-gray-500 mb-2">
-          {partName} ({currentIndex + 1}/{totalComponents})
+        <h3 className="text-sm font-semibold text-tactical-muted mb-3 uppercase tracking-wider font-mono-data">
+          {partName} <span className="text-tactical-accent">{currentIndex + 1}/{totalComponents}</span>
         </h3>
       )}
 
-      <div className="mb-6">
-        <Icon className="w-12 h-12 text-idf-olive mx-auto mb-3" />
-        <h2 className="text-3xl font-bold text-idf-olive mb-2">{component.name}</h2>
+      <div className="mb-8">
+        <Icon className="w-12 h-12 text-tactical-accent mx-auto mb-4" />
+        <h2 className="text-3xl font-bold text-tactical-text mb-2">{component.name}</h2>
         {component.description && (
-          <p className="text-gray-600 text-lg whitespace-pre-wrap">{component.description}</p>
+          <p className="text-tactical-muted text-lg whitespace-pre-wrap">{component.description}</p>
         )}
       </div>
 
@@ -244,20 +260,20 @@ export const ComponentDisplay: React.FC<ComponentDisplayProps> = ({
       )}
 
       {component.instructions && (
-        <div className="bg-gray-50 rounded-lg p-4 my-8 text-right">
-          <p className="text-sm text-gray-700 whitespace-pre-wrap">{component.instructions}</p>
+        <div className="glass-card rounded-xl p-4 my-8 text-right">
+          <p className="text-sm text-tactical-muted whitespace-pre-wrap">{component.instructions}</p>
         </div>
       )}
 
       {component.tips && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 my-4 text-right">
-          <p className="text-sm text-blue-800">{component.tips}</p>
+        <div className="glass-card border-tactical-accent/20 rounded-xl p-4 my-4 text-right">
+          <p className="text-sm text-tactical-accent/80">{component.tips}</p>
         </div>
       )}
 
       <Button
         onClick={onFinish}
-        className="w-full bg-idf-olive text-light-sand font-bold py-4 rounded-xl btn-press card-shadow mt-8 text-lg"
+        className="w-full mt-8 py-4 text-lg"
       >
         {t.finished}
       </Button>
