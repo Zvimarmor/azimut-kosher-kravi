@@ -292,24 +292,45 @@ export class WorkoutCompositionService {
     if (strength.exercises && strength.exercises.length > 0) {
       const rounds = strength.rounds || 1;
 
-      // If multiple rounds, create components for each round
-      for (let round = 0; round < rounds; round++) {
-        strength.exercises.forEach((exercise, index) => {
-          const value = this.getValueForLevel(exercise.values, userLevel);
-          const isLastInRound = index === strength.exercises!.length - 1;
-          const isLastRound = round === rounds - 1;
+      if (rounds === 999) {
+        // AMRAP format - create a single timed component for the whole circuit
+        const match = strength.title.match(/AMRAP\s*(\d+)/i);
+        const durationMinutes = match ? parseInt(match[1], 10) : 20;
 
-          components.push({
-            id: `strength-r${round}-e${index}`,
-            type: 'strength_exercise',
-            name: rounds > 1 ? `${exercise.name} (${round + 1}/${rounds})` : exercise.name,
-            description: this.formatExerciseDescription(exercise.type, value),
-            reps: exercise.type === 'rep_based' ? value : undefined,
-            duration: exercise.type === 'time_based' ? value : undefined,
-            restAfter: (isLastInRound && isLastRound) ? 0 : this.calculateRestForUser(exercise.rest_seconds || 60, user),
-            instructions: strength.instructions
-          });
+        const amrapDescription = strength.exercises.map(ex => {
+          const value = this.getValueForLevel(ex.values, userLevel);
+          return `${ex.name}: ${this.formatExerciseDescription(ex.type, value)}`;
+        }).join(' • ');
+
+        components.push({
+          id: 'strength-amrap',
+          type: 'special_exercise', // Renders with a single large countdown timer
+          name: strength.title,
+          description: amrapDescription,
+          duration: durationMinutes * 60,
+          instructions: strength.instructions || 'בצע כמה שיותר סבבים בזמן הנתון',
+          tips: 'AMRAP (As Many Rounds As Possible)'
         });
+      } else {
+        // If multiple rounds, create components for each round
+        for (let round = 0; round < rounds; round++) {
+          strength.exercises.forEach((exercise, index) => {
+            const value = this.getValueForLevel(exercise.values, userLevel);
+            const isLastInRound = index === strength.exercises!.length - 1;
+            const isLastRound = round === rounds - 1;
+
+            components.push({
+              id: `strength-r${round}-e${index}`,
+              type: 'strength_exercise',
+              name: rounds > 1 ? `${exercise.name} (${round + 1}/${rounds})` : exercise.name,
+              description: this.formatExerciseDescription(exercise.type, value),
+              reps: exercise.type === 'rep_based' ? value : undefined,
+              duration: exercise.type === 'time_based' ? value : undefined,
+              restAfter: (isLastInRound && isLastRound) ? 0 : this.calculateRestForUser(exercise.rest_seconds || 60, user),
+              instructions: strength.instructions
+            });
+          });
+        }
       }
     } else {
       // Legacy single exercise format
@@ -345,25 +366,46 @@ export class WorkoutCompositionService {
     if (special.exercises && special.exercises.length > 0) {
       const rounds = special.rounds || 1;
 
-      for (let round = 0; round < rounds; round++) {
-        special.exercises.forEach((exercise, index) => {
-          const value = this.getValueForLevel(exercise.values, userLevel);
-          const isLastInRound = index === special.exercises!.length - 1;
-          const isLastRound = round === rounds - 1;
+      if (rounds === 999) {
+        // AMRAP format
+        const match = special.title.match(/AMRAP\s*(\d+)/i);
+        const durationMinutes = match ? parseInt(match[1], 10) : 20;
 
-          components.push({
-            id: `special-r${round}-e${index}`,
-            type: 'special_exercise',
-            name: rounds > 1 ? `${exercise.name} (${round + 1}/${rounds})` : exercise.name,
-            description: this.formatExerciseDescription(exercise.type, value),
-            reps: exercise.type === 'rep_based' ? value : undefined,
-            duration: exercise.type === 'time_based' ? value : undefined,
-            distance: exercise.type === 'distance_based' ? value : undefined,
-            restAfter: (isLastInRound && isLastRound) ? 0 : this.calculateRestForUser(exercise.rest_seconds || 60, user),
-            requiresGPS: exercise.type === 'distance_based',
-            instructions: special.instructions
-          });
+        const amrapDescription = special.exercises.map(ex => {
+          const value = this.getValueForLevel(ex.values, userLevel);
+          return `${ex.name}: ${this.formatExerciseDescription(ex.type, value)}`;
+        }).join(' • ');
+
+        components.push({
+          id: 'special-amrap',
+          type: 'special_exercise',
+          name: special.title,
+          description: amrapDescription,
+          duration: durationMinutes * 60,
+          instructions: special.instructions || 'בצע כמה שיותר סבבים בזמן הנתון',
+          tips: 'AMRAP (As Many Rounds As Possible)'
         });
+      } else {
+        for (let round = 0; round < rounds; round++) {
+          special.exercises.forEach((exercise, index) => {
+            const value = this.getValueForLevel(exercise.values, userLevel);
+            const isLastInRound = index === special.exercises!.length - 1;
+            const isLastRound = round === rounds - 1;
+
+            components.push({
+              id: `special-r${round}-e${index}`,
+              type: 'special_exercise',
+              name: rounds > 1 ? `${exercise.name} (${round + 1}/${rounds})` : exercise.name,
+              description: this.formatExerciseDescription(exercise.type, value),
+              reps: exercise.type === 'rep_based' ? value : undefined,
+              duration: exercise.type === 'time_based' ? value : undefined,
+              distance: exercise.type === 'distance_based' ? value : undefined,
+              restAfter: (isLastInRound && isLastRound) ? 0 : this.calculateRestForUser(exercise.rest_seconds || 60, user),
+              requiresGPS: exercise.type === 'distance_based',
+              instructions: special.instructions
+            });
+          });
+        }
       }
     } else {
       // Single special activity
@@ -399,11 +441,13 @@ export class WorkoutCompositionService {
    * uses linear interpolation between defined breakpoints.
    */
   private static getValueForLevel(values: number[] | { [key: string]: number | null }, level: number): number {
+    if (!values) return 30; // Safe fallback if values object is completely missing
+
     const clampedLevel = Math.max(1, Math.min(10, Math.round(level)));
     const arrayIndex = clampedLevel - 1; // Convert to zero-based index
 
     if (Array.isArray(values)) {
-      return values[arrayIndex] ?? values[values.length - 1] ?? 1;
+      return values[arrayIndex] ?? values[values.length - 1] ?? 30;
     } else {
       // Direct lookup first
       const directValue = values[clampedLevel.toString()];
@@ -423,7 +467,7 @@ export class WorkoutCompositionService {
         .filter(k => !isNaN(k) && values[k.toString()] !== null && values[k.toString()] !== undefined)
         .sort((a, b) => a - b);
 
-      if (definedKeys.length === 0) return 1;
+      if (definedKeys.length === 0) return 30;
       if (definedKeys.length === 1) return values[definedKeys[0].toString()]!;
 
       // Use arrayIndex (0-based) for interpolation since CSV keys are 0-based
@@ -446,7 +490,7 @@ export class WorkoutCompositionService {
       }
 
       // Fallback
-      return values[definedKeys[0].toString()]!;
+      return values[definedKeys[0].toString()] ?? 30;
     }
   }
 
