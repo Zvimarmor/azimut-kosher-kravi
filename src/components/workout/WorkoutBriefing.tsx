@@ -170,7 +170,25 @@ export const WorkoutBriefing: React.FC<WorkoutBriefingProps> = ({
                     {partTypeLabels[language][part.type]}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-4 text-xs text-tactical-muted">
+                
+                {/* Exercise details within this part */}
+                <div className="mt-2 space-y-1.5 pr-6">
+                  {part.components.slice(0, 6).map((comp, ci) => (
+                    <div key={comp.id} className="flex items-center justify-between text-xs">
+                      <span className="text-tactical-muted truncate flex-1">{comp.name}</span>
+                      {comp.description && (
+                        <span className="text-tactical-data font-mono-data mr-2 flex-shrink-0">{comp.description}</span>
+                      )}
+                    </div>
+                  ))}
+                  {part.components.length > 6 && (
+                    <p className="text-xs text-tactical-muted/50">
+                      +{part.components.length - 6} {language === 'hebrew' ? 'נוספים' : 'more'}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-4 text-xs text-tactical-muted mt-2 pt-2 border-t border-tactical-accent/5">
                   <span className="font-mono-data">{part.components.length} {t.components}</span>
                   {part.requiresGPS && (
                     <span className="flex items-center gap-1 text-tactical-accent/70">
@@ -185,7 +203,7 @@ export const WorkoutBriefing: React.FC<WorkoutBriefingProps> = ({
 
           {/* Total */}
           <div className="mt-4 pt-4 border-t border-tactical-accent/10 flex justify-between text-sm font-semibold">
-            <span className="text-tactical-muted">סה"כ:</span>
+            <span className="text-tactical-muted">{language === 'hebrew' ? 'סה"כ:' : 'Total:'}</span>
             <span className="text-tactical-text font-mono-data">{totalComponents} {t.components}</span>
           </div>
         </motion.div>

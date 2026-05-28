@@ -394,6 +394,9 @@ export class WorkoutCompositionService {
    *
    * Values arrays contain 10 elements (indices 0–9) representing levels 1–10.
    * The level is clamped to [1, 10] and converted to a zero-based index.
+   *
+   * For sparse key maps (e.g. {"0": 10, "5": 20, "10": 40}),
+   * uses linear interpolation between defined breakpoints.
    */
   private static getValueForLevel(values: number[] | { [key: string]: number | null }, level: number): number {
     const clampedLevel = Math.max(1, Math.min(10, Math.round(level)));
@@ -402,8 +405,48 @@ export class WorkoutCompositionService {
     if (Array.isArray(values)) {
       return values[arrayIndex] ?? values[values.length - 1] ?? 1;
     } else {
-      const value = values[clampedLevel.toString()] ?? values['1'] ?? values[Object.keys(values)[0]];
-      return value !== null && value !== undefined ? value : 1;
+      // Direct lookup first
+      const directValue = values[clampedLevel.toString()];
+      if (directValue !== null && directValue !== undefined) {
+        return directValue;
+      }
+
+      // Also check zero-based index key (CSV data uses 0-10 keys)
+      const zeroBasedValue = values[arrayIndex.toString()];
+      if (zeroBasedValue !== null && zeroBasedValue !== undefined) {
+        return zeroBasedValue;
+      }
+
+      // Linear interpolation between defined breakpoints
+      const definedKeys = Object.keys(values)
+        .map(Number)
+        .filter(k => !isNaN(k) && values[k.toString()] !== null && values[k.toString()] !== undefined)
+        .sort((a, b) => a - b);
+
+      if (definedKeys.length === 0) return 1;
+      if (definedKeys.length === 1) return values[definedKeys[0].toString()]!;
+
+      // Use arrayIndex (0-based) for interpolation since CSV keys are 0-based
+      const lookupKey = arrayIndex;
+
+      // Clamp to defined range
+      if (lookupKey <= definedKeys[0]) return values[definedKeys[0].toString()]!;
+      if (lookupKey >= definedKeys[definedKeys.length - 1]) return values[definedKeys[definedKeys.length - 1].toString()]!;
+
+      // Find surrounding breakpoints and interpolate
+      for (let i = 0; i < definedKeys.length - 1; i++) {
+        const lowerKey = definedKeys[i];
+        const upperKey = definedKeys[i + 1];
+        if (lookupKey >= lowerKey && lookupKey <= upperKey) {
+          const lowerVal = values[lowerKey.toString()]!;
+          const upperVal = values[upperKey.toString()]!;
+          const fraction = (lookupKey - lowerKey) / (upperKey - lowerKey);
+          return Math.round(lowerVal + fraction * (upperVal - lowerVal));
+        }
+      }
+
+      // Fallback
+      return values[definedKeys[0].toString()]!;
     }
   }
 

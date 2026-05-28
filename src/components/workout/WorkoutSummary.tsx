@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Clock, Timer, Check, Star, ThumbsUp, Coffee, Target, Zap, ZapOff } from "lucide-react";
+import { Clock, Timer, Check, Star, ThumbsUp, Coffee, Target, Zap, ZapOff, SkipForward, Trophy } from "lucide-react";
 import { Button } from "../ui/button";
 
 interface CompletedTask {
@@ -8,11 +8,12 @@ interface CompletedTask {
   duration: number;
   type: string;
   partName?: string;
+  skipped?: boolean;
 }
 
 interface WorkoutSummaryProps {
   workoutTitle: string;
-  totalDuration: number;
+  totalDuration: number; // milliseconds
   completedTasks: CompletedTask[];
   onConfirm: () => void;
   language?: 'hebrew' | 'english';
@@ -46,25 +47,38 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
       totalDuration: 'זמן כולל',
       minutes: 'דקות',
       seconds: 'שניות',
-      confirm: 'אישור',
+      confirm: 'המשך',
       rest: 'מנוחה',
-      completed: 'הושלם!'
+      completed: 'הושלם!',
+      exercises: 'תרגילים',
+      skipped: 'דולג',
+      greatJob: 'עבודה מצוינת!',
     },
     english: {
       workoutSummary: 'Workout Summary',
       totalDuration: 'Total Duration',
       minutes: 'minutes',
       seconds: 'seconds',
-      confirm: 'Confirm',
+      confirm: 'Continue',
       rest: 'Rest',
-      completed: 'Completed!'
+      completed: 'Completed!',
+      exercises: 'Exercises',
+      skipped: 'Skipped',
+      greatJob: 'Great job!',
     }
   };
 
   const t = texts[language];
 
-  const totalMinutes = Math.floor(totalDuration / 60);
-  const remainingSeconds = totalDuration % 60;
+  // Separate exercises from rest periods
+  const exerciseTasks = completedTasks.filter(task => task.type !== 'rest');
+  const completedExercises = exerciseTasks.filter(task => !task.skipped);
+  const skippedExercises = exerciseTasks.filter(task => task.skipped);
+
+  // Format total duration from milliseconds
+  const totalMs = totalDuration;
+  const totalMinutes = Math.floor(totalMs / 60000);
+  const remainingSeconds = Math.floor((totalMs % 60000) / 1000);
 
   return (
     <motion.div
@@ -74,49 +88,95 @@ export const WorkoutSummary: React.FC<WorkoutSummaryProps> = ({
       dir={language === 'hebrew' ? 'rtl' : 'ltr'}
     >
       <div className="max-w-md mx-auto">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-10 h-10 rounded-full glass-card flex items-center justify-center glow-border">
-            <Clock className="w-5 h-5 text-tactical-accent" />
-          </div>
-          <h1 className="text-2xl font-bold text-tactical-text">{t.workoutSummary}</h1>
+        {/* Header with trophy */}
+        <div className="text-center mb-6">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+            className="w-16 h-16 rounded-full gradient-accent flex items-center justify-center mx-auto mb-4 glow-border-strong"
+          >
+            <Trophy className="w-8 h-8 text-tactical-bg" />
+          </motion.div>
+          <h1 className="text-2xl font-bold text-tactical-text mb-1">{t.greatJob}</h1>
+          <p className="text-tactical-muted text-sm">{t.workoutSummary}</p>
         </div>
 
         <div className="glass-card-elevated rounded-2xl p-6 mb-6">
           {/* Title and Total Duration */}
           <div className="text-center mb-6">
             <h2 className="text-xl font-bold text-tactical-text mb-3">{workoutTitle}</h2>
-            <div className="flex items-center justify-center gap-2">
-              <Timer className="w-5 h-5 text-tactical-accent" />
-              <span className="text-lg font-mono-data text-tactical-data font-semibold">
-                {t.totalDuration}: {totalMinutes} {t.minutes} {remainingSeconds} {t.seconds}
-              </span>
+            <div className="flex items-center justify-center gap-4">
+              <div className="glass-card rounded-xl px-4 py-2 flex items-center gap-2">
+                <Timer className="w-4 h-4 text-tactical-accent" />
+                <span className="text-lg font-mono-data text-tactical-data font-semibold">
+                  {totalMinutes}:{String(remainingSeconds).padStart(2, '0')}
+                </span>
+              </div>
+              <div className="glass-card rounded-xl px-4 py-2 flex items-center gap-2">
+                <Check className="w-4 h-4 text-tactical-accent" />
+                <span className="text-lg font-mono-data text-tactical-data font-semibold">
+                  {completedExercises.length} {t.exercises}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Completed Tasks */}
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {completedTasks.map((task, index) => (
-              <motion.div 
-                key={index} 
-                className="flex justify-between items-center p-3 glass-card rounded-xl"
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <div className="flex-1 text-right">
-                  <h4 className="font-semibold text-tactical-text text-sm">{task.name}</h4>
-                  {task.partName && <p className="text-xs text-tactical-muted">({task.partName})</p>}
-                  {task.type === 'rest' && <p className="text-xs text-tactical-muted">{t.rest}</p>}
-                </div>
-                <div className="text-sm font-mono text-tactical-data">{formatTime(task.duration)}</div>
-              </motion.div>
-            ))}
-          </div>
+          {/* Completed Exercises */}
+          {completedExercises.length > 0 && (
+            <div className="space-y-2 max-h-48 overflow-y-auto mb-4">
+              {completedExercises.map((task, index) => (
+                <motion.div 
+                  key={`done-${index}`} 
+                  className="flex justify-between items-center p-3 glass-card rounded-xl"
+                  initial={{ opacity: 0, x: language === 'hebrew' ? 8 : -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.04 }}
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <h4 className="font-semibold text-tactical-text text-sm truncate">{task.name}</h4>
+                      {task.partName && <p className="text-xs text-tactical-muted">{task.partName}</p>}
+                    </div>
+                  </div>
+                  <div className="text-sm font-mono text-tactical-data flex-shrink-0 mr-2">{formatTime(task.duration)}</div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {/* Skipped Exercises */}
+          {skippedExercises.length > 0 && (
+            <div className="space-y-2 mt-4 pt-4 border-t border-tactical-accent/10">
+              <p className="text-xs text-tactical-muted font-semibold uppercase tracking-wider mb-2">
+                <SkipForward className="w-3 h-3 inline ml-1" />
+                {t.skipped}
+              </p>
+              {skippedExercises.map((task, index) => (
+                <motion.div 
+                  key={`skip-${index}`} 
+                  className="flex justify-between items-center p-3 glass-card rounded-xl opacity-50"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.5 }}
+                  transition={{ delay: 0.3 + index * 0.04 }}
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <SkipForward className="w-4 h-4 text-tactical-muted flex-shrink-0" />
+                    <div className="min-w-0">
+                      <h4 className="font-semibold text-tactical-muted text-sm line-through truncate">{task.name}</h4>
+                      {task.partName && <p className="text-xs text-tactical-muted/50">{task.partName}</p>}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
 
         <Button
           onClick={onConfirm}
-          className="w-full py-4 text-lg"
+          className="w-full py-4 text-lg glow-border-strong"
         >
           <Check className="w-5 h-5 ml-2" />
           {t.confirm}
