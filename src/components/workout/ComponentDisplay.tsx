@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
-import { Timer, Navigation, Dumbbell, Heart, Zap, Target, Clock, SkipForward, ChevronLeft } from "lucide-react";
+import { Timer, Navigation, Dumbbell, Heart, Zap, Target, Clock, SkipForward, ChevronLeft, MessageSquare, Swords, Trophy } from "lucide-react";
 import { WorkoutComponent } from "../../lib/services/workoutComposition";
 import { GPSStats } from "../../lib/services/gpsService";
 import { Button } from "../ui/button";
@@ -346,6 +346,7 @@ const getComponentIcon = (type: string) => {
     case 'cardio_exercise': return Heart;
     case 'warmup_exercise': return Zap;
     case 'special_exercise': return Target;
+    case 'motivation_talk': return MessageSquare;
     case 'rest': return Clock;
     default: return Target;
   }
@@ -407,6 +408,42 @@ export const ComponentDisplay: React.FC<ComponentDisplayProps> = ({
         language={language}
         isLoading={isLoading}
       />
+    );
+  }
+
+  // === Motivation Talk (חנתר שיחת) - skippable interstitial ===
+  if (component.type === 'motivation_talk') {
+    return (
+      <motion.div
+        key={component.id}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="w-full max-w-md text-center flex flex-col items-center"
+      >
+        <div className="mb-6">
+          <div className="w-20 h-20 rounded-full glass-card-elevated flex items-center justify-center mx-auto mb-4" style={{ background: 'linear-gradient(135deg, rgba(127, 176, 105, 0.3), rgba(127, 176, 105, 0.1))' }}>
+            <MessageSquare className="w-10 h-10 text-tactical-accent" />
+          </div>
+          <h2 className="text-2xl font-bold text-tactical-text mb-2">
+            {language === 'hebrew' ? 'חנתר שיחת' : 'Motivation Talk'}
+          </h2>
+        </div>
+
+        <div className="glass-card-elevated rounded-2xl p-6 mb-6 w-full">
+          <p className="text-lg text-tactical-text leading-relaxed whitespace-pre-wrap font-medium">
+            {component.description || component.instructions}
+          </p>
+        </div>
+
+        <Button
+          onClick={onFinish}
+          disabled={isLoading}
+          className="w-full py-4 text-lg glow-border-strong"
+        >
+          {language === 'hebrew' ? 'המשך לשלב הבא' : 'Continue'}
+        </Button>
+      </motion.div>
     );
   }
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Target, Clock, Zap, Play, ArrowRight } from "lucide-react";
+import { Target, Clock, Zap, Play, ArrowRight, MessageSquare, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ComposedWorkout, WorkoutPart } from "../../lib/services/workoutComposition";
 import { Button } from "../ui/button";
@@ -62,25 +62,34 @@ export const WorkoutBriefing: React.FC<WorkoutBriefingProps> = ({
     elite: 'bg-red-500/20 text-red-400 border-red-500/20'
   };
 
-  const partTypeColors = {
+  const partTypeColors: Record<string, string> = {
     warmup: 'bg-sky-500/20 text-sky-400 border-sky-500/20',
     cardio: 'bg-rose-500/20 text-rose-400 border-rose-500/20',
     strength: 'bg-purple-500/20 text-purple-400 border-purple-500/20',
-    special: 'bg-amber-500/20 text-amber-400 border-amber-500/20'
+    special: 'bg-amber-500/20 text-amber-400 border-amber-500/20',
+    sprints: 'bg-orange-500/20 text-orange-400 border-orange-500/20',
+    closing: 'bg-teal-500/20 text-teal-400 border-teal-500/20',
+    motivation: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20',
   };
 
-  const partTypeLabels = {
+  const partTypeLabels: Record<string, Record<string, string>> = {
     hebrew: {
       warmup: 'חימום',
       cardio: 'קרדיו',
       strength: 'כוח',
-      special: 'מיוחד'
+      special: 'מיוחד',
+      sprints: 'ספרינטים',
+      closing: 'סיום',
+      motivation: 'חנתר',
     },
     english: {
       warmup: 'Warmup',
       cardio: 'Cardio',
       strength: 'Strength',
-      special: 'Special'
+      special: 'Special',
+      sprints: 'Sprints',
+      closing: 'Closing',
+      motivation: 'Talk',
     }
   };
 
@@ -141,6 +150,36 @@ export const WorkoutBriefing: React.FC<WorkoutBriefingProps> = ({
                 <span className="text-sm font-mono-data font-medium">{workout.estimatedDuration} {t.minutes}</span>
               </div>
             </div>
+
+            {/* Equipment Requirements */}
+            {workout.requiredEquipment && workout.requiredEquipment.length > 0 && (
+              <div className="flex items-center justify-center gap-2 mt-3">
+                <Shield className="w-3.5 h-3.5 text-tactical-muted" />
+                <span className="text-xs text-tactical-muted">
+                  {language === 'hebrew' ? 'ציוד נדרש: ' : 'Equipment: '}
+                  {workout.requiredEquipment.map(eq => {
+                    const eqNames: Record<string, string> = {
+                      sandbag: 'שק חול',
+                      stretcher: 'אלונקה',
+                      tire: 'צמיג',
+                      weight_vest: 'וסט משקל',
+                      rope: 'חבל',
+                      water_jugs: 'ג׳ריקנים',
+                    };
+                    return eqNames[eq] || eq;
+                  }).join(', ')}
+                </span>
+              </div>
+            )}
+
+            {/* Partner Mode Indicator */}
+            {workout.isPartnerMode && (
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <span className="text-xs px-3 py-1 rounded-lg bg-tactical-accent/10 text-tactical-accent border border-tactical-accent/20">
+                  {language === 'hebrew' ? 'מצב שותפים' : 'Partner Mode'}
+                </span>
+              </div>
+            )}
           </div>
         </motion.div>
 

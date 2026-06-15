@@ -142,10 +142,12 @@ export default function CreateWorkout() {
         const type = urlParams.get('type');
 
         let workout: ComposedWorkout;
+        const sessionId = urlParams.get('sessionId');
+        const isPartnerMode = !!sessionId; // Group training → enable partner mode
 
         if (type === 'short') {
           // Quick workout mode — generate a random short workout
-          workout = await WorkoutCompositionService.generateRandomWorkout();
+          workout = await WorkoutCompositionService.generateSmartWorkout(isPartnerMode);
         } else if (workoutId && source) {
           // Load specific workout
           if (source === 'strength') {
@@ -154,7 +156,7 @@ export default function CreateWorkout() {
             if (strengthWorkout) {
               workout = await WorkoutCompositionService.createShortWorkout(strengthWorkout);
             } else {
-              workout = await WorkoutCompositionService.generateRandomWorkout();
+              workout = await WorkoutCompositionService.generateSmartWorkout(isPartnerMode);
             }
           } else if (source === 'special') {
             const specialWorkouts = await Special.list();
@@ -162,14 +164,14 @@ export default function CreateWorkout() {
             if (specialWorkout) {
               workout = await WorkoutCompositionService.createShortWorkout(specialWorkout);
             } else {
-              workout = await WorkoutCompositionService.generateRandomWorkout();
+              workout = await WorkoutCompositionService.generateSmartWorkout(isPartnerMode);
             }
           } else {
-            workout = await WorkoutCompositionService.generateRandomWorkout();
+            workout = await WorkoutCompositionService.generateSmartWorkout(isPartnerMode);
           }
         } else {
-          // Generate random workout
-          workout = await WorkoutCompositionService.generateRandomWorkout();
+          // Generate smart workout (replaces old random generation)
+          workout = await WorkoutCompositionService.generateSmartWorkout(isPartnerMode);
         }
 
         setComposedWorkout(workout);
@@ -627,8 +629,8 @@ export default function CreateWorkout() {
           <div className="flex items-center justify-center gap-1 mb-2">
             {composedWorkout.parts.map((part, idx) => {
               const partLabels: Record<string, Record<string, string>> = {
-                hebrew: { warmup: 'חימום', cardio: 'קרדיו', strength: 'כוח', special: 'מיוחד' },
-                english: { warmup: 'Warmup', cardio: 'Cardio', strength: 'Strength', special: 'Special' }
+                hebrew: { warmup: 'חימום', cardio: 'קרדיו', strength: 'כוח', special: 'מיוחד', sprints: 'ספרינטים', closing: 'סיום', motivation: 'חנתר' },
+                english: { warmup: 'Warmup', cardio: 'Cardio', strength: 'Strength', special: 'Special', sprints: 'Sprints', closing: 'Closing', motivation: 'Talk' }
               };
               const isActive = idx === currentPartIndex;
               const isCompleted = idx < currentPartIndex;

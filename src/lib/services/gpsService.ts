@@ -246,17 +246,22 @@ class GPSTrackingService {
    * Handle GPS error
    */
   private handleError = (error: GeolocationPositionError) => {
-    console.error('GPS error:', error.message);
+    console.error('GPS error:', error.message, 'code:', error.code);
 
+    // Do NOT throw from inside watchPosition callback - it would be unhandled.
+    // Instead, log and continue. The tracking continues and will pick up
+    // positions again when signal improves.
     switch (error.code) {
       case error.PERMISSION_DENIED:
-        throw new Error('Location permission denied. Please enable location access.');
+        console.error('Location permission denied. GPS tracking will not work.');
+        this.isTracking = false;
+        break;
       case error.POSITION_UNAVAILABLE:
-        throw new Error('Location information unavailable.');
+        console.warn('Location temporarily unavailable. Waiting for signal...');
+        break;
       case error.TIMEOUT:
-        throw new Error('Location request timed out.');
-      default:
-        throw new Error('Unknown GPS error occurred.');
+        console.warn('Location request timed out. Retrying...');
+        break;
     }
   };
 
@@ -371,7 +376,12 @@ class GPSTrackingService {
       this.measurementSystem = measurementSystem;
     }
 
-    // Try to restore any saved data before starting new tracking
+    // Clear any stale data from previous sessions before attempting restore
+    this.positions = [];
+    this.startTime = null;
+
+    // Try to restore saved data only if resuming from a visibility change
+    // (not starting a fresh workout)
     this.loadSavedData();
 
     this.isTracking = true;
