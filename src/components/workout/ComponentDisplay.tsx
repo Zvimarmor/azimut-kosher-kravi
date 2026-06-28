@@ -24,7 +24,7 @@ interface ComponentDisplayProps {
 /**
  * SVG Countdown Ring — visual progress circle for timed exercises/rest
  */
-const CountdownRing: React.FC<{ remaining: number; total: number; size?: number }> = ({
+const CountdownRing: React.FC<{ remaining: number; total: number; size?: number }> = React.memo(({
   remaining, total, size = 180
 }) => {
   const strokeWidth = 6;
@@ -51,12 +51,12 @@ const CountdownRing: React.FC<{ remaining: number; total: number; size?: number 
       />
     </svg>
   );
-};
+});
 
 /**
  * Timer Display — counts up from start time (stopwatch mode)
  */
-const TimerDisplay: React.FC<{ startTime: number }> = ({ startTime }) => {
+const TimerDisplay: React.FC<{ startTime: number }> = React.memo(({ startTime }) => {
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
@@ -75,7 +75,7 @@ const TimerDisplay: React.FC<{ startTime: number }> = ({ startTime }) => {
       {minutes}:{seconds}
     </div>
   );
-};
+});
 
 /**
  * Countdown Timer — counts down with progress ring and vibration
@@ -130,7 +130,7 @@ const CountdownTimer: React.FC<{
 /**
  * GPS Stats overlay for cardio exercises
  */
-const GPSStatsDisplay: React.FC<{ stats: GPSStats; language: 'hebrew' | 'english' }> = ({ stats, language }) => {
+const GPSStatsDisplay: React.FC<{ stats: GPSStats; language: 'hebrew' | 'english' }> = React.memo(({ stats, language }) => {
   const formatDistance = (distance: number) => `${(distance / 1000).toFixed(2)} km`;
   const formatPace = (pace: number) => {
     const minutes = Math.floor(pace);
@@ -164,7 +164,7 @@ const GPSStatsDisplay: React.FC<{ stats: GPSStats; language: 'hebrew' | 'english
       </div>
     </div>
   );
-};
+});
 
 /**
  * "Next Up" preview card shown during rest
@@ -172,7 +172,7 @@ const GPSStatsDisplay: React.FC<{ stats: GPSStats; language: 'hebrew' | 'english
 const NextUpPreview: React.FC<{
   nextComponent: WorkoutComponent;
   language: 'hebrew' | 'english';
-}> = ({ nextComponent, language }) => {
+}> = React.memo(({ nextComponent, language }) => {
   const Icon = getComponentIcon(nextComponent.type);
 
   return (
@@ -198,7 +198,7 @@ const NextUpPreview: React.FC<{
       </div>
     </motion.div>
   );
-};
+});
 
 /**
  * Sets Tracker — for exercises with multiple sets

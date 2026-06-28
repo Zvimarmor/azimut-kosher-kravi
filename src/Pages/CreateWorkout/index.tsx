@@ -19,6 +19,7 @@ import { WorkoutSummary, WorkoutFeedback } from "../../components/workout/Workou
 import { GPSWarningModal } from "../../components/gps/GPSWarningModal";
 import { createPageUrl } from "../../lib/utils";
 import { Button } from "../../components/ui/button";
+import { LoadingSpinner } from "../../components/shared/LoadingSpinner";
 import { Pause, Play, X, AlertTriangle } from "lucide-react";
 
 interface CompletedTask {
@@ -542,14 +543,9 @@ export default function CreateWorkout() {
   // Loading state
   if (phase === 'loading' || !composedWorkout) {
     return (
-      <div className="flex items-center justify-center text-dark-olive" style={{ height: 'calc(100vh - 73px)' }}>
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-tactical-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="font-medium text-tactical-text">
-            {language === 'hebrew' ? 'יוצר אימון...' : 'Generating workout...'}
-          </p>
-        </div>
-      </div>
+      <LoadingSpinner
+        message={language === 'hebrew' ? 'יוצר אימון...' : 'Generating workout...'}
+      />
     );
   }
 

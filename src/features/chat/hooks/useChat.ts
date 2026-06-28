@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChatSession, ChatMessage } from '../types';
 import { generateUUID, simulateAIResponse } from '../utils';
 import { INSTRUCTIONS_MESSAGE, DAILY_QUOTA } from '../constants';
@@ -11,11 +11,28 @@ export const useChat = (language: 'hebrew' | 'english' = 'hebrew') => {
   const [dailyQuota, setDailyQuota] = useState(DAILY_QUOTA);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Generate user-specific keys for localStorage
-  const getUserKey = (suffix: string) => {
+  // Stable key builder — memoized so effects/callbacks get a stable reference
+  const getUserKey = useCallback((suffix: string) => {
     const userId = currentUser?.uid || 'anonymous';
     return `militaryChat_${userId}_${suffix}`;
-  };
+  }, [currentUser?.uid]);
+
+  const createNewSession = useCallback(() => {
+    const newSession: ChatSession = {
+      id: generateUUID(),
+      title: 'שיחה חדשה',
+      messages: [{
+        id: generateUUID(),
+        type: 'system',
+        content: INSTRUCTIONS_MESSAGE,
+        timestamp: new Date()
+      }],
+      createdAt: new Date()
+    };
+
+    setSessions(prev => [newSession, ...prev]);
+    setActiveSessionId(newSession.id);
+  }, []);
 
   // Load sessions and quota from localStorage
   useEffect(() => {
@@ -27,7 +44,6 @@ export const useChat = (language: 'hebrew' | 'english' = 'hebrew') => {
       const today = new Date().toDateString();
 
       if (lastQuotaReset !== today) {
-        // Reset quota for new day
         setDailyQuota(DAILY_QUOTA);
         localStorage.setItem(getUserKey('quota'), DAILY_QUOTA.toString());
         localStorage.setItem(getUserKey('quotaReset'), today);
@@ -47,16 +63,17 @@ export const useChat = (language: 'hebrew' | 'english' = 'hebrew') => {
           createNewSession();
         }
       } else {
-        // Create initial session
         createNewSession();
       }
     } catch (e) {
       console.error('Error loading from localStorage:', e);
       createNewSession();
     }
-  }, [currentUser]);
+  // activeSessionId intentionally omitted — only re-run when user or key builder changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser, getUserKey, createNewSession]);
 
-  // Save sessions to localStorage
+  // Persist sessions to localStorage whenever they change
   useEffect(() => {
     try {
       if (sessions.length > 0 && currentUser) {
@@ -65,30 +82,13 @@ export const useChat = (language: 'hebrew' | 'english' = 'hebrew') => {
     } catch (e) {
       console.error('Error saving to localStorage:', e);
     }
-  }, [sessions, currentUser]);
+  }, [sessions, currentUser, getUserKey]);
 
-  const createNewSession = () => {
-    const newSession: ChatSession = {
-      id: generateUUID(),
-      title: 'שיחה חדשה',
-      messages: [{
-        id: generateUUID(),
-        type: 'system',
-        content: INSTRUCTIONS_MESSAGE,
-        timestamp: new Date()
-      }],
-      createdAt: new Date()
-    };
-
-    setSessions(prev => [newSession, ...prev]);
-    setActiveSessionId(newSession.id);
-  };
-
-  const getCurrentSession = () => {
+  const getCurrentSession = useCallback((): ChatSession | undefined => {
     return sessions.find(s => s.id === activeSessionId);
-  };
+  }, [sessions, activeSessionId]);
 
-  const updateSessionTitle = (sessionId: string, firstMessage: string) => {
+  const updateSessionTitle = useCallback((sessionId: string, firstMessage: string) => {
     const title = firstMessage.length > 30 ? firstMessage.substring(0, 30) + '...' : firstMessage;
     setSessions(prev =>
       prev.map(session =>
@@ -97,10 +97,9 @@ export const useChat = (language: 'hebrew' | 'english' = 'hebrew') => {
           : session
       )
     );
-  };
+  }, []);
 
-  const sendMessage = async (inputMessage: string) => {
-    // Require user to be logged in
+  const sendMessage = useCallback(async (inputMessage: string) => {
     if (!currentUser) {
       throw new Error('You must be logged in to send messages');
     }
@@ -110,7 +109,6 @@ export const useChat = (language: 'hebrew' | 'english' = 'hebrew') => {
     const currentSession = getCurrentSession();
     if (!currentSession) return;
 
-    // Add user message
     const userMessage: ChatMessage = {
       id: generateUUID(),
       type: 'user',
@@ -121,15 +119,11 @@ export const useChat = (language: 'hebrew' | 'english' = 'hebrew') => {
     setSessions(prev =>
       prev.map(session =>
         session.id === activeSessionId
-          ? {
-              ...session,
-              messages: [...session.messages, userMessage]
-            }
+          ? { ...session, messages: [...session.messages, userMessage] }
           : session
       )
     );
 
-    // Update session title if this is the first real message
     if (currentSession.messages.length === 1) {
       updateSessionTitle(activeSessionId!, inputMessage.trim());
     }
@@ -137,7 +131,6 @@ export const useChat = (language: 'hebrew' | 'english' = 'hebrew') => {
     setIsLoading(true);
 
     try {
-      // Get conversation history for context
       const conversationHistory = currentSession.messages
         .filter(msg => msg.type === 'user' || msg.type === 'ai')
         .map(msg => ({
@@ -157,15 +150,11 @@ export const useChat = (language: 'hebrew' | 'english' = 'hebrew') => {
       setSessions(prev =>
         prev.map(session =>
           session.id === activeSessionId
-            ? {
-                ...session,
-                messages: [...session.messages, aiMessage]
-              }
+            ? { ...session, messages: [...session.messages, aiMessage] }
             : session
         )
       );
 
-      // Update quota
       const newQuota = dailyQuota - 1;
       setDailyQuota(newQuota);
       localStorage.setItem(getUserKey('quota'), newQuota.toString());
@@ -183,31 +172,31 @@ export const useChat = (language: 'hebrew' | 'english' = 'hebrew') => {
       setSessions(prev =>
         prev.map(session =>
           session.id === activeSessionId
-            ? {
-                ...session,
-                messages: [...session.messages, errorMessage]
-              }
+            ? { ...session, messages: [...session.messages, errorMessage] }
             : session
         )
       );
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentUser, isLoading, dailyQuota, activeSessionId, getCurrentSession, updateSessionTitle, getUserKey, language]);
 
-  const deleteSession = (sessionId: string) => {
-    setSessions(prev => prev.filter(s => s.id !== sessionId));
-    if (activeSessionId === sessionId) {
-      const remainingSessions = sessions.filter(s => s.id !== sessionId);
-      if (remainingSessions.length > 0) {
-        setActiveSessionId(remainingSessions[0].id);
-      } else {
-        createNewSession();
+  const deleteSession = useCallback((sessionId: string) => {
+    // Compute remaining before clearing, then update active if needed
+    setSessions(prev => {
+      const remaining = prev.filter(s => s.id !== sessionId);
+      if (activeSessionId === sessionId) {
+        if (remaining.length > 0) {
+          setActiveSessionId(remaining[0].id);
+        } else {
+          createNewSession();
+        }
       }
-    }
-  };
+      return remaining;
+    });
+  }, [activeSessionId, createNewSession]);
 
-  const updateSession = (sessionId: string, updates: Partial<ChatSession>) => {
+  const updateSession = useCallback((sessionId: string, updates: Partial<ChatSession>) => {
     setSessions(prev =>
       prev.map(session =>
         session.id === sessionId
@@ -215,7 +204,7 @@ export const useChat = (language: 'hebrew' | 'english' = 'hebrew') => {
           : session
       )
     );
-  };
+  }, []);
 
   return {
     sessions,

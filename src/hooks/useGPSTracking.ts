@@ -15,14 +15,13 @@ export function useGPSTracking(measurementSystem: 'metric' | 'imperial' = 'metri
   const [isActive, setIsActive] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
 
-  const { addToBuffer } = useBackgroundSync((syncData) => {
+  const { addToBuffer } = useBackgroundSync<GPSStats>((syncData) => {
     // When app becomes visible, take the latest GPS stats from the buffer.
     // gpsService maintains correct cumulative totals internally, so we
     // simply use the most recent reading rather than summing (which would
     // inflate distance by adding cumulative values together).
     if (syncData.length > 0) {
-      const latestStats = syncData[syncData.length - 1].data as GPSStats;
-      setGPSStats(latestStats);
+      setGPSStats(syncData[syncData.length - 1].data);
     }
   });
 

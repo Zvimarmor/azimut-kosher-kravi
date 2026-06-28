@@ -299,17 +299,17 @@ class GPSTrackingService {
       this.permissionRequested = true;
       this.hasPermission = true;
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.permissionRequested = true;
-      if (error.code === 1) {
+      const geoError = error as GeolocationPositionError;
+      if (geoError.code === 1) {
         // Permission denied
         this.hasPermission = false;
         return false;
       }
-      // For timeout or position unavailable, still set permission as true if not denied
-      // The user may have granted permission but signal is weak
-      if (error.code === 2 || error.code === 3) {
-        console.warn('GPS signal weak or timeout, but permission may be granted:', error.message);
+      // For timeout or position unavailable, permission may still be granted (weak signal)
+      if (geoError.code === 2 || geoError.code === 3) {
+        console.warn('GPS signal weak or timeout, but permission may be granted:', geoError.message);
         this.hasPermission = true;
         this.permissionRequested = true;
         return true;
