@@ -69,6 +69,7 @@ export default function WorkoutSetup() {
   const navigate = useNavigate();
   const context = useContext(LanguageContext);
   const language = context?.language || 'hebrew';
+  const displayLanguage = (language === 'spanish' ? 'english' : language) as 'hebrew' | 'english';
   const t = context?.allTexts[language];
   const { currentUser } = useAuth();
 
@@ -198,7 +199,7 @@ export default function WorkoutSetup() {
         joinCode.toUpperCase(),
         userId,
         userName,
-        language
+        displayLanguage
       );
       setGroupSession(session);
       setShowJoinSessionModal(false);

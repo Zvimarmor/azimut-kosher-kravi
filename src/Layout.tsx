@@ -8,28 +8,41 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./components/ui/dropdown-menu";
-import { LanguageContext, allTexts } from "./components/shared/LanguageContext";
+import { LanguageContext, allTexts, type SupportedLanguage } from "./components/shared/LanguageContext";
 import { useAuth } from "./features/auth/useAuth";
 
+const LANGUAGE_CYCLE: SupportedLanguage[] = ['hebrew', 'english', 'spanish'];
+
+const LANGUAGE_FLAGS: Record<SupportedLanguage, string> = {
+  hebrew: '🇮🇱',
+  english: '🇺🇸',
+  spanish: '🇪🇸',
+};
+
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<'hebrew' | 'english'>(() => {
+  const [language, setLanguage] = useState<SupportedLanguage>(() => {
     const saved = localStorage.getItem('language');
-    return (saved === 'english' || saved === 'hebrew') ? saved : 'hebrew';
+    return (saved === 'english' || saved === 'hebrew' || saved === 'spanish') ? saved as SupportedLanguage : 'hebrew';
   });
 
   const { currentUser, userProfile, logout } = useAuth();
 
-  // Save language preference to localStorage when it changes
   React.useEffect(() => {
     localStorage.setItem('language', language);
   }, [language]);
+
+  const cycleLanguage = () => {
+    const currentIndex = LANGUAGE_CYCLE.indexOf(language);
+    const nextIndex = (currentIndex + 1) % LANGUAGE_CYCLE.length;
+    setLanguage(LANGUAGE_CYCLE[nextIndex]);
+  };
 
   const currentTexts = allTexts[language];
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, allTexts }}>
       <div className={`min-h-screen tactical-bg ${language === 'hebrew' ? 'rtl' : 'ltr'} flex flex-col`}>
-        
+
         <header className="glass-header relative z-50 flex-shrink-0">
           <div className="max-w-7xl mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
@@ -39,8 +52,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <Menu className="w-5 h-5 text-tactical-text" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  align="end" 
+                <DropdownMenuContent
+                  align="end"
                   className="w-72 glass-card-elevated border-tactical-accent/10"
                 >
                   <div className="px-4 py-3 border-b border-tactical-accent/10">
@@ -68,17 +81,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       </div>
                     </div>
                   </div>
-                  
-                  <DropdownMenuItem 
+
+                  {/* Language Cycle Button */}
+                  <DropdownMenuItem
                     className="text-tactical-text hover:bg-tactical-accent/10 cursor-pointer"
-                    onClick={() => setLanguage(language === 'hebrew' ? 'english' : 'hebrew')}
+                    onClick={cycleLanguage}
                   >
                     <Globe className="w-4 h-4 mr-3 text-tactical-accent" />
-                    <div className="flex items-center gap-2">
-                      <span>{language === 'hebrew' ? '🇺🇸' : '🇮🇱'}</span>
-                      <span>{currentTexts.language}</span>
+                    <div className="flex items-center gap-2 flex-1">
+                      <span>{LANGUAGE_FLAGS[language]}</span>
+                      <span className="flex-1">{currentTexts.language}</span>
+                      <span className="text-xs text-tactical-muted px-2 py-0.5 rounded glass-card">
+                        {LANGUAGE_FLAGS[LANGUAGE_CYCLE[(LANGUAGE_CYCLE.indexOf(language) + 1) % LANGUAGE_CYCLE.length]]}
+                      </span>
                     </div>
                   </DropdownMenuItem>
+
                   <DropdownMenuItem
                     className="text-tactical-text hover:bg-tactical-accent/10 cursor-pointer"
                     onClick={() => window.location.href = createPageUrl("WorkoutHistory")}
@@ -93,7 +111,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <Dumbbell className="w-4 h-4 mr-3 text-tactical-accent" />
                     <span>{currentTexts.exerciseLibrary}</span>
                   </DropdownMenuItem>
-                   <DropdownMenuItem
+                  <DropdownMenuItem
                     className="text-tactical-text hover:bg-tactical-accent/10 cursor-pointer"
                     onClick={() => window.location.href = createPageUrl("AboutUs")}
                   >
@@ -116,7 +134,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         onClick={logout}
                       >
                         <LogOut className="w-4 h-4 mr-3" />
-                        <span>{language === 'hebrew' ? 'התנתק' : 'Logout'}</span>
+                        <span>{currentTexts.logout}</span>
                       </DropdownMenuItem>
                     </>
                   )}

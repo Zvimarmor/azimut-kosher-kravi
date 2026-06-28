@@ -11,7 +11,8 @@ import { LoginModal } from '../../features/auth/components/LoginModal';
 export default function MilitaryChat() {
   const context = useContext(LanguageContext);
   const language = context?.language || 'hebrew';
-  const t = CHAT_TEXTS[language];
+  const displayLanguage = (language === 'spanish' ? 'english' : language) as 'hebrew' | 'english';
+  const t = CHAT_TEXTS[displayLanguage];
   const allTexts = context?.allTexts[language];
   const { currentUser, chatQuotaRemaining } = useAuth();
 
@@ -27,7 +28,7 @@ export default function MilitaryChat() {
     deleteSession,
     updateSession,
     isLoggedIn,
-  } = useChat(language);
+  } = useChat(displayLanguage);
 
   const [inputMessage, setInputMessage] = useState('');
   const [showHistorySidebar, setShowHistorySidebar] = useState(false);
@@ -464,7 +465,7 @@ export default function MilitaryChat() {
       {showLoginModal && (
         <LoginModal
           onClose={() => setShowLoginModal(false)}
-          language={language}
+          language={displayLanguage}
         />
       )}
     </div>

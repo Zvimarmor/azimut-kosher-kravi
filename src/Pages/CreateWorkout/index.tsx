@@ -85,6 +85,8 @@ export default function CreateWorkout() {
   const location = useLocation();
   const languageContext = useContext(LanguageContext);
   const language = languageContext?.language || 'hebrew';
+  // Components that only support hebrew/english fall back to english for Spanish users
+  const displayLanguage = (language === 'spanish' ? 'english' : language) as 'hebrew' | 'english';
 
   // Workout state
   const [composedWorkout, setComposedWorkout] = useState<ComposedWorkout | null>(null);
@@ -555,7 +557,7 @@ export default function CreateWorkout() {
       <WorkoutBriefing
         workout={composedWorkout}
         onStart={handleStartWorkout}
-        language={language}
+        language={displayLanguage}
       />
     );
   }
@@ -568,7 +570,7 @@ export default function CreateWorkout() {
         totalDuration={workoutDuration}
         completedTasks={completedTasks}
         onConfirm={handleSummaryConfirm}
-        language={language}
+        language={displayLanguage}
       />
     );
   }
@@ -578,7 +580,7 @@ export default function CreateWorkout() {
     return (
       <WorkoutFeedback
         onSubmit={handleFeedbackSubmit}
-        language={language}
+        language={displayLanguage}
       />
     );
   }
@@ -717,7 +719,7 @@ export default function CreateWorkout() {
                 onFinish={phase === 'rest' ? handleRestFinish : handleComponentFinish}
                 onSkip={phase !== 'rest' ? handleSkip : undefined}
                 gpsStats={isGPSActive ? gpsStats : null}
-                language={language}
+                language={displayLanguage}
                 partName={currentPart.name}
                 currentIndex={currentComponentIndex}
                 totalComponents={totalComponentsInPart}
@@ -766,7 +768,7 @@ export default function CreateWorkout() {
       {/* GPS Warning Modal */}
       {showGPSWarning && (
         <GPSWarningModal
-          language={language}
+          language={displayLanguage}
           warningType={gpsWarningType}
           onContinueWithoutGPS={() => {
             setShowGPSWarning(false);
