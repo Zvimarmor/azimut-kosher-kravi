@@ -1,15 +1,15 @@
 import { useEffect, useRef } from 'react';
 
-export type SyncData = {
+export type SyncData<T = unknown> = {
   timestamp: number;
-  data: any;
+  data: T;
 };
 
-export function useBackgroundSync(
-  onSync: (data: SyncData[]) => void,
+export function useBackgroundSync<T = unknown>(
+  onSync: (data: SyncData<T>[]) => void,
   interval: number = 1000
 ) {
-  const bufferRef = useRef<SyncData[]>([]);
+  const bufferRef = useRef<SyncData<T>[]>([]);
   const visibilityRef = useRef(true);
 
   useEffect(() => {
@@ -29,8 +29,8 @@ export function useBackgroundSync(
     };
   }, [onSync]);
 
-  const addToBuffer = (data: any) => {
-    const syncData = {
+  const addToBuffer = (data: T) => {
+    const syncData: SyncData<T> = {
       timestamp: Date.now(),
       data
     };
