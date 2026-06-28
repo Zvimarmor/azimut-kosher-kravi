@@ -1,5 +1,7 @@
 import { createContext } from "react";
 
+export type SupportedLanguage = 'hebrew' | 'english' | 'spanish';
+
 export const allTexts = {
   hebrew: {
     appName: "אזימוט כושר קרבי",
@@ -143,11 +145,29 @@ export const allTexts = {
     copyCode: "העתק קוד",
     codeCopied: "הקוד הועתק!",
     or: "או",
+
+    // Settings
+    languageLabel: "שפה",
+    languageHebrew: "עברית",
+    languageEnglish: "English",
+    languageSpanish: "Español",
+    measurementUnits: "יחידות מדידה",
+    metric: "מטרי (ק\"מ, ק\"ג)",
+    imperial: "אימפריאלי (מייל, פאונד)",
+    colorTheme: "ערכת צבעים",
+    themeDefault: "ברירת מחדל (בהיר)",
+    themeRanger: "רינג'ר ירוק (כהה)",
+    userAccount: "חשבון משתמש",
+    signIn: "התחבר / הירשם",
+    signOut: "התנתק",
+    aboutSection: "אודות",
+    version: "גרסה",
+    signInDesc: "התחבר כדי לשמור את ההתקדמות שלך ולסנכרן בין מכשירים",
   },
   english: {
     appName: "Azimut Kosher Kravi",
     aboutUs: "About Us",
-    language: "עברית",
+    language: "Español",
     workoutHistory: "Workout History",
     settings: "Settings",
     memorial: "In memory of Ofek Becher and Shilo Har-Even z\"l\n© All rights reserved",
@@ -286,12 +306,191 @@ export const allTexts = {
     copyCode: "Copy Code",
     codeCopied: "Code Copied!",
     or: "or",
+
+    // Settings
+    languageLabel: "Language",
+    languageHebrew: "עברית",
+    languageEnglish: "English",
+    languageSpanish: "Español",
+    measurementUnits: "Measurement Units",
+    metric: "Metric (km, kg)",
+    imperial: "Imperial (miles, lbs)",
+    colorTheme: "Color Theme",
+    themeDefault: "Default (Light)",
+    themeRanger: "Ranger Green (Dark)",
+    userAccount: "User Account",
+    signIn: "Login / Sign Up",
+    signOut: "Sign Out",
+    aboutSection: "About",
+    version: "Version",
+    signInDesc: "Sign in to save your progress and sync across devices",
+  },
+  spanish: {
+    appName: "Azimut Kósher Kravi",
+    aboutUs: "Sobre Nosotros",
+    language: "עברית",
+    workoutHistory: "Historial de Entrenamientos",
+    settings: "Configuración",
+    memorial: "En memoria de Ofek Becher y Shilo Har-Even z\"l\n© Todos los derechos reservados",
+    freeUser: "Usuario Gratuito",
+    proUser: "Usuario Pro",
+
+    // Home page
+    createWorkout: "Crear Entrenamiento",
+    createWorkoutDesc: "Plan de entrenamiento completo y personalizado",
+    selectWorkout: "Seleccionar Entrenamiento",
+    selectWorkoutDesc: "Elige un entrenamiento existente",
+    heritage: "Herencia y Cultura",
+    militaryChat: "Asesor Militar",
+    militaryChatDesc: "Orientación profesional con IA",
+
+    // Common UI elements
+    back: "Atrás",
+    next: "Siguiente",
+    continue: "Continuar",
+    save: "Guardar",
+    cancel: "Cancelar",
+    delete: "Eliminar",
+    edit: "Editar",
+    close: "Cerrar",
+    yes: "Sí",
+    no: "No",
+
+    // Workout related
+    workout: "Entrenamiento",
+    workouts: "Entrenamientos",
+    exercise: "Ejercicio",
+    exercises: "Ejercicios",
+    duration: "Duración",
+    difficulty: "Dificultad",
+    instructions: "Instrucciones",
+    beginner: "Principiante",
+    intermediate: "Intermedio",
+    advanced: "Avanzado",
+    searchWorkout: "Buscar entrenamiento...",
+    selectWorkoutTitle: "Seleccionar Entrenamiento",
+    noWorkoutsFound: "No se encontraron entrenamientos",
+    tryDifferentSearch: "Prueba una búsqueda diferente o cambia la categoría.",
+    allWorkouts: "Todos",
+    strengthWorkouts: "Fuerza",
+    specialWorkouts: "Especiales",
+    strength: "Fuerza",
+    special: "Especial",
+
+    // Time and dates
+    minutes: "minutos",
+    seconds: "segundos",
+    today: "Hoy",
+    yesterday: "Ayer",
+
+    // Login/Auth
+    login: "Iniciar sesión",
+    logout: "Cerrar sesión",
+    loginRequired: "Inicio de sesión requerido",
+    loginRequiredMessage: "Se requiere autenticación para acceder al Asesor de Preparación Militar.",
+    loginWithGoogle: "Iniciar sesión con Google",
+    loginWithFacebook: "Iniciar sesión con Facebook",
+
+    // Categories and search
+    categoryStrength: "Fuerza",
+    categorySpecial: "Especial",
+
+    // User status
+    guestUser: "Usuario Invitado",
+
+    // Workout Setup
+    workoutSetup: "Configuración del Entrenamiento",
+    workoutSetupDesc: "Marca las condiciones y el equipo disponibles (opcional)",
+    equipment: "Equipo",
+    environment: "Entorno",
+    temperature: "Temperatura",
+    timeOfDay: "Hora del día",
+    rain: "Lluvia",
+    rememberEnvironment: "Recordar este entorno",
+
+    // Equipment options
+    weight: "Peso",
+    sandbag: "Saco de arena",
+
+    // Environment options
+    dune: "Duna",
+    track: "400m superficie recta",
+    pullupBar: "Barra de dominadas",
+    dipStation: "Paralelas",
+
+    // Temperature options
+    hot: "Caliente",
+    mild: "Templado",
+    cold: "Frío",
+
+    // Time of day options
+    morning: "Mañana",
+    noon: "Mediodía",
+    evening: "Tarde",
+
+    // Rain options
+    rainYes: "Lluvia",
+    rainNo: "Sin lluvia",
+
+    // Heritage page
+    heritageQuote: "A Shilo Har-Even, que tuve el privilegio de tener como comandante en Agoz, tenía una frase constante: La cultura gana las guerras.",
+    randomEntry: "Entrada aleatoria",
+    pastBattles: "Batallas pasadas de Israel",
+    fallenSoldiers: "Soldados caídos de las FDI",
+    militaryConcepts: "Conceptos militares y tácticos",
+    philosophyJudaism: "Filosofía y Judaísmo en asuntos militares",
+
+    // Exercise Library
+    exerciseLibrary: "Biblioteca de Ejercicios",
+    exerciseDetails: "Detalles del ejercicio",
+    formTips: "Consejos de forma",
+    commonMistakes: "Errores comunes",
+    targetMuscles: "Músculos objetivo",
+    relatedExercises: "Ejercicios relacionados",
+    watchVideo: "Ver video",
+    searchExercises: "Buscar ejercicios...",
+    allCategories: "Todos",
+
+    // Group Training
+    groupTraining: "Entrenamiento en grupo",
+    inviteOthers: "Invitar a otros",
+    joinWorkout: "Unirse al entrenamiento",
+    sessionCode: "Código de sesión",
+    enterSessionCode: "Ingresar código de sesión",
+    createSession: "Crear nueva sesión",
+    waitingForParticipants: "Esperando participantes",
+    participants: "Participantes",
+    maxParticipants: "Hasta 4 participantes",
+    leaveSession: "Salir de la sesión",
+    waitingForOthers: "Esperando a otros participantes...",
+    allCompleted: "¡Todos completaron!",
+    copyCode: "Copiar código",
+    codeCopied: "¡Código copiado!",
+    or: "o",
+
+    // Settings
+    languageLabel: "Idioma",
+    languageHebrew: "עברית",
+    languageEnglish: "English",
+    languageSpanish: "Español",
+    measurementUnits: "Unidades de medida",
+    metric: "Métrico (km, kg)",
+    imperial: "Imperial (millas, libras)",
+    colorTheme: "Tema de color",
+    themeDefault: "Predeterminado (Claro)",
+    themeRanger: "Verde Ranger (Oscuro)",
+    userAccount: "Cuenta de usuario",
+    signIn: "Iniciar sesión / Registrarse",
+    signOut: "Cerrar sesión",
+    aboutSection: "Acerca de",
+    version: "Versión",
+    signInDesc: "Inicia sesión para guardar tu progreso y sincronizar entre dispositivos",
   }
 };
 
 interface LanguageContextType {
-  language: 'hebrew' | 'english';
-  setLanguage: (language: 'hebrew' | 'english') => void;
+  language: SupportedLanguage;
+  setLanguage: (language: SupportedLanguage) => void;
   allTexts: typeof allTexts;
 }
 

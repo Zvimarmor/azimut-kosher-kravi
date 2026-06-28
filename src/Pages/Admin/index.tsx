@@ -72,7 +72,8 @@ const TEXTS = {
 export default function Admin() {
   const context = useContext(LanguageContext);
   const language = context?.language || 'hebrew';
-  const t = TEXTS[language];
+  const displayLanguage = (language === 'spanish' ? 'english' : language) as 'hebrew' | 'english';
+  const t = TEXTS[displayLanguage];
 
   const [selectedType, setSelectedType] = useState<WorkoutType>('warmup');
   const [data, setData] = useState<WorkoutData[]>([]);

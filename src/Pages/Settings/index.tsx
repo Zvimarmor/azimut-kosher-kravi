@@ -1,24 +1,40 @@
 import React, { useContext, useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { ArrowLeft, Settings as SettingsIcon, Globe, Info, Palette, Ruler, User as UserIcon, LogOut, LogIn } from "lucide-react";
+import { ArrowRight, Settings as SettingsIcon, Globe, Info, Palette, Ruler, User as UserIcon, LogOut, LogIn, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "../../lib/utils";
-import { LanguageContext } from "../../components/shared/LanguageContext";
-import { useTheme } from "../../components/shared/ThemeContext";
+import { LanguageContext, type SupportedLanguage } from "../../components/shared/LanguageContext";
 import { User as UserEntity } from "../../Entities/User";
 import { useAuth } from "../../features/auth/useAuth";
 import { LoginModal } from "../../features/auth/components/LoginModal";
 
+const sectionVariants = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.33, 1, 0.68, 1] } }
+};
+
+const containerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } }
+};
+
+const LANGUAGE_OPTIONS: { value: SupportedLanguage; label: string; flag: string; nativeLabel: string }[] = [
+  { value: 'hebrew', label: 'עברית', flag: '🇮🇱', nativeLabel: 'עברית' },
+  { value: 'english', label: 'English', flag: '🇺🇸', nativeLabel: 'English' },
+  { value: 'spanish', label: 'Español', flag: '🇪🇸', nativeLabel: 'Español' },
+];
+
 export default function SettingsPage() {
   const context = useContext(LanguageContext);
-  const { language, setLanguage } = context || { language: 'hebrew', setLanguage: () => {} };
-  const { theme, setTheme } = useTheme();
+  const { language, setLanguage } = context || { language: 'hebrew' as SupportedLanguage, setLanguage: () => {} };
+  const t = context?.allTexts[language];
   const { currentUser, userProfile, logout } = useAuth();
   const [measurementSystem, setMeasurementSystem] = useState<'metric' | 'imperial'>('metric');
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  // Load measurement system preference on mount
+  const isRTL = language === 'hebrew';
+
   useEffect(() => {
     const loadMeasurementSystem = async () => {
       try {
@@ -31,205 +47,204 @@ export default function SettingsPage() {
     loadMeasurementSystem();
   }, []);
 
-  const toggleLanguage = () => {
-    setLanguage((prev: 'hebrew' | 'english') => prev === 'hebrew' ? 'english' : 'hebrew');
+  const handleMeasurementChange = async (system: 'metric' | 'imperial') => {
+    if (measurementSystem === system) return;
+    setMeasurementSystem(system);
+    UserEntity.update({ measurement_system: system }).catch(console.error);
   };
 
   return (
-    <div className="p-6 text-dark-olive" dir={language === 'hebrew' ? 'rtl' : 'ltr'}>
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-4 mb-6">
-           <Link to={createPageUrl("Home")}>
-            <button className="p-2 rounded-lg bg-white border border-gray-200 card-shadow btn-press">
-              <ArrowLeft className="w-6 h-6 text-dark-olive" />
+    <div
+      className="px-5 py-6 text-tactical-text overflow-y-auto"
+      style={{ height: 'calc(100vh - 57px)' }}
+      dir={isRTL ? 'rtl' : 'ltr'}
+    >
+      <div className="max-w-md mx-auto">
+        {/* Header */}
+        <motion.div
+          className="flex items-center gap-4 mb-7"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Link to={createPageUrl("Home")}>
+            <button className="p-2 rounded-xl glass-card press-scale hover:glow-border transition-all duration-200">
+              <ArrowRight className="w-5 h-5 text-tactical-muted" />
             </button>
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <SettingsIcon className="w-7 h-7 text-idf-olive" />
-              הגדרות
-            </h1>
+          <div className="flex items-center gap-3">
+            <SettingsIcon className="w-6 h-6 text-tactical-accent" />
+            <h1 className="text-2xl font-bold text-tactical-text">{t?.settings || 'Settings'}</h1>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="space-y-6">
-          {/* User Account Card */}
-          <Card className="bg-white card-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <UserIcon className="w-5 h-5 text-idf-olive" />
-                {language === 'hebrew' ? 'חשבון משתמש' : 'User Account'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <motion.div
+          className="space-y-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+        >
+          {/* User Account Section */}
+          <motion.div variants={sectionVariants} className="glass-card-elevated rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-tactical-accent/10">
+              <UserIcon className="w-5 h-5 text-tactical-accent" />
+              <h2 className="font-bold text-tactical-text">{t?.userAccount || 'User Account'}</h2>
+            </div>
+            <div className="p-5">
               {currentUser ? (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    {currentUser.photoURL && (
+                  <div className="flex items-center gap-4 p-4 glass-card rounded-xl">
+                    {currentUser.photoURL ? (
                       <img
                         src={currentUser.photoURL}
                         alt="Profile"
-                        className="w-12 h-12 rounded-full object-cover"
+                        className="w-14 h-14 rounded-full object-cover ring-2 ring-tactical-accent/30"
                       />
-                    )}
-                    {!currentUser.photoURL && (
-                      <div className="w-12 h-12 rounded-full bg-[var(--color-accent-primary)] flex items-center justify-center">
-                        <UserIcon className="w-6 h-6 text-white" />
+                    ) : (
+                      <div className="w-14 h-14 rounded-full gradient-accent flex items-center justify-center flex-shrink-0">
+                        <UserIcon className="w-7 h-7 text-tactical-bg" />
                       </div>
                     )}
-                    <div className="flex-1">
-                      <p className="font-semibold">{userProfile?.displayName || currentUser.displayName}</p>
-                      <p className="text-sm text-gray-600">{currentUser.email}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {(() => {
-                          const tier = userProfile?.subscription.tier;
-                          if (tier === 'free') {
-                            return language === 'hebrew' ? 'משתמש חינמי' : 'Free User';
-                          } else if (tier === 'premium') {
-                            return language === 'hebrew' ? 'משתמש פרימיום' : 'Premium User';
-                          } else if (tier === 'pro') {
-                            return language === 'hebrew' ? 'משתמש Pro' : 'Pro User';
-                          } else {
-                            return language === 'hebrew' ? 'משתמש חינמי' : 'Free User';
-                          }
-                        })()}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-tactical-text truncate">
+                        {userProfile?.displayName || currentUser.displayName}
                       </p>
+                      <p className="text-sm text-tactical-muted truncate">{currentUser.email}</p>
+                      <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-md bg-tactical-accent/10 text-tactical-accent border border-tactical-accent/20">
+                        {userProfile?.subscription.tier === 'free'
+                          ? t?.freeUser
+                          : t?.proUser}
+                      </span>
                     </div>
                   </div>
                   <Button
                     onClick={logout}
-                    className="bg-red-500 hover:bg-red-600 text-white w-full btn-press"
+                    variant="outline"
+                    className="w-full py-3 text-red-400 border-red-400/30 hover:bg-red-500/10 hover:border-red-400/50"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
-                    {language === 'hebrew' ? 'התנתק' : 'Sign Out'}
+                    {t?.signOut || 'Sign Out'}
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-gray-600 text-center">
-                    {language === 'hebrew'
-                      ? 'התחבר כדי לשמור את ההתקדמות שלך ולסנכרן בין מכשירים'
-                      : 'Sign in to save your progress and sync across devices'}
+                <div className="space-y-4 text-center">
+                  <p className="text-sm text-tactical-muted leading-relaxed">
+                    {t?.signInDesc || 'Sign in to save your progress and sync across devices'}
                   </p>
                   <Button
                     onClick={() => setShowLoginModal(true)}
-                    className="bg-idf-olive hover:bg-idf-olive/90 text-white w-full btn-press"
+                    className="w-full py-3 glow-border"
                   >
                     <LogIn className="w-4 h-4 mr-2" />
-                    {language === 'hebrew' ? 'התחבר / הירשם' : 'Login / Sign Up'}
+                    {t?.signIn || 'Login / Sign Up'}
                   </Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </motion.div>
 
-          {/* Language Card */}
-          <Card className="bg-white card-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Globe className="w-5 h-5 text-idf-olive" />
-                {language === 'hebrew' ? 'שפה' : 'Language'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={toggleLanguage} className="bg-idf-olive text-light-sand w-full btn-press">
-                {language === 'hebrew' ? 'Switch to English' : 'עבור לעברית'}
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Language Section */}
+          <motion.div variants={sectionVariants} className="glass-card-elevated rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-tactical-accent/10">
+              <Globe className="w-5 h-5 text-tactical-accent" />
+              <h2 className="font-bold text-tactical-text">{t?.languageLabel || 'Language'}</h2>
+            </div>
+            <div className="p-4 space-y-2">
+              {LANGUAGE_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setLanguage(opt.value)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 press-scale
+                    ${language === opt.value
+                      ? 'gradient-accent text-tactical-bg glow-border'
+                      : 'glass-card text-tactical-text hover:border-tactical-accent/30'}`}
+                >
+                  <span className="text-xl">{opt.flag}</span>
+                  <span className="flex-1 text-left font-semibold">{opt.nativeLabel}</span>
+                  {language === opt.value && <Check className="w-4 h-4" />}
+                </button>
+              ))}
+            </div>
+          </motion.div>
 
-          <Card className="bg-white card-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Ruler className="w-5 h-5 text-idf-olive" />
-                {language === 'hebrew' ? 'יחידות מדידה' : 'Measurement Units'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button
-                onClick={() => {
-                  if (measurementSystem !== 'metric') {
-                    setMeasurementSystem('metric');
-                    UserEntity.update({ measurement_system: 'metric' }).catch(console.error);
-                  }
-                }}
-                variant={measurementSystem === 'metric' ? 'default' : 'outline'}
-                className="w-full btn-press"
+          {/* Measurement Units */}
+          <motion.div variants={sectionVariants} className="glass-card-elevated rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-tactical-accent/10">
+              <Ruler className="w-5 h-5 text-tactical-accent" />
+              <h2 className="font-bold text-tactical-text">{t?.measurementUnits || 'Measurement Units'}</h2>
+            </div>
+            <div className="p-4 grid grid-cols-2 gap-3">
+              {(['metric', 'imperial'] as const).map(system => (
+                <button
+                  key={system}
+                  onClick={() => handleMeasurementChange(system)}
+                  className={`flex flex-col items-center gap-1 px-3 py-3.5 rounded-xl transition-all duration-200 press-scale
+                    ${measurementSystem === system
+                      ? 'gradient-accent text-tactical-bg glow-border'
+                      : 'glass-card text-tactical-text hover:border-tactical-accent/30'}`}
+                >
+                  <span className="text-lg">{system === 'metric' ? '📏' : '🦅'}</span>
+                  <span className="text-xs font-bold">
+                    {system === 'metric'
+                      ? (t?.metric || 'Metric')
+                      : (t?.imperial || 'Imperial')}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Color Theme */}
+          <motion.div variants={sectionVariants} className="glass-card-elevated rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-tactical-accent/10">
+              <Palette className="w-5 h-5 text-tactical-accent" />
+              <h2 className="font-bold text-tactical-text">{t?.colorTheme || 'Color Theme'}</h2>
+            </div>
+            <div className="p-4">
+              <button
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl gradient-accent text-tactical-bg glow-border press-scale"
               >
-                {language === 'hebrew' ? 'מטרי (ק"מ, ק"ג)' : 'Metric (km, kg)'}
-              </Button>
-              <Button
-                onClick={() => {
-                  if (measurementSystem !== 'imperial') {
-                    setMeasurementSystem('imperial');
-                    UserEntity.update({ measurement_system: 'imperial' }).catch(console.error);
-                  }
-                }}
-                variant={measurementSystem === 'imperial' ? 'default' : 'outline'}
-                className="w-full btn-press"
-              >
-                {language === 'hebrew' ? 'אימפריאלי (מייל, פאונד)' : 'Imperial (miles, lbs)'}
-              </Button>
-            </CardContent>
-          </Card>
+                <div className="flex gap-1">
+                  <div className="w-4 h-4 rounded-full bg-tactical-bg/40" />
+                  <div className="w-4 h-4 rounded-full bg-tactical-bg/20" />
+                </div>
+                <span className="text-sm font-bold flex-1 text-left">Tactical Dark</span>
+                <Check className="w-4 h-4" />
+              </button>
+              <p className="text-xs text-tactical-muted text-center mt-3 opacity-60">
+                {language === 'hebrew' ? 'ערכת הצבעים הטקטית הכהה פעילה' :
+                  language === 'spanish' ? 'Tema oscuro táctico activo' :
+                  'Tactical dark theme is active'}
+              </p>
+            </div>
+          </motion.div>
 
-          <Card className="bg-white card-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Palette className="w-5 h-5 text-idf-olive" />
-                {language === 'hebrew' ? 'ערכת צבעים' : 'Color Theme'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button
-                onClick={() => setTheme('default')}
-                variant={theme === 'default' ? 'default' : 'outline'}
-                className="w-full btn-press"
-              >
-                {language === 'hebrew' ? 'ברירת מחדל (בהיר)' : 'Default (Light)'}
-              </Button>
-              <Button
-                onClick={() => setTheme('ranger-green')}
-                variant={theme === 'ranger-green' ? 'default' : 'outline'}
-                className="w-full btn-press"
-              >
-                {language === 'hebrew' ? 'רינג\'ר ירוק (כהה)' : 'Ranger Green (Dark)'}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white card-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Info className="w-5 h-5 text-idf-olive" />
-                {language === 'hebrew' ? 'אודות' : 'About'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center text-gray-600">
-                <p> {language === 'hebrew' ? 'אזימוט כושר קרבי גרסא 1.0.0' : 'Azimut Kosher Kravi Version 1.0.0'}</p>
-
-                <p className="text-sm"> {language === 'hebrew' ?
-                  'פלטפורמת אימון בהשראת יחידות מיוחדות' :
-                  'A training platform inspired by special forces units'
-                }</p>
-                <p className="text-xs mt-4">{language === 'hebrew' ? 'לזכר אופק בכר ושילה הר-אבן' : 'In memory of Ofek Bechar and Shilo Har-Even'}</p>
-              </div>
-              <Link to={createPageUrl("AboutUs")}>
-                <Button variant="outline" className="w-full btn-press border-idf-olive text-idf-olive hover:bg-idf-olive hover:text-light-sand">
-                  {language === 'hebrew' ? 'קצת עלינו' : 'About Us'}
+          {/* About */}
+          <motion.div variants={sectionVariants} className="glass-card-elevated rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-tactical-accent/10">
+              <Info className="w-5 h-5 text-tactical-accent" />
+              <h2 className="font-bold text-tactical-text">{t?.aboutSection || 'About'}</h2>
+            </div>
+            <div className="p-5 text-center space-y-2">
+              <p className="text-tactical-text font-semibold">{t?.appName || 'Azimut Kosher Kravi'}</p>
+              <p className="text-sm text-tactical-muted">{t?.version || 'Version'} 1.0.0</p>
+              <p className="text-xs text-tactical-muted/60 mt-3 leading-relaxed whitespace-pre-line">
+                {t?.memorial}
+              </p>
+              <Link to={createPageUrl("AboutUs")} className="block mt-4">
+                <Button variant="outline" className="w-full hover:glow-border">
+                  {t?.aboutUs || 'About Us'}
                 </Button>
               </Link>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </motion.div>
+        </motion.div>
       </div>
 
-      {/* Login Modal */}
       {showLoginModal && (
         <LoginModal
           onClose={() => setShowLoginModal(false)}
-          language={language}
+          language={language === 'spanish' ? 'english' : language}
         />
       )}
     </div>

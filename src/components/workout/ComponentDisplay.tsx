@@ -4,6 +4,7 @@ import { Timer, Navigation, Dumbbell, Heart, Zap, Target, Clock, SkipForward, Ch
 import { WorkoutComponent } from "../../lib/services/workoutComposition";
 import { GPSStats } from "../../lib/services/gpsService";
 import { Button } from "../ui/button";
+import { GPSErrorBoundary } from "./GPSErrorBoundary";
 
 interface ComponentDisplayProps {
   component: WorkoutComponent;
@@ -571,7 +572,9 @@ export const ComponentDisplay: React.FC<ComponentDisplayProps> = ({
       <TimerDisplay startTime={startTime} />
 
       {component.requiresGPS && gpsStats && (
-        <GPSStatsDisplay stats={gpsStats} language={language} />
+        <GPSErrorBoundary language={language}>
+          <GPSStatsDisplay stats={gpsStats} language={language} />
+        </GPSErrorBoundary>
       )}
 
       {component.instructions && (

@@ -796,6 +796,27 @@ export class WorkoutCompositionService {
     const avgLevel = this.calculateAverageLevel(user.attributes);
     const weakest = UserService.getWeakestAttribute(user.attributes);
 
+    // Attribute-targeted selection: bias workout type toward weakest attribute (30% of the time)
+    // This ensures the engine rounds out the user's weak spots over many sessions.
+    if (Math.random() < 0.30) {
+      switch (weakest) {
+        case 'cardio_endurance':
+        case 'running_volume':
+          // Push toward cardio-heavy workouts
+          if (avgLevel <= 4) return this.createClassicWorkout(undefined, undefined, undefined, avgLevel);
+          if (avgLevel <= 7) return this.createPyramidWorkout(avgLevel, isPartnerMode);
+          return this.createTsokuonWorkout(avgLevel);
+        case 'rucking_volume':
+          return this.createMasaWorkout(avgLevel);
+        case 'push_strength':
+        case 'pull_strength':
+        case 'weight_work':
+          if (avgLevel <= 4) return this.createTabataWorkout(avgLevel);
+          if (avgLevel <= 7) return this.createCombatClassicWorkout(avgLevel, isPartnerMode);
+          return this.createCompetitionDay(avgLevel);
+      }
+    }
+
     // Level-based workout type selection
     const random = Math.random();
 
@@ -929,7 +950,7 @@ export class WorkoutCompositionService {
           reps: exercise.type === 'rep_based' ? value : undefined,
           duration: exercise.type === 'time_based' ? value : undefined,
           distance: exercise.type === 'distance_based' ? value : undefined,
-          restAfter: this.calculateRestForUser(exercise.rest_seconds || 60, user),
+          restAfter: this.calculateRestForUser(exercise.rest_seconds || 60, user, 'cardio'),
           requiresGPS: true,
           instructions: cardio.instructions
         });
@@ -1300,12 +1321,36 @@ export class WorkoutCompositionService {
   }
 
   /**
-   * Helper: Calculate rest period adjusted for user fitness
+   * Helper: Calculate rest period with adaptive scaling.
+   *
+   * Rest scales inversely with user fitness (higher level → shorter rest),
+   * but is also influenced by the intensity class of the exercise:
+   *   'cardio'   — +20% rest (recovery from sustained effort)
+   *   'strength' — base rest
+   *   'warmup'   — −20% rest (lower intensity)
+   *   'special'  — +30% rest (complex skill-based drills)
+   *
+   * The final rest is clamped to [10, 300] seconds so it stays sensible.
    */
-  private static calculateRestForUser(baseRest: number, user: User): number {
+  private static calculateRestForUser(
+    baseRest: number,
+    user: User,
+    exerciseType: 'cardio' | 'strength' | 'warmup' | 'special' = 'strength'
+  ): number {
     const avgFitness = this.calculateAverageLevel(user.attributes);
-    const multiplier = getScaledValue(scalingTables.general.restMultiplier, avgFitness);
-    return Math.round(baseRest * multiplier);
+    // Fitness multiplier: levels 1-10 map from ~1.4× to ~0.7× rest
+    const fitnessMultiplier = getScaledValue(scalingTables.general.restMultiplier, avgFitness);
+
+    // Intensity modifier per exercise class
+    const intensityModifier: Record<string, number> = {
+      cardio: 1.2,
+      strength: 1.0,
+      warmup: 0.8,
+      special: 1.3,
+    };
+
+    const raw = Math.round(baseRest * fitnessMultiplier * (intensityModifier[exerciseType] ?? 1.0));
+    return Math.min(300, Math.max(10, raw));
   }
 
   /**

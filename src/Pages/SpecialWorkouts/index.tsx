@@ -21,8 +21,10 @@ const pageTexts = {
 };
 
 export default function SpecialWorkouts() {
-  const { language } = useContext(LanguageContext);
-  const currentTexts = pageTexts[language];
+  const context = useContext(LanguageContext);
+  const language = context?.language || 'hebrew';
+  const displayLanguage = (language === 'spanish' ? 'english' : language) as 'hebrew' | 'english';
+  const currentTexts = pageTexts[displayLanguage];
   
   return (
     <div className="min-h-screen px-6 py-8" dir={language === 'hebrew' ? 'rtl' : 'ltr'}>

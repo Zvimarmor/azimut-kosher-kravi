@@ -35,7 +35,8 @@ const pageTexts = {
 export default function AboutUs() {
   const context = useContext(LanguageContext);
   const language = context?.language || 'hebrew';
-  const currentTexts = pageTexts[language];
+  const displayLanguage = (language === 'spanish' ? 'english' : language) as 'hebrew' | 'english';
+  const currentTexts = pageTexts[displayLanguage];
 
   return (
     <div className="min-h-screen px-6 py-8" dir={language === 'hebrew' ? 'rtl' : 'ltr'}>
